@@ -46,19 +46,26 @@ names are merged, and invalid or cyclic parent links are removed. Existing
 concepts are kept when extraction fails or returns an empty list. Course files
 from before this feature can still be loaded.
 
+## C06 Questions and citations
+
+Added KeywordRetrieval and TfIdfRetrieval through RetrievalStrategy.
+QuestionAnswerService retrieves course chunks before calling the model.
+CitationValidator checks returned source IDs, and answers display their original
+file locations. Empty retrieval results and clarification requests have separate
+messages.
+
 ## Checks
 
-All 35 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
-HTTP protocol tests use a local test server. A separate real API check generated
-and saved a summary with the configured gpt-6.1-sol model. The concept check
-extracted eight concepts and confirmed their source IDs, parent links and saved
-data after a new process loaded the course. CLI argument checks and loading an
-older course file also passed. The GUI compiles; its final walkthrough is still
-pending.
+All 42 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+HTTP protocol tests use a local test server. Real API checks covered summaries,
+concepts and a cited answer with the configured gpt-6.1-sol model. The answer's
+source ID and line range matched the saved material. Empty courses, unrelated
+questions, missing arguments and keyword configuration were also checked through
+the CLI. The GUI compiles; its final walkthrough is still pending.
 
 ## Next steps
 
-Add retrieval and questions with validated citations.
+Add flashcards, review records and progress notifications.
 
 ## AI support
 

@@ -55,4 +55,18 @@ public class ResponseParser {
         return values;
     }
 
+    public CitedAnswer parseCitedAnswer(String text) {
+        JSONObject data = parseObject(text);
+        String answer = data.getString("answer");
+        if (answer.isBlank()) {
+            throw new JSONException("Empty answer");
+        }
+        if (data.has("needsClarification") && !(data.get("needsClarification") instanceof Boolean)) {
+            throw new JSONException("Clarification flag must be a boolean");
+        }
+        List<String> citedIds = parseStringList(data.getJSONArray("citedChunkIds"));
+        boolean needsClarification = data.optBoolean("needsClarification", false);
+        return new CitedAnswer(answer, citedIds, needsClarification);
+    }
+
 }

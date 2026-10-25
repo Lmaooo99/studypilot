@@ -7,9 +7,9 @@ is [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Create courses and import TXT, Markdown or PDF materials through the GUI or CLI.
 Imports keep the file name and original line ranges or PDF page numbers. Generate
-material summaries and extract concepts through the configured OpenAI-compatible
-service. Questions, flashcards, quizzes, study plans and the agent will be added
-later.
+material summaries, extract concepts and ask questions with citations through the
+configured OpenAI-compatible service. Flashcards, quizzes, study plans and the
+agent will be added later.
 
 ## Build and run
 
@@ -76,6 +76,25 @@ chunks. Invalid parent links and cycles are removed before saving.
 Extraction accepts 1 to 400 chunks, processed in batches of 20. Invalid responses
 are retried once. If extraction fails or finds no concepts, earlier saved concepts
 are kept. Saved concepts can be listed after restarting the application.
+
+## Questions with citations
+
+```sh
+java -jar target/studypilot.jar ask "What does the Observer pattern do?" --course COURSE_ID
+```
+
+In the GUI, select a course and open Questions. Enter a question and click Ask
+with citations. Answers show source file names and their page numbers or line
+ranges.
+
+Set RETRIEVAL_MODE in .env to keyword or tfidf. The default is tfidf. Both retrieve
+matching chunks through RetrievalStrategy. If no relevant chunks are found, the
+application gives a message without calling the model. Ambiguous questions can
+return a request for clarification.
+
+Cited chunk IDs are checked against the retrieved chunks. Unknown IDs are removed,
+and a response without any valid citations is retried once. These checks confirm
+the citation source; they do not verify every factual claim in the answer.
 
 ## Configuration and storage
 

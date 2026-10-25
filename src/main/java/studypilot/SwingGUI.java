@@ -26,10 +26,12 @@ public class SwingGUI implements ActionListener {
     private final JComboBox<Material> materials = new JComboBox<>();
     private final JComboBox<String> styles = new JComboBox<>(new String[] {"brief", "detailed", "bullet"});
     private final JTextField courseName = new JTextField(20);
+    private final JTextField question = new JTextField(60);
     private final JButton createButton = new JButton("Create course");
     private final JButton importButton = new JButton("Import material");
     private final JButton summarizeButton = new JButton("Summarize");
     private final JButton extractButton = new JButton("Extract concepts");
+    private final JButton askButton = new JButton("Ask with citations");
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private JFrame window;
@@ -77,7 +79,8 @@ public class SwingGUI implements ActionListener {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setName("features");
         tabs.addTab("Courses and materials", coursePanel());
-        String[] planned = {"Questions", "Flashcards", "Quizzes", "Progress", "Study plans", "Assistant"};
+        tabs.addTab("Questions", questionPanel());
+        String[] planned = {"Flashcards", "Quizzes", "Progress", "Study plans", "Assistant"};
         for (String name : planned) {
             JPanel panel = new JPanel();
             panel.add(new JLabel(name + " - planned implementation"));
@@ -107,6 +110,17 @@ public class SwingGUI implements ActionListener {
         return panel;
     }
 
+    private JPanel questionPanel() {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        question.setName("question");
+        askButton.setName("askQuestion");
+        askButton.addActionListener(this);
+        panel.add(new JLabel("Question"));
+        panel.add(question);
+        panel.add(askButton);
+        return panel;
+    }
+
     public void actionPerformed(ActionEvent event) {
         if (loading || busy) {
             return;
@@ -124,6 +138,11 @@ public class SwingGUI implements ActionListener {
             } else if (event.getSource() == extractButton) {
                 checkMaterialSelection();
                 runTask("extractConcepts", null);
+            } else if (event.getSource() == askButton) {
+                if (courses.getSelectedItem() == null) {
+                    throw new IllegalArgumentException("Select a course first.");
+                }
+                runTask("askQuestion", null);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             JOptionPane.showMessageDialog(window, e.getMessage());
@@ -164,6 +183,8 @@ public class SwingGUI implements ActionListener {
         styles.setEnabled(enabled);
         summarizeButton.setEnabled(enabled);
         extractButton.setEnabled(enabled);
+        question.setEnabled(enabled);
+        askButton.setEnabled(enabled);
     }
 
     private void refreshCourses() {
@@ -208,6 +229,7 @@ public class SwingGUI implements ActionListener {
         private final Course course;
         private final Material material;
         private final String style;
+        private final String questionText;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -216,6 +238,7 @@ public class SwingGUI implements ActionListener {
             course = (Course) courses.getSelectedItem();
             material = (Material) materials.getSelectedItem();
             style = (String) styles.getSelectedItem();
+            questionText = question.getText();
         }
 
         protected String doInBackground() {
@@ -238,6 +261,9 @@ public class SwingGUI implements ActionListener {
             }
             if (action.equals("extractConcepts")) {
                 return extractConcepts();
+            }
+            if (action.equals("askQuestion")) {
+                return facade.askQuestion(course.getId(), questionText).toString();
             }
             throw new IllegalArgumentException("Unknown GUI action.");
         }

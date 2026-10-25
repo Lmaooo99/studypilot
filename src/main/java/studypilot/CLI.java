@@ -70,6 +70,8 @@ public class CLI {
             return summarizeCommand(args);
         } else if (command.equals("concepts")) {
             return conceptsCommand(args);
+        } else if (command.equals("ask")) {
+            return askCommand(args);
         }
         return unknownCommand();
     }
@@ -86,6 +88,7 @@ public class CLI {
         output.println("  summarize <materialId> --course <id> [--style brief|detailed|bullet]");
         output.println("  concepts extract <materialId> --course <id>");
         output.println("  concepts list --course <id>");
+        output.println("  ask <question> --course <id>");
     }
 
     private int courseCommand(String[] args) {
@@ -157,6 +160,16 @@ public class CLI {
             return 0;
         }
         return unknownCommand();
+    }
+
+    private int askCommand(String[] args) {
+        if (args.length < 2) {
+            return unknownCommand();
+        }
+        Map<String, String> flags = options(args, 2, "--course");
+        String courseId = required(flags, "--course");
+        output.println(facade.askQuestion(courseId, args[1]));
+        return 0;
     }
 
     private int unknownCommand() {

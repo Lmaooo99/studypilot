@@ -11,12 +11,13 @@ to the new commits.
 | C02 | TXT/Markdown imports and JSON storage | [d9ebbe1](https://github.com/Lmaooo99/studypilot/commit/d9ebbe1f1f0ef20c3c49cba026fce130aaf872de) | 18 tests; CLI import/reload and error checks |
 | C03 | PDF imports and page references | [e476562](https://github.com/Lmaooo99/studypilot/commit/e476562b2382b522d2a18bbe3ef9904dd07cc04f) | 21 tests; CLI PDF import/reload and error checks |
 | C04 | LLM adapter and summaries | [f2177e9](https://github.com/Lmaooo99/studypilot/commit/f2177e9b49ee54ce22c07884783402c462ed25b3) | 31 tests; real API summary and CLI checks |
-| C05 | Concept extraction | Current C05 commit; see Git history | 35 tests; real API concepts, source checks and reload |
-| C06 | Questions and checked citations | Pending | Pending |
+| C05 | Concept extraction | [c807572](https://github.com/Lmaooo99/studypilot/commit/c8075726085d7fd93450b52fc8112e4c0b8c4eb3) | 35 tests; real API concepts, source checks and reload |
+| C06 | Questions and checked citations | Current C06 commit; see Git history | 42 tests; real API answer and source-location checks |
 | C07 | Flashcards, review and Observer updates | Pending | Pending |
 
 C01 was committed on October 25 at 00:37:22 and its push was checked at 00:37:24.
 C02 was committed on October 25 at 02:02:33 and its push was checked at 02:02:38.
 C03 was committed on October 25 at 03:47:04 and its push was checked at 03:47:12.
 C04 was committed on October 25 at 05:32:09 and its push was checked at 05:32:16.
-C05's SHA and publication time will be included in the next batch's summary.
+C05 was committed on October 25 at 07:16:57 and its push was checked at 07:17:04.
+C06's SHA and publication time will be included in the next batch's summary.

@@ -6,6 +6,7 @@ public class AgentFacade {
     private final CourseService courseService;
     private final SummaryService summaryService;
     private final ConceptService conceptService;
+    private final QuestionAnswerService questionAnswerService;
 
     public AgentFacade(AppConfig config) {
         this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
@@ -14,9 +15,17 @@ public class AgentFacade {
     public AgentFacade(AppConfig config, LLMClient llmClient) {
         CourseRepository repository = new CourseRepository(config.getDataDirectory());
         PromptTemplates templates = new PromptTemplates();
+        ResponseParser parser = new ResponseParser();
         courseService = new CourseService(repository);
         summaryService = new SummaryService(llmClient, templates, repository);
-        conceptService = new ConceptService(llmClient, templates, new ResponseParser(), repository);
+        conceptService = new ConceptService(llmClient, templates, parser, repository);
+        RetrievalStrategy retrieval;
+        if (config.getRetrievalMode().equals("keyword")) {
+            retrieval = new KeywordRetrieval();
+        } else {
+            retrieval = new TfIdfRetrieval();
+        }
+        questionAnswerService = new QuestionAnswerService(retrieval, llmClient, templates, parser, new CitationValidator());
     }
 
     public Course createCourse(String name) {
@@ -45,8 +54,12 @@ public class AgentFacade {
         return conceptService.extractConcepts(course, course.getMaterial(materialId));
     }
 
+    public Answer askQuestion(String courseId, String question) {
+        return questionAnswerService.answer(getCourse(courseId), question);
+    }
+
     public String getImplementationStatus() {
-        return "Available: courses, TXT/Markdown/PDF import, AI summaries and concepts."
-                + "\nQuestions, flashcards, quizzes, study plans and the agent are not available yet.";
+        return "Available: courses, TXT/Markdown/PDF import, AI summaries, concepts and cited questions."
+                + "\nFlashcards, quizzes, study plans and the agent are not available yet.";
     }
 }

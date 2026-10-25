@@ -25,6 +25,13 @@ public class PromptTemplates {
                 + "A parentName must name another extracted concept or be empty. Avoid cycles.\n" + context(chunks);
     }
 
+    public String qaPrompt(String question, List<Chunk> chunks) {
+        return "Answer the student's question using only the supplied material. Do not add outside facts. "
+                + "Return JSON only: {\"answer\":\"...\",\"citedChunkIds\":[\"...\"],\"needsClarification\":false}. "
+                + "Use the supplied chunk IDs. If the question is ambiguous, ask a specific clarifying question, "
+                + "set needsClarification=true and use an empty citation array.\nSTUDENT QUESTION\n" + question + "\n" + context(chunks);
+    }
+
     private String context(List<Chunk> chunks) {
         StringBuilder text = new StringBuilder("MATERIAL DATA BEGIN\n");
         for (Chunk chunk : chunks) {
