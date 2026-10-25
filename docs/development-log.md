@@ -11,61 +11,29 @@
 ## My review, integration and validation
 
 - I read through the implementation and worked through the responsibilities of the main classes and methods.
-- I reviewed the code against the Stage 1 design, including the feature flow and required patterns.
-- I integrated the generated parts and checked the connections between components.
-- I validated the implementation and reviewed the results.
+- I reviewed the code against the Stage 1 design, including the feature flow and the required design patterns.
+- I integrated the generated parts and checked how the GUI, CLI, facade, services and JSON storage connect.
+- I validated the current implementation and reviewed the results as part of accepting the code.
 
-## C01 Setup
+## Completed work
 
-Added the Maven build, command-line startup, Swing window and local configuration.
-Feature screens are marked as planned until their implementation is added.
-
-## C02 Course materials
-
-Added Course, Material and Chunk classes, TXT/Markdown import and JSON storage.
-Imports keep line references and reject empty, unsupported, oversized or duplicate
-files. Unicode characters are preserved at chunk boundaries.
-
-## C03 PDF materials
-
-Added PDF imports using PDFBox. Text is read page by page, and saved chunks keep
-the file name and page number. Corrupt PDFs, PDFs without readable text and files
-above 20 MiB are rejected before any material is added.
-
-## C04 Material summaries
-
-Added LLMClient, OpenAIAdapter and OpenAIApiClient for Chat Completions requests.
-Summaries support brief, detailed and bullet styles. Long materials use partial
-summaries followed by a combined summary. Failed calls are retried once, and a
-failed generation keeps the previous saved summary. GUI and CLI use AgentFacade.
-
-## C05 Course concepts
-
-Added concept extraction, JSON validation and saved source chunk IDs. Duplicate
-names are merged, and invalid or cyclic parent links are removed. Existing
-concepts are kept when extraction fails or returns an empty list. Course files
-from before this feature can still be loaded.
-
-## C06 Questions and citations
-
-Added KeywordRetrieval and TfIdfRetrieval through RetrievalStrategy.
-QuestionAnswerService retrieves course chunks before calling the model.
-CitationValidator checks returned source IDs, and answers display their original
-file locations. Empty retrieval results and clarification requests have separate
-messages.
+- Added TXT, Markdown and PDF imports with line or page references.
+- Added summaries, concept extraction and questions with checked source citations.
+- Added flashcards, review records and basic progress/history using JSON files.
 
 ## Checks
 
-All 42 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
-HTTP protocol tests use a local test server. Real API checks covered summaries,
-concepts and a cited answer with the configured gpt-6.1-sol model. The answer's
-source ID and line range matched the saved material. Empty courses, unrelated
-questions, missing arguments and keyword configuration were also checked through
-the CLI. The GUI compiles; its final walkthrough is still pending.
+- All 52 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- Real API checks covered summaries, concepts, cited answers and three generated flashcards.
+- Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
+- Course isolation and backups of damaged progress/history files were checked.
+- Earlier GUI checks covered summaries and input errors.
+- I have completed my review and validation of the current implementation. The final GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Add flashcards, review records and progress notifications.
+Finish quizzes, grading, study plans and the multi-step agent, then update the UML,
+report and demonstration videos.
 
 ## AI support
 

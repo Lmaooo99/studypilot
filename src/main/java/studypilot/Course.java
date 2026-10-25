@@ -9,6 +9,7 @@ public class Course {
     private final String name;
     private final List<Material> materials;
     private final List<Concept> concepts = new ArrayList<>();
+    private final List<Flashcard> flashcards = new ArrayList<>();
 
     public Course(String name) {
         this(UUID.randomUUID().toString(), name, new ArrayList<Material>());
@@ -43,6 +44,24 @@ public class Course {
     public void setConcepts(List<Concept> values) {
         concepts.clear();
         concepts.addAll(values);
+    }
+
+    public List<Flashcard> getFlashcards() {
+        return new ArrayList<>(flashcards);
+    }
+
+    public void setFlashcards(List<Flashcard> values) {
+        flashcards.clear();
+        flashcards.addAll(values);
+    }
+
+    public Flashcard getFlashcard(String cardId) {
+        for (Flashcard card : flashcards) {
+            if (card.getId().equals(cardId)) {
+                return card;
+            }
+        }
+        throw new IllegalArgumentException("Flashcard not found in this course.");
     }
 
     public Material getMaterial(String materialId) {

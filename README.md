@@ -1,19 +1,19 @@
 # StudyPilot
 
-StudyPilot is an AI study and learning assistant for EECS3311. The design baseline
-is [Stage1-Report.pdf](Stage1-Report.pdf).
+StudyPilot is the EECS3311 course project for an AI study and learning agent.
+The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 
-## Current functionality
+## Current status
 
-Create courses and import TXT, Markdown or PDF materials through the GUI or CLI.
-Imports keep the file name and original line ranges or PDF page numbers. Generate
-material summaries, extract concepts and ask questions with citations through the
-configured OpenAI-compatible service. Flashcards, quizzes, study plans and the
-agent will be added later.
+Period 1 implements F01-F05: course/material import, summaries, concepts,
+questions with checked citation IDs, and flashcard generation/review. F11 currently
+records reviews and their history. Quizzes, grading, adaptive difficulty, weak
+topics, study plans, and the multi-step agent remain scheduled for Periods 2 and 3.
 
-## Build and run
+## Requirements and build
 
-Use JDK 17 or newer. The first Maven Wrapper build needs Internet access.
+- JDK 17 or newer
+- Internet access for the first Maven Wrapper build
 
 ```sh
 ./mvnw clean verify
@@ -22,9 +22,25 @@ java -jar target/studypilot.jar status
 java -jar target/studypilot.jar gui
 ```
 
-On Windows, use mvnw.cmd. Eclipse can import the repository as a Maven project.
+On Windows, use `mvnw.cmd clean verify` for the build. Eclipse can import the
+repository as an existing Maven project.
 
-## Course materials
+## Local configuration
+
+Copy `.env.example` to `.env` and enter your own OpenAI-compatible API settings.
+The base URL must include the provider's API version path. The application will
+append `/chat/completions`. Use HTTPS; HTTP is allowed only for local test servers.
+The default model is `gpt-6.1-sol`. Availability depends on your provider and account.
+Courses, imports, reviews and progress work without an API key.
+
+```sh
+cp .env.example .env
+```
+
+Never commit `.env`, credentials, runtime data, or raw AI conversation logs.
+The example configuration contains placeholders only.
+
+## Course material commands
 
 ```sh
 java -jar target/studypilot.jar course add "Software Design"
@@ -33,49 +49,42 @@ java -jar target/studypilot.jar material import samples/design-notes.md --course
 java -jar target/studypilot.jar material list --course COURSE_ID
 ```
 
-Replace COURSE_ID with the ID printed when creating a course. Imports accept
-.txt, .md and .pdf files up to 20 MiB. Empty, unreadable, unsupported and duplicate files
-are rejected. Long text is split into overlapping chunks while preserving complete
-Unicode characters and line ranges.
+Replace COURSE_ID with the ID printed by course creation. TXT and Markdown imports
+keep original line ranges. Long text is split into overlapping chunks without
+breaking Unicode characters. Files over 20 MiB are rejected. Duplicate files
+within a course are skipped with a message, and failed imports do not add materials.
 
-PDF text is extracted one page at a time, so each chunk keeps its original page
-number. PDFs without readable text, including scanned pages without a text layer,
-are rejected. OCR is not included.
+PDF imports extract text separately from each page and retain its original page
+number. Scanned PDFs with no extractable text are rejected; OCR is outside the scope.
 
-## Material summaries
-
-Copy .env.example to .env and set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL for your
-service. Include the API version path, such as /v1, in the base URL. The default
-model is gpt-6.1-sol. Set LLM_REASONING_EFFORT to an empty value if your service
-does not accept that optional parameter.
+## AI summaries
 
 ```sh
 java -jar target/studypilot.jar summarize MATERIAL_ID --course COURSE_ID --style brief
 ```
 
-Replace MATERIAL_ID with an imported material's ID. Styles are brief, detailed and
-bullet. In the GUI, select a course and material, choose a style and click
-Summarize. The result is saved with the material.
+The styles are `brief`, `detailed`, and `bullet`. A failed or empty model reply is
+retried once. Long materials use batches of 20 chunks and a final merge, up to 20
+batches. The saved summary is updated only after the complete operation succeeds.
+API requests have a 90-second timeout. Provider errors do not print response bodies
+or credentials. Available token counts are saved in `llm-usage.jsonl` under DATA_DIR;
+the file contains no prompts, responses, or credentials. Billing costs are recorded separately.
 
-Long materials are summarized in batches of 20 chunks and then combined. A summary
-accepts at most 400 chunks. A failed call is retried once. If generation still
-fails, the previous saved summary is kept and an error is displayed.
+`LLM_REASONING_EFFORT` defaults to `low` for the selected model. Leave its value
+empty if a different compatible provider does not support that request parameter.
 
-## Course concepts
+## Concept extraction
 
 ```sh
 java -jar target/studypilot.jar concepts extract MATERIAL_ID --course COURSE_ID
 java -jar target/studypilot.jar concepts list --course COURSE_ID
 ```
 
-In the GUI, select a course and material and click Extract concepts. Each concept
-has a name, definition, optional parent and source chunk IDs. Names are merged
-without regard to letter case. Sources must belong to the supplied material
-chunks. Invalid parent links and cycles are removed before saving.
-
-Extraction accepts 1 to 400 chunks, processed in batches of 20. Invalid responses
-are retried once. If extraction fails or finds no concepts, earlier saved concepts
-are kept. Saved concepts can be listed after restarting the application.
+Concepts have names, definitions, optional parent names and source chunk IDs.
+The program validates model JSON and source IDs, merges duplicate names, and
+removes cyclic or unknown parent links. Invalid responses are retried once.
+An empty result preserves earlier concepts. Up to 400 chunks are processed in
+batches of 20.
 
 ## Questions with citations
 
@@ -83,28 +92,87 @@ are kept. Saved concepts can be listed after restarting the application.
 java -jar target/studypilot.jar ask "What does the Observer pattern do?" --course COURSE_ID
 ```
 
-In the GUI, select a course and open Questions. Enter a question and click Ask
-with citations. Answers show source file names and their page numbers or line
-ranges.
+`RETRIEVAL_MODE=tfidf` selects TF-IDF cosine scoring; `keyword` selects keyword
+matching. Both return at most five matching chunks. No model call is made when
+retrieval finds no matching chunks. Unknown citation IDs are removed; a reply with
+no valid citation is retried once and then reported as a failure. Ambiguous
+questions can return a clearly labeled clarification request.
 
-Set RETRIEVAL_MODE in .env to keyword or tfidf. The default is tfidf. Both retrieve
-matching chunks through RetrievalStrategy. If no relevant chunks are found, the
-application gives a message without calling the model. Ambiguous questions can
-return a request for clarification.
+Citation checking establishes that a chunk was retrieved. It does not prove that
+every sentence of the answer is supported. Retrieval is lexical and does not use
+an embedding model. Semantic answer validation remains part of Stage 3.
 
-Cited chunk IDs are checked against the retrieved chunks. Unknown IDs are removed,
-and a response without any valid citations is retried once. These checks confirm
-the citation source; they do not verify every factual claim in the answer.
+## Implementation approach
 
-## Configuration and storage
+Plain Java and Swing follow the Stage 1 design. JSON repositories use explicit
+field mapping. PDFBox handles PDF text extraction. Tests use JUnit 4.
+The planned patterns are Facade, Strategy, Adapter, Factory Method, and Observer.
 
-Runtime files are saved under data/courses by default. A new process reloads the
-saved course, material and chunk IDs. DATA_DIR can be set in a local .env file.
-Keep real settings local. Course creation and imports do not require an API key.
-API token usage is recorded in llm-usage.jsonl in the data directory, without
-prompts or credentials.
+To follow the code, start with a single operation such as importing a material:
+
+1. `CLI.materialCommand` or `SwingGUI.StudyWorker` receives the input.
+2. `AgentFacade` calls `CourseService`, which checks the file and creates chunks.
+3. `CourseRepository` converts each object to JSON and saves the course.
+
+The other features follow the same route through the facade and their service.
+Model calls use `OpenAIAdapter`; model output is checked by `ResponseParser` and
+the relevant service before it is saved. SwingWorker keeps slow file and model
+operations from blocking the GUI.
 
 ## Development records
 
-See [the development log](docs/development-log.md) for decisions and checks, and
-[the commit summary](docs/period-1-commits.md) for publication progress.
+See [the development log](docs/development-log.md) for project decisions and checks,
+and [the task board](docs/stage2-tasks.md) for the remaining work.
+
+## Flashcards and review
+
+```sh
+java -jar target/studypilot.jar flashcards generate MATERIAL_ID --course COURSE_ID --count 5
+java -jar target/studypilot.jar review COURSE_ID
+java -jar target/studypilot.jar flashcards show CARD_ID --course COURSE_ID
+java -jar target/studypilot.jar review COURSE_ID --card CARD_ID --remembered true
+java -jar target/studypilot.jar progress --course COURSE_ID
+java -jar target/studypilot.jar history --course COURSE_ID
+```
+
+Replace MATERIAL_ID and CARD_ID with IDs printed by the application. Generation
+accepts 1-50 cards and materials with up to 400 chunks. Duplicate fronts are removed
+and the actual number of new cards is reported. The GUI has a Flip card button;
+Remembered and Not yet save the review. The CLI shows the back with `flashcards show`
+and records a review with `review --card ... --remembered true|false`.
+
+Never-reviewed cards come first, followed by low-mastery cards. Mastery is the
+remembered count divided by the review count. Review statistics do not rank weak
+quiz topics. ProgressTracker notifies HistoryRecorder and the GUI's DashboardView.
+Review counts, card mastery, and history are restored after restarting the app.
+
+## Storage and verification
+
+Runtime files are under DATA_DIR, which defaults to the ignored `data` folder.
+Courses use `courses/COURSE_ID.json`; review progress and history use `progress.json`
+and `history.json`. Unreadable progress/history is moved to a unique `.bak-*` file,
+then starts empty with a warning. Individual JSON saves use temporary-file
+replacement. Use one writable application instance per data directory.
+
+```sh
+./mvnw clean verify
+```
+
+The default tests use temporary directories and a test-only MockLLMClient. They do
+not call a paid API. HTTP adapter tests use a local HTTP server. Test doubles are
+excluded from the application JAR. Live checks of summaries, concepts, cited
+answers and card generation are recorded separately in the development log.
+
+The implemented patterns so far are Facade, Adapter, retrieval Strategy and
+Observer. Factory Method is scheduled with typed quizzes. Full Stage 3 deterministic
+testing and KUMA evaluation, the final seven-section report, updated UML and
+feature recordings remain in progress.
+
+## Stage 2 tracking
+
+- [Task board](docs/stage2-tasks.md)
+- [Period 1 code commits](docs/period-1-commits.md)
+- [Implementation working record](docs/implementation-working-record.md)
+- [Usage checkpoint](docs/usage-checkpoint.json)
+
+The report notes will be used to prepare stage2-report.docx and stage2-report.pdf.

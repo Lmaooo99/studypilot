@@ -7,6 +7,10 @@ public class AgentFacade {
     private final SummaryService summaryService;
     private final ConceptService conceptService;
     private final QuestionAnswerService questionAnswerService;
+    private final FlashcardService flashcardService;
+    private final ProgressTracker progressTracker;
+    private final ProgressRepository progressRepository;
+    private final HistoryRecorder historyRecorder;
 
     public AgentFacade(AppConfig config) {
         this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
@@ -19,6 +23,7 @@ public class AgentFacade {
         courseService = new CourseService(repository);
         summaryService = new SummaryService(llmClient, templates, repository);
         conceptService = new ConceptService(llmClient, templates, parser, repository);
+
         RetrievalStrategy retrieval;
         if (config.getRetrievalMode().equals("keyword")) {
             retrieval = new KeywordRetrieval();
@@ -26,6 +31,11 @@ public class AgentFacade {
             retrieval = new TfIdfRetrieval();
         }
         questionAnswerService = new QuestionAnswerService(retrieval, llmClient, templates, parser, new CitationValidator());
+        progressRepository = new ProgressRepository(config.getDataDirectory());
+        progressTracker = new ProgressTracker(progressRepository);
+        historyRecorder = new HistoryRecorder(progressTracker, progressRepository);
+        progressTracker.attach(historyRecorder);
+        flashcardService = new FlashcardService(llmClient, templates, parser, repository, progressTracker);
     }
 
     public Course createCourse(String name) {
@@ -58,8 +68,40 @@ public class AgentFacade {
         return questionAnswerService.answer(getCourse(courseId), question);
     }
 
+    public List<Flashcard> generateFlashcards(String courseId, String materialId, int count) {
+        Course course = getCourse(courseId);
+        return flashcardService.generateCards(course, course.getMaterial(materialId), count);
+    }
+
+    public List<Flashcard> getCardsToReview(String courseId) {
+        return flashcardService.getCardsToReview(getCourse(courseId));
+    }
+
+    public void reviewCard(String courseId, String cardId, boolean remembered) {
+        Course course = getCourse(courseId);
+        flashcardService.review(course, course.getFlashcard(cardId), remembered);
+    }
+
+    public ProgressSummary getProgress(String courseId) {
+        getCourse(courseId);
+        return progressTracker.getSummary(courseId);
+    }
+
+    public List<StudyEvent> getHistory(String courseId) {
+        getCourse(courseId);
+        return historyRecorder.getHistory(courseId);
+    }
+
+    public String getStorageWarnings() {
+        return progressRepository.getRecoveryWarning();
+    }
+
+    public void observeProgress(Observer observer) {
+        progressTracker.attach(observer);
+    }
+
     public String getImplementationStatus() {
-        return "Available: courses, TXT/Markdown/PDF import, AI summaries, concepts and cited questions."
-                + "\nFlashcards, quizzes, study plans and the agent are not available yet.";
+        return "Available: F01-F05 (courses, materials, summaries, concepts, cited questions, flashcards and review)."
+                + "\nF11 currently records reviews and their history. Quizzes, study plans and the agent are planned for later periods.";
     }
 }

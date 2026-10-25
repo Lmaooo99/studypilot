@@ -69,4 +69,23 @@ public class ResponseParser {
         return new CitedAnswer(answer, citedIds, needsClarification);
     }
 
+    public List<Flashcard> parseFlashcards(String text) {
+        JSONObject data = parseObject(text);
+        JSONArray items = data.getJSONArray("cards");
+        List<Flashcard> cards = new ArrayList<>();
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            String front = item.getString("front");
+            String back = item.getString("back");
+            if (front.isBlank() || back.isBlank()) {
+                throw new JSONException("Empty flashcard fields");
+            }
+            String conceptName = "";
+            if (item.has("conceptName")) {
+                conceptName = item.getString("conceptName");
+            }
+            cards.add(new Flashcard(front, back, conceptName));
+        }
+        return cards;
+    }
 }

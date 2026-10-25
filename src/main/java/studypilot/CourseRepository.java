@@ -35,6 +35,12 @@ public class CourseRepository {
         }
         data.put("concepts", concepts);
 
+        JSONArray cards = new JSONArray();
+        for (Flashcard card : course.getFlashcards()) {
+            cards.put(flashcardToJson(card));
+        }
+        data.put("flashcards", cards);
+
         Path file = JsonFiles.namedFile(directory, course.getId());
         JsonFiles.write(file, data);
     }
@@ -57,7 +63,7 @@ public class CourseRepository {
             }
             Course course = new Course(courseId, data.getString("name"), materials);
 
-            // Earlier course files may not have concepts yet.
+            // Earlier course files may not have concepts or flashcards yet.
             if (data.has("concepts")) {
                 List<Concept> concepts = new ArrayList<>();
                 JSONArray savedConcepts = data.getJSONArray("concepts");
@@ -65,6 +71,14 @@ public class CourseRepository {
                     concepts.add(conceptFromJson(savedConcepts.getJSONObject(i)));
                 }
                 course.setConcepts(concepts);
+            }
+            if (data.has("flashcards")) {
+                List<Flashcard> cards = new ArrayList<>();
+                JSONArray savedCards = data.getJSONArray("flashcards");
+                for (int i = 0; i < savedCards.length(); i++) {
+                    cards.add(flashcardFromJson(savedCards.getJSONObject(i)));
+                }
+                course.setFlashcards(cards);
             }
             return course;
         } catch (JSONException e) {
@@ -140,6 +154,27 @@ public class CourseRepository {
         String definition = data.getString("definition");
         String parentName = data.getString("parentName");
         return new Concept(name, definition, parentName, sourceIds);
+    }
+
+    private JSONObject flashcardToJson(Flashcard card) {
+        JSONObject data = new JSONObject();
+        data.put("cardId", card.getId());
+        data.put("front", card.getFront());
+        data.put("back", card.getBack());
+        data.put("conceptName", card.getConceptName());
+        data.put("reviewCount", card.getReviewCount());
+        data.put("rememberedCount", card.getRememberedCount());
+        return data;
+    }
+
+    private Flashcard flashcardFromJson(JSONObject data) {
+        String id = data.getString("cardId");
+        String front = data.getString("front");
+        String back = data.getString("back");
+        String conceptName = data.getString("conceptName");
+        int reviewCount = data.getInt("reviewCount");
+        int rememberedCount = data.getInt("rememberedCount");
+        return new Flashcard(id, front, back, conceptName, reviewCount, rememberedCount);
     }
 
     public List<Course> listCourses() {

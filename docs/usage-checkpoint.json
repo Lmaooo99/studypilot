@@ -1,0 +1,112 @@
+{
+  "recorded_at": "2026-10-24T22:11:39.844264-04:00",
+  "development_tool": "Codex",
+  "development_model": "gpt-6.1-sol",
+  "counter_window_start_utc": "2026-10-25T01:21:40Z",
+  "counter_window_end_utc": "2026-10-25T02:09:35.191Z",
+  "development_money_cost": null,
+  "development_money_note": "Billing records are not available from the development session.",
+  "tokens_note": "Measured session-counter differences for this window. Cached input is included in input_tokens; reasoning output is included in output_tokens.",
+  "development_tokens": {
+    "input_tokens": 18889846,
+    "cached_input_tokens": 18721152,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 129769,
+    "reasoning_output_tokens": 65139,
+    "total_tokens": 19019615
+  },
+  "application_usage_record_count": 5,
+  "application_tokens_reported_by_completed_calls": {
+    "prompt_tokens": 27854,
+    "completion_tokens": 994,
+    "total_tokens": 28848
+  },
+  "application_tokens_note": "Includes successful logged application calls and the successful direct connection probe. The first timed-out request has unknown usage.",
+  "application_money_cost": null,
+  "application_money_note": "Provider billing records are not available.",
+  "readability_revision": {
+    "recorded_at": "2026-10-24T23:43:50.113559-04:00",
+    "development_tool": "Codex",
+    "development_model": "gpt-6.1-sol",
+    "counter_window_start_utc": "2026-10-25T03:18:49.532Z",
+    "counter_window_end_utc": "2026-10-25T03:43:13.992Z",
+    "development_tokens": {
+      "input_tokens": 6908744,
+      "cached_input_tokens": 6837504,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 67171,
+      "reasoning_output_tokens": 30355,
+      "total_tokens": 6975915
+    },
+    "development_money_cost": null,
+    "development_money_note": "Billing records are not available for this development window.",
+    "application_usage_record_count": 5,
+    "application_tokens_reported_by_completed_calls": {
+      "prompt_tokens": 23451,
+      "completion_tokens": 791,
+      "total_tokens": 24242
+    },
+    "application_money_cost": null,
+    "application_money_note": "Provider billing records are not available.",
+    "tokens_note": "Measured differences for this revision. Cached input and reasoning output are subsets, not additional tokens."
+  },
+  "period_1_verification": {
+    "recorded_at": "2026-10-25T09:10:23.904065-04:00",
+    "application_usage_record_count": 4,
+    "application_tokens_reported_by_completed_calls": {
+      "prompt_tokens": 18779,
+      "completion_tokens": 762,
+      "total_tokens": 19541
+    },
+    "application_calls": [
+      {
+        "completion_tokens": 55,
+        "prompt_tokens": 4684,
+        "total_tokens": 4739,
+        "model": "gpt-6.1-sol",
+        "time": "2026-10-25T08:05:03.246294Z",
+        "feature": "F02"
+      },
+      {
+        "completion_tokens": 508,
+        "prompt_tokens": 4721,
+        "total_tokens": 5229,
+        "model": "gpt-6.1-sol",
+        "time": "2026-10-25T09:49:08.467579Z",
+        "feature": "F03"
+      },
+      {
+        "completion_tokens": 84,
+        "prompt_tokens": 4670,
+        "total_tokens": 4754,
+        "model": "gpt-6.1-sol",
+        "time": "2026-10-25T11:34:15.833066Z",
+        "feature": "F04"
+      },
+      {
+        "completion_tokens": 115,
+        "prompt_tokens": 4704,
+        "total_tokens": 4819,
+        "model": "gpt-6.1-sol",
+        "time": "2026-10-25T13:07:03.365632Z",
+        "feature": "F05"
+      }
+    ],
+    "application_money_cost": null,
+    "application_money_note": "Provider billing records are not available.",
+    "development_tokens": null,
+    "development_money_cost": null,
+    "development_usage_note": "Development-session token and billing totals were not separately recorded for these additional checks.",
+    "tokens_note": "Additional real API checks after the earlier recorded windows. Token counts came from service responses."
+  },
+  "application_totals_for_recorded_checks": {
+    "call_count": 14,
+    "tokens": {
+      "prompt_tokens": 70084,
+      "completion_tokens": 2547,
+      "total_tokens": 72631
+    },
+    "money_cost": null,
+    "note": "Totals combine the three recorded application-check windows. Requests with unavailable usage, including the earlier timeout, are excluded."
+  }
+}

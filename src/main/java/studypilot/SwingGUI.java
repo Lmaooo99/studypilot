@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JButton;
@@ -24,19 +25,19 @@ public class SwingGUI implements ActionListener {
     private final AgentFacade facade;
     private final JComboBox<Course> courses = new JComboBox<>();
     private final JComboBox<Material> materials = new JComboBox<>();
+    private final JComboBox<Flashcard> cards = new JComboBox<>();
     private final JComboBox<String> styles = new JComboBox<>(new String[] {"brief", "detailed", "bullet"});
     private final JTextField courseName = new JTextField(20);
     private final JTextField question = new JTextField(60);
-    private final JButton createButton = new JButton("Create course");
-    private final JButton importButton = new JButton("Import material");
-    private final JButton summarizeButton = new JButton("Summarize");
-    private final JButton extractButton = new JButton("Extract concepts");
-    private final JButton askButton = new JButton("Ask with citations");
+    private final JTextField cardCount = new JTextField("5", 4);
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
+    private final List<JButton> buttons = new ArrayList<>();
     private JFrame window;
+    private DashboardView dashboard;
     private boolean loading;
     private boolean busy;
+    private boolean answerShown;
 
     public SwingGUI(AgentFacade facade) {
         this.facade = facade;
@@ -46,6 +47,7 @@ public class SwingGUI implements ActionListener {
         window = new JFrame("StudyPilot");
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.add(selectionPanel(), BorderLayout.NORTH);
+
         JPanel center = new JPanel(new BorderLayout());
         center.add(featureTabs(), BorderLayout.NORTH);
         results.setName("results");
@@ -56,8 +58,9 @@ public class SwingGUI implements ActionListener {
         center.setBorder(new EmptyBorder(8, 8, 8, 8));
         window.add(center, BorderLayout.CENTER);
         window.add(status, BorderLayout.SOUTH);
+
         refreshCourses();
-        results.setText(facade.getImplementationStatus());
+        results.setText(facade.getImplementationStatus() + "\n" + facade.getStorageWarnings());
         window.setSize(1150, 760);
         window.setLocationRelativeTo(null);
         window.setVisible(true);
@@ -80,85 +83,121 @@ public class SwingGUI implements ActionListener {
         tabs.setName("features");
         tabs.addTab("Courses and materials", coursePanel());
         tabs.addTab("Questions", questionPanel());
-        String[] planned = {"Flashcards", "Quizzes", "Progress", "Study plans", "Assistant"};
-        for (String name : planned) {
-            JPanel panel = new JPanel();
-            panel.add(new JLabel(name + " - planned implementation"));
-            tabs.addTab(name, panel);
-        }
+        tabs.addTab("Flashcards", flashcardPanel());
+        tabs.addTab("Quizzes", plannedPanel("Quizzes"));
+        dashboard = new DashboardView(facade);
+        facade.observeProgress(dashboard);
+        tabs.addTab("Progress", dashboard);
+        tabs.addTab("Study plans", plannedPanel("Study plans"));
+        tabs.addTab("Assistant", plannedPanel("Assistant"));
         return tabs;
     }
 
     private JPanel coursePanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel coursesPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         courseName.setName("courseName");
-        createButton.setName("createCourse");
-        importButton.setName("importMaterial");
-        summarizeButton.setName("summarize");
-        extractButton.setName("extractConcepts");
-        createButton.addActionListener(this);
-        importButton.addActionListener(this);
-        summarizeButton.addActionListener(this);
-        extractButton.addActionListener(this);
-        panel.add(new JLabel("New course"));
-        panel.add(courseName);
-        panel.add(createButton);
-        panel.add(importButton);
-        panel.add(styles);
-        panel.add(summarizeButton);
-        panel.add(extractButton);
+        coursesPanel.add(new JLabel("New course"));
+        coursesPanel.add(courseName);
+        coursesPanel.add(button("Create course", "createCourse"));
+        coursesPanel.add(button("Import material", "importMaterial"));
+
+        JPanel analysisPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        analysisPanel.add(styles);
+        analysisPanel.add(button("Summarize", "summarize"));
+        analysisPanel.add(button("Extract concepts", "extractConcepts"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(coursesPanel, BorderLayout.NORTH);
+        panel.add(analysisPanel, BorderLayout.SOUTH);
         return panel;
     }
 
     private JPanel questionPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         question.setName("question");
-        askButton.setName("askQuestion");
-        askButton.addActionListener(this);
         panel.add(new JLabel("Question"));
         panel.add(question);
-        panel.add(askButton);
+        panel.add(button("Ask with citations", "askQuestion"));
         return panel;
+    }
+
+    private JPanel flashcardPanel() {
+        JPanel generation = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        generation.add(new JLabel("Number of cards"));
+        generation.add(cardCount);
+        generation.add(button("Generate flashcards", "generateFlashcards"));
+
+        JPanel review = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        cards.setName("cards");
+        cards.addActionListener(this);
+        review.add(cards);
+        review.add(button("Flip card", "flipCard"));
+        review.add(button("Remembered", "remembered"));
+        review.add(button("Not yet", "notYet"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(generation, BorderLayout.NORTH);
+        panel.add(review, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel plannedPanel(String name) {
+        JPanel panel = new JPanel();
+        panel.add(new JLabel(name + " - planned implementation"));
+        return panel;
+    }
+
+    private JButton button(String label, String action) {
+        JButton button = new JButton(label);
+        button.setName(action);
+        button.setActionCommand(action);
+        button.addActionListener(this);
+        buttons.add(button);
+        return button;
     }
 
     public void actionPerformed(ActionEvent event) {
         if (loading || busy) {
             return;
         }
-        try {
-            if (event.getSource() == courses) {
-                refreshMaterials(null);
-            } else if (event.getSource() == createButton) {
-                runTask("createCourse", null);
-            } else if (event.getSource() == importButton) {
-                chooseMaterial();
-            } else if (event.getSource() == summarizeButton) {
-                checkMaterialSelection();
-                runTask("summarize", null);
-            } else if (event.getSource() == extractButton) {
-                checkMaterialSelection();
-                runTask("extractConcepts", null);
-            } else if (event.getSource() == askButton) {
-                if (courses.getSelectedItem() == null) {
-                    throw new IllegalArgumentException("Select a course first.");
+        if (event.getSource() == courses) {
+            refreshMaterials(null);
+        } else if (event.getSource() == cards) {
+            showCardFront();
+        } else {
+            try {
+                String action = event.getActionCommand();
+                if (action.equals("flipCard")) {
+                    flipCard();
+                } else if (action.equals("importMaterial")) {
+                    chooseMaterial();
+                } else {
+                    runTask(action, null);
                 }
-                runTask("askQuestion", null);
+            } catch (IllegalArgumentException e) {
+                JOptionPane.showMessageDialog(window, e.getMessage());
             }
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            JOptionPane.showMessageDialog(window, e.getMessage());
         }
     }
 
-    private void checkMaterialSelection() {
-        if (courses.getSelectedItem() == null || materials.getSelectedItem() == null) {
-            throw new IllegalArgumentException("Select a course and material first.");
+    private void showCardFront() {
+        answerShown = false;
+        Flashcard card = (Flashcard) cards.getSelectedItem();
+        if (card != null) {
+            results.setText("Front: " + card.getFront());
         }
+    }
+
+    private void flipCard() {
+        Flashcard card = (Flashcard) cards.getSelectedItem();
+        if (card == null) {
+            results.setText("No flashcards to review.");
+            return;
+        }
+        answerShown = true;
+        results.setText("Front: " + card.getFront() + "\n\nBack: " + card.getBack());
     }
 
     private void chooseMaterial() {
-        if (courses.getSelectedItem() == null) {
-            throw new IllegalArgumentException("Create or select a course first.");
-        }
+        checkSelection("importMaterial");
         JFileChooser chooser = new JFileChooser();
         if (chooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION) {
             String filePath = chooser.getSelectedFile().getAbsolutePath();
@@ -166,7 +205,30 @@ public class SwingGUI implements ActionListener {
         }
     }
 
+    private void checkSelection(String action) {
+        if (action.equals("createCourse")) {
+            return;
+        }
+        if (courses.getSelectedItem() == null) {
+            throw new IllegalArgumentException("Select a course first.");
+        }
+        if (action.equals("summarize") || action.equals("extractConcepts") || action.equals("generateFlashcards")) {
+            if (materials.getSelectedItem() == null) {
+                throw new IllegalArgumentException("Import and select a material first.");
+            }
+        }
+        if (action.equals("remembered") || action.equals("notYet")) {
+            if (cards.getSelectedItem() == null) {
+                throw new IllegalArgumentException("No flashcards to review.");
+            }
+            if (!answerShown) {
+                throw new IllegalArgumentException("Flip the card before recording a review.");
+            }
+        }
+    }
+
     private void runTask(String action, String filePath) {
+        checkSelection(action);
         StudyWorker worker = new StudyWorker(action, filePath);
         busy = true;
         setControlsEnabled(false);
@@ -177,14 +239,14 @@ public class SwingGUI implements ActionListener {
     private void setControlsEnabled(boolean enabled) {
         courses.setEnabled(enabled);
         materials.setEnabled(enabled);
+        cards.setEnabled(enabled);
         courseName.setEnabled(enabled);
-        createButton.setEnabled(enabled);
-        importButton.setEnabled(enabled);
-        styles.setEnabled(enabled);
-        summarizeButton.setEnabled(enabled);
-        extractButton.setEnabled(enabled);
         question.setEnabled(enabled);
-        askButton.setEnabled(enabled);
+        cardCount.setEnabled(enabled);
+        styles.setEnabled(enabled);
+        for (JButton button : buttons) {
+            button.setEnabled(enabled);
+        }
     }
 
     private void refreshCourses() {
@@ -208,7 +270,9 @@ public class SwingGUI implements ActionListener {
 
     private void refreshMaterials(String materialId) {
         loading = true;
+        answerShown = false;
         materials.removeAllItems();
+        cards.removeAllItems();
         Course course = (Course) courses.getSelectedItem();
         if (course != null) {
             for (Material material : course.getMaterials()) {
@@ -217,55 +281,73 @@ public class SwingGUI implements ActionListener {
                     materials.setSelectedItem(material);
                 }
             }
+            for (Flashcard card : facade.getCardsToReview(course.getId())) {
+                cards.addItem(card);
+            }
+            dashboard.setCourseId(course.getId());
+        } else {
+            dashboard.setCourseId(null);
         }
         loading = false;
     }
 
-    // File and LLM operations run without blocking the window.
+    // SwingWorker runs file and network operations without blocking the window.
     private class StudyWorker extends SwingWorker<String, Void> {
         private final String action;
         private final String filePath;
-        private final String name;
         private final Course course;
         private final Material material;
-        private final String style;
+        private final Flashcard card;
+        private final String name;
         private final String questionText;
+        private final String style;
+        private final String requestedCount;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
             this.filePath = filePath;
-            name = courseName.getText();
             course = (Course) courses.getSelectedItem();
             material = (Material) materials.getSelectedItem();
-            style = (String) styles.getSelectedItem();
+            card = (Flashcard) cards.getSelectedItem();
+            name = courseName.getText();
             questionText = question.getText();
+            style = (String) styles.getSelectedItem();
+            requestedCount = cardCount.getText();
         }
 
         protected String doInBackground() {
             if (action.equals("createCourse")) {
-                Course created = facade.createCourse(name);
-                return "Created course: " + created.getName() + "\nCourse ID: " + created.getId();
-            }
-            if (action.equals("importMaterial")) {
-                Material imported = facade.importMaterial(course.getId(), filePath);
-                StringBuilder text = new StringBuilder("Imported " + imported.getFileName());
-                text.append("\nMaterial ID: " + imported.getId());
-                text.append("\nChunks: " + imported.getChunks().size());
-                for (Chunk chunk : imported.getChunks()) {
-                    text.append("\n" + chunk.getLocation());
-                }
-                return text.toString();
-            }
-            if (action.equals("summarize")) {
+                return createCourse();
+            } else if (action.equals("importMaterial")) {
+                return importMaterial();
+            } else if (action.equals("summarize")) {
                 return facade.summarize(course.getId(), material.getId(), style);
-            }
-            if (action.equals("extractConcepts")) {
+            } else if (action.equals("extractConcepts")) {
                 return extractConcepts();
-            }
-            if (action.equals("askQuestion")) {
+            } else if (action.equals("askQuestion")) {
                 return facade.askQuestion(course.getId(), questionText).toString();
+            } else if (action.equals("generateFlashcards")) {
+                return generateFlashcards();
+            } else if (action.equals("remembered") || action.equals("notYet")) {
+                return reviewCard();
             }
             throw new IllegalArgumentException("Unknown GUI action.");
+        }
+
+        private String createCourse() {
+            Course created = facade.createCourse(name);
+            return "Created course: " + created.getName() + "\nCourse ID: " + created.getId();
+        }
+
+        private String importMaterial() {
+            Material imported = facade.importMaterial(course.getId(), filePath);
+            StringBuilder text = new StringBuilder("Imported " + imported.getFileName());
+            text.append("\nMaterial ID: " + imported.getId());
+            text.append("\nChunks: " + imported.getChunks().size());
+            for (Chunk chunk : imported.getChunks()) {
+                text.append("\n" + chunk.getLocation());
+            }
+            return text.toString();
         }
 
         private String extractConcepts() {
@@ -278,6 +360,19 @@ public class SwingGUI implements ActionListener {
                 text.append(concept + "\n\n");
             }
             return text.toString();
+        }
+
+        private String generateFlashcards() {
+            int count = Integer.parseInt(requestedCount);
+            List<Flashcard> generated = facade.generateFlashcards(course.getId(), material.getId(), count);
+            return "Generated " + generated.size() + " new cards; requested " + count + ". Select a card to review.";
+        }
+
+        private String reviewCard() {
+            boolean remembered = action.equals("remembered");
+            facade.reviewCard(course.getId(), card.getId(), remembered);
+            Flashcard updated = facade.getCourse(course.getId()).getFlashcard(card.getId());
+            return "Review recorded. Reviews: " + updated.getReviewCount() + ", mastery: " + updated.getMastery();
         }
 
         protected void done() {

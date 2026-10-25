@@ -32,6 +32,12 @@ public class PromptTemplates {
                 + "set needsClarification=true and use an empty citation array.\nSTUDENT QUESTION\n" + question + "\n" + context(chunks);
     }
 
+    public String flashcardPrompt(List<Chunk> chunks, int count) {
+        return "Create " + count + " distinct flashcards using only this course material. Return JSON only: "
+                + "{\"cards\":[{\"front\":\"question\",\"back\":\"answer\",\"conceptName\":\"topic\"}]}. "
+                + "Use concise, nonempty questions and answers.\n" + context(chunks);
+    }
+
     private String context(List<Chunk> chunks) {
         StringBuilder text = new StringBuilder("MATERIAL DATA BEGIN\n");
         for (Chunk chunk : chunks) {

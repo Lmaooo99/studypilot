@@ -42,6 +42,10 @@ public class CLI {
     }
 
     public int runCommand(String[] args) {
+        String warnings = facade.getStorageWarnings();
+        if (!warnings.isBlank()) {
+            errors.print(warnings);
+        }
         try {
             return execute(args);
         } catch (IllegalArgumentException e) {
@@ -72,6 +76,12 @@ public class CLI {
             return conceptsCommand(args);
         } else if (command.equals("ask")) {
             return askCommand(args);
+        } else if (command.equals("flashcards")) {
+            return flashcardsCommand(args);
+        } else if (command.equals("review")) {
+            return reviewCommand(args);
+        } else if (command.equals("progress") || command.equals("history")) {
+            return progressCommand(args);
         }
         return unknownCommand();
     }
@@ -89,6 +99,11 @@ public class CLI {
         output.println("  concepts extract <materialId> --course <id>");
         output.println("  concepts list --course <id>");
         output.println("  ask <question> --course <id>");
+        output.println("  flashcards generate <materialId> --course <id> [--count <number>]");
+        output.println("  flashcards show <cardId> --course <id>");
+        output.println("  review <courseId> [--card <cardId> --remembered true|false]");
+        output.println("  progress --course <id>");
+        output.println("  history --course <id>");
     }
 
     private int courseCommand(String[] args) {
@@ -169,6 +184,73 @@ public class CLI {
         Map<String, String> flags = options(args, 2, "--course");
         String courseId = required(flags, "--course");
         output.println(facade.askQuestion(courseId, args[1]));
+        return 0;
+    }
+
+    private int flashcardsCommand(String[] args) {
+        if (args.length < 3) {
+            return unknownCommand();
+        }
+        if (args[1].equals("generate")) {
+            Map<String, String> flags = options(args, 3, "--course", "--count");
+            String courseId = required(flags, "--course");
+            int count = Integer.parseInt(flags.getOrDefault("--count", "5"));
+            List<Flashcard> cards = facade.generateFlashcards(courseId, args[2], count);
+            output.println("Generated " + cards.size() + " new cards; requested " + count + ".");
+            for (Flashcard card : cards) {
+                output.println(card.getId() + "  " + card.getFront());
+            }
+            return 0;
+        }
+        if (args[1].equals("show")) {
+            Map<String, String> flags = options(args, 3, "--course");
+            String courseId = required(flags, "--course");
+            Flashcard card = facade.getCourse(courseId).getFlashcard(args[2]);
+            output.println("Front: " + card.getFront() + "\nBack: " + card.getBack());
+            return 0;
+        }
+        return unknownCommand();
+    }
+
+    private int reviewCommand(String[] args) {
+        if (args.length < 2) {
+            return unknownCommand();
+        }
+        Map<String, String> flags = options(args, 2, "--card", "--remembered");
+        if (flags.isEmpty()) {
+            List<Flashcard> cards = facade.getCardsToReview(args[1]);
+            if (cards.isEmpty()) {
+                output.println("No flashcards to review.");
+            }
+            for (Flashcard card : cards) {
+                output.println(card.getId() + "  " + card.getFront() + "  mastery=" + card.getMastery());
+            }
+        } else {
+            String remembered = required(flags, "--remembered");
+            if (!remembered.equals("true") && !remembered.equals("false")) {
+                throw new IllegalArgumentException("--remembered must be true or false.");
+            }
+            String cardId = required(flags, "--card");
+            facade.reviewCard(args[1], cardId, Boolean.parseBoolean(remembered));
+            output.println("Review recorded.");
+        }
+        return 0;
+    }
+
+    private int progressCommand(String[] args) {
+        Map<String, String> flags = options(args, 1, "--course");
+        String courseId = required(flags, "--course");
+        if (args[0].equals("progress")) {
+            output.println(facade.getProgress(courseId));
+        } else {
+            List<StudyEvent> events = facade.getHistory(courseId);
+            if (events.isEmpty()) {
+                output.println("No study history yet.");
+            }
+            for (StudyEvent event : events) {
+                output.println(event);
+            }
+        }
         return 0;
     }
 
