@@ -3,6 +3,7 @@ package studypilot;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
 
@@ -67,6 +68,8 @@ public class CLI {
             return materialCommand(args);
         } else if (command.equals("summarize")) {
             return summarizeCommand(args);
+        } else if (command.equals("concepts")) {
+            return conceptsCommand(args);
         }
         return unknownCommand();
     }
@@ -81,6 +84,8 @@ public class CLI {
         output.println("  material import <file> --course <id>");
         output.println("  material list --course <id>");
         output.println("  summarize <materialId> --course <id> [--style brief|detailed|bullet]");
+        output.println("  concepts extract <materialId> --course <id>");
+        output.println("  concepts list --course <id>");
     }
 
     private int courseCommand(String[] args) {
@@ -128,6 +133,30 @@ public class CLI {
         String style = flags.getOrDefault("--style", "brief");
         output.println(facade.summarize(courseId, args[1], style));
         return 0;
+    }
+
+    private int conceptsCommand(String[] args) {
+        if (args.length >= 3 && args[1].equals("extract")) {
+            Map<String, String> flags = options(args, 3, "--course");
+            String courseId = required(flags, "--course");
+            List<Concept> concepts = facade.extractConcepts(courseId, args[2]);
+            if (concepts.isEmpty()) {
+                output.println("No concepts found. Existing concepts were kept.");
+            }
+            for (Concept concept : concepts) {
+                output.println(concept);
+            }
+            return 0;
+        }
+        if (args.length >= 2 && args[1].equals("list")) {
+            Map<String, String> flags = options(args, 2, "--course");
+            String courseId = required(flags, "--course");
+            for (Concept concept : facade.getCourse(courseId).getConcepts()) {
+                output.println(concept);
+            }
+            return 0;
+        }
+        return unknownCommand();
     }
 
     private int unknownCommand() {

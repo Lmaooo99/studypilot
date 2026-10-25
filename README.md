@@ -7,8 +7,9 @@ is [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Create courses and import TXT, Markdown or PDF materials through the GUI or CLI.
 Imports keep the file name and original line ranges or PDF page numbers. Generate
-material summaries through the configured OpenAI-compatible service. Concepts,
-questions, flashcards, quizzes, study plans and the agent will be added later.
+material summaries and extract concepts through the configured OpenAI-compatible
+service. Questions, flashcards, quizzes, study plans and the agent will be added
+later.
 
 ## Build and run
 
@@ -59,6 +60,22 @@ Summarize. The result is saved with the material.
 Long materials are summarized in batches of 20 chunks and then combined. A summary
 accepts at most 400 chunks. A failed call is retried once. If generation still
 fails, the previous saved summary is kept and an error is displayed.
+
+## Course concepts
+
+```sh
+java -jar target/studypilot.jar concepts extract MATERIAL_ID --course COURSE_ID
+java -jar target/studypilot.jar concepts list --course COURSE_ID
+```
+
+In the GUI, select a course and material and click Extract concepts. Each concept
+has a name, definition, optional parent and source chunk IDs. Names are merged
+without regard to letter case. Sources must belong to the supplied material
+chunks. Invalid parent links and cycles are removed before saving.
+
+Extraction accepts 1 to 400 chunks, processed in batches of 20. Invalid responses
+are retried once. If extraction fails or finds no concepts, earlier saved concepts
+are kept. Saved concepts can be listed after restarting the application.
 
 ## Configuration and storage
 

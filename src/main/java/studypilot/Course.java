@@ -8,6 +8,7 @@ public class Course {
     private final String courseId;
     private final String name;
     private final List<Material> materials;
+    private final List<Concept> concepts = new ArrayList<>();
 
     public Course(String name) {
         this(UUID.randomUUID().toString(), name, new ArrayList<Material>());
@@ -33,6 +34,15 @@ public class Course {
 
     public void addMaterial(Material material) {
         materials.add(material);
+    }
+
+    public List<Concept> getConcepts() {
+        return new ArrayList<>(concepts);
+    }
+
+    public void setConcepts(List<Concept> values) {
+        concepts.clear();
+        concepts.addAll(values);
     }
 
     public Material getMaterial(String materialId) {

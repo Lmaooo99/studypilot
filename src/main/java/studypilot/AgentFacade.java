@@ -5,6 +5,7 @@ import java.util.List;
 public class AgentFacade {
     private final CourseService courseService;
     private final SummaryService summaryService;
+    private final ConceptService conceptService;
 
     public AgentFacade(AppConfig config) {
         this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
@@ -12,8 +13,10 @@ public class AgentFacade {
 
     public AgentFacade(AppConfig config, LLMClient llmClient) {
         CourseRepository repository = new CourseRepository(config.getDataDirectory());
+        PromptTemplates templates = new PromptTemplates();
         courseService = new CourseService(repository);
-        summaryService = new SummaryService(llmClient, new PromptTemplates(), repository);
+        summaryService = new SummaryService(llmClient, templates, repository);
+        conceptService = new ConceptService(llmClient, templates, new ResponseParser(), repository);
     }
 
     public Course createCourse(String name) {
@@ -37,8 +40,13 @@ public class AgentFacade {
         return summaryService.summarize(course, course.getMaterial(materialId), style);
     }
 
+    public List<Concept> extractConcepts(String courseId, String materialId) {
+        Course course = getCourse(courseId);
+        return conceptService.extractConcepts(course, course.getMaterial(materialId));
+    }
+
     public String getImplementationStatus() {
-        return "Available: courses, TXT/Markdown/PDF import and AI material summaries."
-                + "\nConcepts, questions, flashcards, quizzes, study plans and the agent are not available yet.";
+        return "Available: courses, TXT/Markdown/PDF import, AI summaries and concepts."
+                + "\nQuestions, flashcards, quizzes, study plans and the agent are not available yet.";
     }
 }

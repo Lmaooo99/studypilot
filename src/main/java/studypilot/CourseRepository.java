@@ -29,6 +29,12 @@ public class CourseRepository {
         }
         data.put("materials", materials);
 
+        JSONArray concepts = new JSONArray();
+        for (Concept concept : course.getConcepts()) {
+            concepts.put(conceptToJson(concept));
+        }
+        data.put("concepts", concepts);
+
         Path file = JsonFiles.namedFile(directory, course.getId());
         JsonFiles.write(file, data);
     }
@@ -51,6 +57,15 @@ public class CourseRepository {
             }
             Course course = new Course(courseId, data.getString("name"), materials);
 
+            // Earlier course files may not have concepts yet.
+            if (data.has("concepts")) {
+                List<Concept> concepts = new ArrayList<>();
+                JSONArray savedConcepts = data.getJSONArray("concepts");
+                for (int i = 0; i < savedConcepts.length(); i++) {
+                    concepts.add(conceptFromJson(savedConcepts.getJSONObject(i)));
+                }
+                course.setConcepts(concepts);
+            }
             return course;
         } catch (JSONException e) {
             throw new IllegalStateException("Saved course fields are invalid. The original file was not changed.");
@@ -104,6 +119,27 @@ public class CourseRepository {
         int lineStart = data.getInt("lineStart");
         int lineEnd = data.getInt("lineEnd");
         return new Chunk(id, text, fileName, page, lineStart, lineEnd);
+    }
+
+    private JSONObject conceptToJson(Concept concept) {
+        JSONObject data = new JSONObject();
+        data.put("name", concept.getName());
+        data.put("definition", concept.getDefinition());
+        data.put("parentName", concept.getParentName());
+        data.put("sourceChunkIds", new JSONArray(concept.getSourceChunkIds()));
+        return data;
+    }
+
+    private Concept conceptFromJson(JSONObject data) {
+        List<String> sourceIds = new ArrayList<>();
+        JSONArray savedIds = data.getJSONArray("sourceChunkIds");
+        for (int i = 0; i < savedIds.length(); i++) {
+            sourceIds.add(savedIds.getString(i));
+        }
+        String name = data.getString("name");
+        String definition = data.getString("definition");
+        String parentName = data.getString("parentName");
+        return new Concept(name, definition, parentName, sourceIds);
     }
 
     public List<Course> listCourses() {

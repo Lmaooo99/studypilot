@@ -18,6 +18,13 @@ public class PromptTemplates {
         return prompt.toString();
     }
 
+    public String conceptPrompt(List<Chunk> chunks) {
+        return "Extract up to 12 key concepts using only this material. Return JSON only: "
+                + "{\"concepts\":[{\"name\":\"...\",\"definition\":\"...\",\"parentName\":\"\",\"sourceChunkIds\":[\"...\"]}]}. "
+                + "Names and definitions must be nonempty. Use supplied chunk IDs. "
+                + "A parentName must name another extracted concept or be empty. Avoid cycles.\n" + context(chunks);
+    }
+
     private String context(List<Chunk> chunks) {
         StringBuilder text = new StringBuilder("MATERIAL DATA BEGIN\n");
         for (Chunk chunk : chunks) {

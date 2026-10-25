@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -28,6 +29,7 @@ public class SwingGUI implements ActionListener {
     private final JButton createButton = new JButton("Create course");
     private final JButton importButton = new JButton("Import material");
     private final JButton summarizeButton = new JButton("Summarize");
+    private final JButton extractButton = new JButton("Extract concepts");
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private JFrame window;
@@ -90,15 +92,18 @@ public class SwingGUI implements ActionListener {
         createButton.setName("createCourse");
         importButton.setName("importMaterial");
         summarizeButton.setName("summarize");
+        extractButton.setName("extractConcepts");
         createButton.addActionListener(this);
         importButton.addActionListener(this);
         summarizeButton.addActionListener(this);
+        extractButton.addActionListener(this);
         panel.add(new JLabel("New course"));
         panel.add(courseName);
         panel.add(createButton);
         panel.add(importButton);
         panel.add(styles);
         panel.add(summarizeButton);
+        panel.add(extractButton);
         return panel;
     }
 
@@ -114,13 +119,20 @@ public class SwingGUI implements ActionListener {
             } else if (event.getSource() == importButton) {
                 chooseMaterial();
             } else if (event.getSource() == summarizeButton) {
-                if (courses.getSelectedItem() == null || materials.getSelectedItem() == null) {
-                    throw new IllegalArgumentException("Select a course and material first.");
-                }
+                checkMaterialSelection();
                 runTask("summarize", null);
+            } else if (event.getSource() == extractButton) {
+                checkMaterialSelection();
+                runTask("extractConcepts", null);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             JOptionPane.showMessageDialog(window, e.getMessage());
+        }
+    }
+
+    private void checkMaterialSelection() {
+        if (courses.getSelectedItem() == null || materials.getSelectedItem() == null) {
+            throw new IllegalArgumentException("Select a course and material first.");
         }
     }
 
@@ -151,6 +163,7 @@ public class SwingGUI implements ActionListener {
         importButton.setEnabled(enabled);
         styles.setEnabled(enabled);
         summarizeButton.setEnabled(enabled);
+        extractButton.setEnabled(enabled);
     }
 
     private void refreshCourses() {
@@ -223,7 +236,22 @@ public class SwingGUI implements ActionListener {
             if (action.equals("summarize")) {
                 return facade.summarize(course.getId(), material.getId(), style);
             }
+            if (action.equals("extractConcepts")) {
+                return extractConcepts();
+            }
             throw new IllegalArgumentException("Unknown GUI action.");
+        }
+
+        private String extractConcepts() {
+            List<Concept> concepts = facade.extractConcepts(course.getId(), material.getId());
+            StringBuilder text = new StringBuilder("Concept extraction results\n\n");
+            if (concepts.isEmpty()) {
+                text.append("No concepts found. Existing concepts were kept.");
+            }
+            for (Concept concept : concepts) {
+                text.append(concept + "\n\n");
+            }
+            return text.toString();
         }
 
         protected void done() {

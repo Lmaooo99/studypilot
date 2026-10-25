@@ -39,17 +39,26 @@ Summaries support brief, detailed and bullet styles. Long materials use partial
 summaries followed by a combined summary. Failed calls are retried once, and a
 failed generation keeps the previous saved summary. GUI and CLI use AgentFacade.
 
+## C05 Course concepts
+
+Added concept extraction, JSON validation and saved source chunk IDs. Duplicate
+names are merged, and invalid or cyclic parent links are removed. Existing
+concepts are kept when extraction fails or returns an empty list. Course files
+from before this feature can still be loaded.
+
 ## Checks
 
-All 31 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+All 35 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 HTTP protocol tests use a local test server. A separate real API check generated
-and saved a summary with the configured gpt-6.1-sol model. Packaged CLI checks
-confirmed missing-key errors, invalid styles and saved data after a new process
-loaded the course. The GUI compiles; its final walkthrough is still pending.
+and saved a summary with the configured gpt-6.1-sol model. The concept check
+extracted eight concepts and confirmed their source IDs, parent links and saved
+data after a new process loaded the course. CLI argument checks and loading an
+older course file also passed. The GUI compiles; its final walkthrough is still
+pending.
 
 ## Next steps
 
-Add concept extraction and validate its returned data.
+Add retrieval and questions with validated citations.
 
 ## AI support
 
