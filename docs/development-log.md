@@ -20,14 +20,21 @@
 Added the Maven build, command-line startup, Swing window and local configuration.
 Feature screens are marked as planned until their implementation is added.
 
+## C02 Course materials
+
+Added Course, Material and Chunk classes, TXT/Markdown import and JSON storage.
+Imports keep line references and reject empty, unsupported, oversized or duplicate
+files. Unicode characters are preserved at chunk boundaries.
+
 ## Checks
 
-All 8 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
-The packaged CLI help and status commands also ran successfully.
+All 18 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+Packaged CLI checks passed for course creation, Markdown import, reload in a new
+process, duplicate rejection, empty input and unsupported PDF rejection.
 
 ## Next steps
 
-Add text and Markdown imports, then PDF imports and the study features.
+Add PDF imports with page references, then the AI study features.
 
 ## AI support
 

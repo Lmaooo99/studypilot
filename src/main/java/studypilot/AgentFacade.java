@@ -1,15 +1,33 @@
 package studypilot;
 
+import java.util.List;
+
 public class AgentFacade {
-    private final AppConfig config;
+    private final CourseService courseService;
 
     public AgentFacade(AppConfig config) {
-        this.config = config;
+        CourseRepository repository = new CourseRepository(config.getDataDirectory());
+        courseService = new CourseService(repository);
+    }
+
+    public Course createCourse(String name) {
+        return courseService.createCourse(name);
+    }
+
+    public List<Course> listCourses() {
+        return courseService.listCourses();
+    }
+
+    public Course getCourse(String courseId) {
+        return courseService.getCourse(courseId);
+    }
+
+    public Material importMaterial(String courseId, String filePath) {
+        return courseService.importMaterial(courseId, filePath);
     }
 
     public String getImplementationStatus() {
-        return "StudyPilot Stage 2: application startup and local configuration are available."
-                + "\nConfigured model: " + config.getModel()
-                + "\nFeature implementation is in progress.";
+        return "Available: courses and TXT/Markdown import with source locations."
+                + "\nPDF imports and the study features are not available yet.";
     }
 }
