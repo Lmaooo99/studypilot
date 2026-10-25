@@ -1,0 +1,15 @@
+# Local credentials
+.env
+.env.*
+!.env.example
+config.local.json
+
+# Application data and generated files
+data/
+logs/
+target/
+*.class
+.DS_Store
+.idea/
+.vscode/
+*.iml
