@@ -26,15 +26,22 @@ Added Course, Material and Chunk classes, TXT/Markdown import and JSON storage.
 Imports keep line references and reject empty, unsupported, oversized or duplicate
 files. Unicode characters are preserved at chunk boundaries.
 
+## C03 PDF materials
+
+Added PDF imports using PDFBox. Text is read page by page, and saved chunks keep
+the file name and page number. Corrupt PDFs, PDFs without readable text and files
+above 20 MiB are rejected before any material is added.
+
 ## Checks
 
-All 18 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
-Packaged CLI checks passed for course creation, Markdown import, reload in a new
-process, duplicate rejection, empty input and unsupported PDF rejection.
+All 21 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+Packaged CLI checks passed for PDF import, page references, reload in a new
+process, duplicate rejection and corrupt PDF rejection. Rejected imports did not
+add any materials. The GUI compiles; its final walkthrough is still pending.
 
 ## Next steps
 
-Add PDF imports with page references, then the AI study features.
+Connect the LLM service and add material summaries.
 
 ## AI support
 

@@ -8,6 +8,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 
 public class CourseService {
     private final CourseRepository repository;
@@ -43,8 +46,13 @@ public class CourseService {
             String hash = contentHash(Files.readAllBytes(file));
             checkDuplicateMaterial(course, hash);
 
-            String text = readTextFile(file);
-            List<Chunk> chunks = splitIntoChunks(text, fileName, 0);
+            List<Chunk> chunks;
+            if (fileName.toLowerCase(Locale.ROOT).endsWith(".pdf")) {
+                chunks = extractPdf(file, fileName);
+            } else {
+                String text = readTextFile(file);
+                chunks = splitIntoChunks(text, fileName, 0);
+            }
             if (chunks.isEmpty()) {
                 throw new IllegalArgumentException("The material has no readable text.");
             }
@@ -63,8 +71,8 @@ public class CourseService {
             throw new IllegalArgumentException("Select a material file.");
         }
         String fileName = file.getFileName().toString().toLowerCase(Locale.ROOT);
-        if (!fileName.endsWith(".txt") && !fileName.endsWith(".md")) {
-            throw new IllegalArgumentException("Supported material types are .txt and .md.");
+        if (!fileName.endsWith(".txt") && !fileName.endsWith(".md") && !fileName.endsWith(".pdf")) {
+            throw new IllegalArgumentException("Supported material types are .txt, .md and .pdf.");
         }
         if (!Files.isRegularFile(file) || Files.size(file) > MAX_FILE_BYTES) {
             throw new IllegalArgumentException("Select a readable file no larger than 20 MiB.");
@@ -86,6 +94,23 @@ public class CourseService {
             text = text.substring(1);
         }
         return text;
+    }
+
+    private List<Chunk> extractPdf(Path file, String fileName) throws IOException {
+        List<Chunk> chunks = new ArrayList<>();
+        try (PDDocument document = Loader.loadPDF(file.toFile())) {
+            if (!document.getCurrentAccessPermission().canExtractContent()) {
+                throw new IllegalArgumentException("This PDF does not permit text extraction.");
+            }
+            PDFTextStripper stripper = new PDFTextStripper();
+            for (int page = 1; page <= document.getNumberOfPages(); page++) {
+                stripper.setStartPage(page);
+                stripper.setEndPage(page);
+                String text = stripper.getText(document);
+                chunks.addAll(splitIntoChunks(text, fileName, page));
+            }
+        }
+        return chunks;
     }
 
     private String contentHash(byte[] bytes) {

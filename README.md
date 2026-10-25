@@ -5,9 +5,9 @@ is [Stage1-Report.pdf](Stage1-Report.pdf).
 
 ## Current functionality
 
-Create courses and import TXT or Markdown materials through the GUI or CLI.
-Imports keep the file name and original line ranges. PDF imports and the AI study
-features will be added in later batches.
+Create courses and import TXT, Markdown or PDF materials through the GUI or CLI.
+Imports keep the file name and original line ranges or PDF page numbers. The AI
+study features will be added in later batches.
 
 ## Build and run
 
@@ -32,9 +32,13 @@ java -jar target/studypilot.jar material list --course COURSE_ID
 ```
 
 Replace COURSE_ID with the ID printed when creating a course. Imports accept
-.txt and .md files up to 20 MiB. Empty, unreadable, unsupported and duplicate files
+.txt, .md and .pdf files up to 20 MiB. Empty, unreadable, unsupported and duplicate files
 are rejected. Long text is split into overlapping chunks while preserving complete
 Unicode characters and line ranges.
+
+PDF text is extracted one page at a time, so each chunk keeps its original page
+number. PDFs without readable text, including scanned pages without a text layer,
+are rejected. OCR is not included.
 
 ## Configuration and storage
 

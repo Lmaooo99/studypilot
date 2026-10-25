@@ -27,7 +27,7 @@ public class AgentFacade {
     }
 
     public String getImplementationStatus() {
-        return "Available: courses and TXT/Markdown import with source locations."
-                + "\nPDF imports and the study features are not available yet.";
+        return "Available: courses and TXT/Markdown/PDF import with source locations."
+                + "\nThe AI study features are not available yet.";
     }
 }
