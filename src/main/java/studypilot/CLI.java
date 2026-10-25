@@ -65,6 +65,8 @@ public class CLI {
             return courseCommand(args);
         } else if (command.equals("material")) {
             return materialCommand(args);
+        } else if (command.equals("summarize")) {
+            return summarizeCommand(args);
         }
         return unknownCommand();
     }
@@ -78,6 +80,7 @@ public class CLI {
         output.println("  course list");
         output.println("  material import <file> --course <id>");
         output.println("  material list --course <id>");
+        output.println("  summarize <materialId> --course <id> [--style brief|detailed|bullet]");
     }
 
     private int courseCommand(String[] args) {
@@ -114,6 +117,17 @@ public class CLI {
             return 0;
         }
         return unknownCommand();
+    }
+
+    private int summarizeCommand(String[] args) {
+        if (args.length < 2) {
+            return unknownCommand();
+        }
+        Map<String, String> flags = options(args, 2, "--course", "--style");
+        String courseId = required(flags, "--course");
+        String style = flags.getOrDefault("--style", "brief");
+        output.println(facade.summarize(courseId, args[1], style));
+        return 0;
     }
 
     private int unknownCommand() {

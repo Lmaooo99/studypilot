@@ -4,10 +4,16 @@ import java.util.List;
 
 public class AgentFacade {
     private final CourseService courseService;
+    private final SummaryService summaryService;
 
     public AgentFacade(AppConfig config) {
+        this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
+    }
+
+    public AgentFacade(AppConfig config, LLMClient llmClient) {
         CourseRepository repository = new CourseRepository(config.getDataDirectory());
         courseService = new CourseService(repository);
+        summaryService = new SummaryService(llmClient, new PromptTemplates(), repository);
     }
 
     public Course createCourse(String name) {
@@ -26,8 +32,13 @@ public class AgentFacade {
         return courseService.importMaterial(courseId, filePath);
     }
 
+    public String summarize(String courseId, String materialId, String style) {
+        Course course = getCourse(courseId);
+        return summaryService.summarize(course, course.getMaterial(materialId), style);
+    }
+
     public String getImplementationStatus() {
-        return "Available: courses and TXT/Markdown/PDF import with source locations."
-                + "\nThe AI study features are not available yet.";
+        return "Available: courses, TXT/Markdown/PDF import and AI material summaries."
+                + "\nConcepts, questions, flashcards, quizzes, study plans and the agent are not available yet.";
     }
 }

@@ -23,9 +23,11 @@ public class SwingGUI implements ActionListener {
     private final AgentFacade facade;
     private final JComboBox<Course> courses = new JComboBox<>();
     private final JComboBox<Material> materials = new JComboBox<>();
+    private final JComboBox<String> styles = new JComboBox<>(new String[] {"brief", "detailed", "bullet"});
     private final JTextField courseName = new JTextField(20);
     private final JButton createButton = new JButton("Create course");
     private final JButton importButton = new JButton("Import material");
+    private final JButton summarizeButton = new JButton("Summarize");
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private JFrame window;
@@ -87,12 +89,16 @@ public class SwingGUI implements ActionListener {
         courseName.setName("courseName");
         createButton.setName("createCourse");
         importButton.setName("importMaterial");
+        summarizeButton.setName("summarize");
         createButton.addActionListener(this);
         importButton.addActionListener(this);
+        summarizeButton.addActionListener(this);
         panel.add(new JLabel("New course"));
         panel.add(courseName);
         panel.add(createButton);
         panel.add(importButton);
+        panel.add(styles);
+        panel.add(summarizeButton);
         return panel;
     }
 
@@ -107,6 +113,11 @@ public class SwingGUI implements ActionListener {
                 runTask("createCourse", null);
             } else if (event.getSource() == importButton) {
                 chooseMaterial();
+            } else if (event.getSource() == summarizeButton) {
+                if (courses.getSelectedItem() == null || materials.getSelectedItem() == null) {
+                    throw new IllegalArgumentException("Select a course and material first.");
+                }
+                runTask("summarize", null);
             }
         } catch (IllegalArgumentException | IllegalStateException e) {
             JOptionPane.showMessageDialog(window, e.getMessage());
@@ -138,6 +149,8 @@ public class SwingGUI implements ActionListener {
         courseName.setEnabled(enabled);
         createButton.setEnabled(enabled);
         importButton.setEnabled(enabled);
+        styles.setEnabled(enabled);
+        summarizeButton.setEnabled(enabled);
     }
 
     private void refreshCourses() {
@@ -174,18 +187,22 @@ public class SwingGUI implements ActionListener {
         loading = false;
     }
 
-    // File operations run without blocking the window.
+    // File and LLM operations run without blocking the window.
     private class StudyWorker extends SwingWorker<String, Void> {
         private final String action;
         private final String filePath;
         private final String name;
         private final Course course;
+        private final Material material;
+        private final String style;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
             this.filePath = filePath;
             name = courseName.getText();
             course = (Course) courses.getSelectedItem();
+            material = (Material) materials.getSelectedItem();
+            style = (String) styles.getSelectedItem();
         }
 
         protected String doInBackground() {
@@ -202,6 +219,9 @@ public class SwingGUI implements ActionListener {
                     text.append("\n" + chunk.getLocation());
                 }
                 return text.toString();
+            }
+            if (action.equals("summarize")) {
+                return facade.summarize(course.getId(), material.getId(), style);
             }
             throw new IllegalArgumentException("Unknown GUI action.");
         }

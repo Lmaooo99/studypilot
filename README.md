@@ -6,8 +6,9 @@ is [Stage1-Report.pdf](Stage1-Report.pdf).
 ## Current functionality
 
 Create courses and import TXT, Markdown or PDF materials through the GUI or CLI.
-Imports keep the file name and original line ranges or PDF page numbers. The AI
-study features will be added in later batches.
+Imports keep the file name and original line ranges or PDF page numbers. Generate
+material summaries through the configured OpenAI-compatible service. Concepts,
+questions, flashcards, quizzes, study plans and the agent will be added later.
 
 ## Build and run
 
@@ -40,12 +41,32 @@ PDF text is extracted one page at a time, so each chunk keeps its original page
 number. PDFs without readable text, including scanned pages without a text layer,
 are rejected. OCR is not included.
 
+## Material summaries
+
+Copy .env.example to .env and set LLM_BASE_URL, LLM_API_KEY and LLM_MODEL for your
+service. Include the API version path, such as /v1, in the base URL. The default
+model is gpt-6.1-sol. Set LLM_REASONING_EFFORT to an empty value if your service
+does not accept that optional parameter.
+
+```sh
+java -jar target/studypilot.jar summarize MATERIAL_ID --course COURSE_ID --style brief
+```
+
+Replace MATERIAL_ID with an imported material's ID. Styles are brief, detailed and
+bullet. In the GUI, select a course and material, choose a style and click
+Summarize. The result is saved with the material.
+
+Long materials are summarized in batches of 20 chunks and then combined. A summary
+accepts at most 400 chunks. A failed call is retried once. If generation still
+fails, the previous saved summary is kept and an error is displayed.
+
 ## Configuration and storage
 
 Runtime files are saved under data/courses by default. A new process reloads the
 saved course, material and chunk IDs. DATA_DIR can be set in a local .env file.
-Copy .env.example to .env before configuring later AI features. Keep real settings
-local. Course creation and text imports do not require an API key.
+Keep real settings local. Course creation and imports do not require an API key.
+API token usage is recorded in llm-usage.jsonl in the data directory, without
+prompts or credentials.
 
 ## Development records
 
