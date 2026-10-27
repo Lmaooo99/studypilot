@@ -39,6 +39,32 @@ public class ProgressTracker extends Subject {
         return summary;
     }
 
+    public void recordQuizAttempt(QuizAttempt attempt) {
+        if (!attempt.isSubmitted()) {
+            throw new IllegalArgumentException("Only a submitted attempt can update progress.");
+        }
+        String courseId = attempt.getCourseId();
+        ProgressSummary summary = summaries.get(courseId);
+        if (summary == null) {
+            summary = new ProgressSummary(courseId, 0);
+            summaries.put(courseId, summary);
+        }
+        summary.recordQuizAttempt(attempt);
+        repository.saveSummaries(summaries);
+        for (QuestionResult result : attempt.getResults()) {
+            if (result.getStatus() == GradingStatus.GRADED) {
+                result.markCounted();
+            }
+        }
+        int graded = attempt.getResults().size() - attempt.getPendingCount();
+        // Repeated submissions use the same event ID, so history stays idempotent.
+        String eventId = attempt.getId() + "-graded-" + graded;
+        String description = "Submitted quiz attempt " + attempt.getId() + "; graded answers: " + graded
+                + "; pending: " + attempt.getPendingCount();
+        lastEvent = new StudyEvent(eventId, attempt.getSubmittedAt(), courseId, "", description);
+        notifyObservers();
+    }
+
     public StudyEvent getLastEvent() {
         return lastEvent;
     }

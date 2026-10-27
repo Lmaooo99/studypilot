@@ -1,12 +1,15 @@
 package studypilot;
 
 import java.io.PrintStream;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.SwingUtilities;
+import org.json.JSONException;
 
 public class CLI {
     private final AgentFacade facade;
@@ -109,6 +112,10 @@ public class CLI {
         output.println("      [--types multiple-choice,true-false,short-answer]");
         output.println("  quiz list --course <id>");
         output.println("  quiz show <quizId> --course <id>");
+        output.println("  quiz take <quizId> --course <id>");
+        output.println("  quiz submit <attemptId> --course <id> --answers <jsonFile>");
+        output.println("  quiz attempt <attemptId> --course <id>");
+        output.println("  quiz attempts --course <id>");
         output.println("  progress --course <id>");
         output.println("  history --course <id>");
     }
@@ -282,7 +289,57 @@ public class CLI {
             output.println(facade.getQuiz(courseId, args[2]).describe());
             return 0;
         }
+        if (args.length >= 2 && args[1].equals("attempts")) {
+            String courseId = required(options(args, 2, "--course"), "--course");
+            List<QuizAttempt> attempts = facade.listAttempts(courseId);
+            if (attempts.isEmpty()) {
+                output.println("No saved attempts in this course.");
+            }
+            for (QuizAttempt attempt : attempts) {
+                output.println(attempt.getId() + "  " + attempt);
+            }
+            return 0;
+        }
+        if (args.length >= 3 && (args[1].equals("take") || args[1].equals("submit") || args[1].equals("attempt"))) {
+            return quizAttemptCommand(args);
+        }
         return unknownCommand();
+    }
+
+    private int quizAttemptCommand(String[] args) {
+        Map<String, String> flags;
+        if (args[1].equals("submit")) {
+            flags = options(args, 3, "--course", "--answers");
+        } else {
+            flags = options(args, 3, "--course");
+        }
+        String courseId = required(flags, "--course");
+        QuizAttempt attempt;
+        if (args[1].equals("take")) {
+            attempt = facade.startAttempt(courseId, args[2]);
+        } else if (args[1].equals("submit")) {
+            Map<String, String> answers = readAnswers(required(flags, "--answers"));
+            attempt = facade.submitAttempt(courseId, args[2], answers);
+        } else {
+            attempt = facade.getAttempt(courseId, args[2]);
+        }
+        Quiz quiz = facade.getQuiz(courseId, attempt.getQuizId());
+        output.println(attempt.describe(quiz));
+        if (!attempt.isSubmitted()) {
+            output.println("Question IDs for the answers file:");
+            for (Question question : quiz.getQuestions()) {
+                output.println(question.getId() + "  " + question.getText());
+            }
+        }
+        return 0;
+    }
+
+    private Map<String, String> readAnswers(String filePath) {
+        try {
+            return new ResponseParser().parseAnswers(Files.readString(Path.of(filePath)));
+        } catch (IOException | JSONException e) {
+            throw new IllegalArgumentException("The answers file must contain JSON with an answers object of text values.");
+        }
     }
 
     private int createQuizCommand(String[] args) {

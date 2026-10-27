@@ -21,6 +21,8 @@ public class HistoryRecorder implements Observer {
         }
         for (StudyEvent previous : history) {
             if (previous.getId().equals(event.getId())) {
+                // Retry saving if an earlier notification could not reach the disk.
+                repository.saveHistory(history);
                 return;
             }
         }

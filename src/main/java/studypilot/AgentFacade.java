@@ -1,6 +1,7 @@
 package studypilot;
 
 import java.util.List;
+import java.util.Map;
 
 public class AgentFacade {
     private final CourseService courseService;
@@ -32,12 +33,13 @@ public class AgentFacade {
             retrieval = new TfIdfRetrieval();
         }
         questionAnswerService = new QuestionAnswerService(retrieval, llmClient, templates, parser, new CitationValidator());
-        quizService = new QuizService(llmClient, templates, parser, new QuizRepository(config.getDataDirectory()), retrieval);
         progressRepository = new ProgressRepository(config.getDataDirectory());
         progressTracker = new ProgressTracker(progressRepository);
         historyRecorder = new HistoryRecorder(progressTracker, progressRepository);
         progressTracker.attach(historyRecorder);
         flashcardService = new FlashcardService(llmClient, templates, parser, repository, progressTracker);
+        quizService = new QuizService(llmClient, templates, parser,
+                new QuizRepository(config.getDataDirectory()), retrieval, progressTracker);
     }
 
     public Course createCourse(String name) {
@@ -98,6 +100,26 @@ public class AgentFacade {
         return quizService.listQuizzes(courseId);
     }
 
+    public QuizAttempt startAttempt(String courseId, String quizId) {
+        getCourse(courseId);
+        return quizService.startAttempt(courseId, quizId);
+    }
+
+    public QuizAttempt getAttempt(String courseId, String attemptId) {
+        getCourse(courseId);
+        return quizService.getAttempt(courseId, attemptId);
+    }
+
+    public List<QuizAttempt> listAttempts(String courseId) {
+        getCourse(courseId);
+        return quizService.listAttempts(courseId);
+    }
+
+    public QuizAttempt submitAttempt(String courseId, String attemptId, Map<String, String> answers) {
+        getCourse(courseId);
+        return quizService.submitAttempt(courseId, attemptId, answers);
+    }
+
     public ProgressSummary getProgress(String courseId) {
         getCourse(courseId);
         return progressTracker.getSummary(courseId);
@@ -118,6 +140,7 @@ public class AgentFacade {
 
     public String getImplementationStatus() {
         return "Available: F01-F06 (courses, materials, summaries, concepts, cited questions, flashcards, review and quiz generation)."
-                + "\nF11 currently records reviews and their history. Quiz attempts/grading, adaptive difficulty, weak topics, study plans and the agent remain planned.";
+                + "\nF08 supports saved attempts and objective grading; nonempty short answers remain pending."
+                + "\nF11 records reviews, quiz submissions, graded answers and history. Short-answer grading, adaptive difficulty, weak topics, study plans and the agent remain planned.";
     }
 }

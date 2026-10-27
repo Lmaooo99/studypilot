@@ -13,14 +13,18 @@ public class QuizService {
     private final ResponseParser parser;
     private final QuizRepository repository;
     private final RetrievalStrategy retrieval;
+    private final ProgressTracker tracker;
+    private final QuizGrader grader;
 
     public QuizService(LLMClient llmClient, PromptTemplates templates, ResponseParser parser,
-                       QuizRepository repository, RetrievalStrategy retrieval) {
+                       QuizRepository repository, RetrievalStrategy retrieval, ProgressTracker tracker) {
         this.llmClient = llmClient;
         this.templates = templates;
         this.parser = parser;
         this.repository = repository;
         this.retrieval = retrieval;
+        this.tracker = tracker;
+        grader = new QuizGrader();
         creators.put(QuestionType.MULTIPLE_CHOICE, new MCQQuestionCreator());
         creators.put(QuestionType.TRUE_FALSE, new TrueFalseQuestionCreator());
         creators.put(QuestionType.SHORT_ANSWER, new ShortAnswerQuestionCreator());
@@ -146,5 +150,55 @@ public class QuizService {
 
     public List<Quiz> listQuizzes(String courseId) {
         return repository.listQuizzes(courseId);
+    }
+
+    public QuizAttempt startAttempt(String courseId, String quizId) {
+        Quiz quiz = getQuiz(courseId, quizId);
+        QuizAttempt attempt = new QuizAttempt(quiz.getId(), courseId);
+        repository.saveAttempt(attempt);
+        return attempt;
+    }
+
+    public QuizAttempt getAttempt(String courseId, String attemptId) {
+        QuizAttempt attempt = repository.loadAttempt(attemptId);
+        if (!attempt.getCourseId().equals(courseId)) {
+            throw new IllegalArgumentException("Quiz attempt not found in this course.");
+        }
+        return attempt;
+    }
+
+    public List<QuizAttempt> listAttempts(String courseId) {
+        return repository.listAttempts(courseId);
+    }
+
+    public QuizAttempt submitAttempt(String courseId, String attemptId, Map<String, String> answers) {
+        QuizAttempt attempt = getAttempt(courseId, attemptId);
+        Quiz quiz = getQuiz(courseId, attempt.getQuizId());
+        if (!attempt.isSubmitted()) {
+            attempt.submit(checkedAnswers(quiz, answers));
+            grader.grade(quiz, attempt);
+            repository.saveAttempt(attempt);
+        }
+        // Retry progress/history persistence, without grading or replacing saved answers again.
+        tracker.recordQuizAttempt(attempt);
+        repository.saveAttempt(attempt);
+        return attempt;
+    }
+
+    private Map<String, String> checkedAnswers(Quiz quiz, Map<String, String> answers) {
+        if (answers == null) {
+            throw new IllegalArgumentException("Supply answers for this attempt.");
+        }
+        for (String id : answers.keySet()) {
+            quiz.getQuestion(id);
+            if (answers.get(id) == null) {
+                throw new IllegalArgumentException("Answer values must be text.");
+            }
+        }
+        Map<String, String> checked = new HashMap<>();
+        for (Question question : quiz.getQuestions()) {
+            checked.put(question.getId(), answers.getOrDefault(question.getId(), "").trim());
+        }
+        return checked;
     }
 }

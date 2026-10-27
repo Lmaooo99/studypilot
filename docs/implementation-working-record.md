@@ -5,8 +5,10 @@ Notes for the Stage 2 implementation report, covering the current implementation
 ## 1 Project overview and status
 
 StudyPilot helps students study their own course materials. F01-F06 are implemented
-with basic automated and live API verification. F11 currently covers review activity
-and history. The other original features remain explicit later-period tasks.
+with basic automated and live API verification. F08 currently supports saved attempts
+and objective grading; nonempty short answers remain pending. F11 covers reviews,
+quiz submissions, graded-answer counts and history. The other original features
+remain explicit later-period tasks.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
 
@@ -21,10 +23,10 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A, pending |
 | F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
 | F07 Adaptive difficulty | Deterministic | Not implemented | Planned quiz rules and graded statistics | Planned suggestDifficulty | Planned Facade | B, pending |
-| F08 Attempts/grading | Hybrid | Not implemented | Planned attempts, grading strategies and pending handling | Planned submitAttempt/retryPendingGrading/selfGrade | Planned Strategy | B, pending |
+| F08 Attempts/grading | Deterministic so far | Partial | QuizAttempt stores the first submission; QuizGrader uses ExactMatchGrading for objective questions; QuestionResult records GRADED/PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, getScore, getPendingCount, saveAttempt, loadAttempt | Facade, Strategy, Observer | B, pending |
 | F09 Weak topics | Hybrid | Not implemented | Planned WeakTopicAnalyzer and graded statistics | Planned analyze | Planned Adapter | B, pending |
 | F10 Study plans | Hybrid | Not implemented | Planned StudyPlanGenerator, StudyPlan and StudyTask | Planned generate/validatePlan/markTaskDone | Planned Observer | C, pending |
-| F11 Progress/history | Deterministic | Partial | ProgressTracker saves review counts; HistoryRecorder saves events; DashboardView observes updates | recordReview, getSummary, update, getHistory | Facade, Observer | B, pending |
+| F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews and quiz submissions; ProgressSummary/ConceptStats count graded results once; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, getSummary, update, getHistory | Facade, Observer | B, pending |
 | F12 Natural-language agent | AI | Not implemented | Planned controller, planner, six tools and memory | Planned handleRequest/createPlan/execute | Planned Facade/Adapter | C, pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
@@ -40,6 +42,12 @@ selects chunks, quizPrompt supplies the context, and LLMClient returns drafts.
 ResponseParser reads them; the matching QuestionCreator builds each valid product.
 QuizRepository saves the Quiz and the GUI/CLI shows its questions and actual count.
 
+F08 starts a saved QuizAttempt through AgentFacade/QuizService. Submission validates
+answer IDs, then QuizGrader chooses ExactMatchGrading for objective answers. Missing
+answers score zero and nonempty short answers remain PENDING. The saved attempt is
+passed to ProgressTracker, which persists graded-only statistics and notifies the
+observers. Repeating the same submission reuses the stored answers and grades.
+
 ## 3 Implemented design patterns
 
 Facade: SwingGUI and CLI call AgentFacade, which delegates to the domain services.
@@ -52,6 +60,10 @@ buildQuestion operation calls createQuestion, which the three concrete creators
 override to construct MultipleChoiceQuestion, TrueFalseQuestion or ShortAnswerQuestion.
 QuizService holds the type-to-creator map and does not construct the products itself.
 The updated implementation UML remains a later delivery task.
+
+For objective grading, QuizGrader is also a Strategy context and holds
+GradingStrategy objects. ExactMatchGrading implements that interface for multiple
+choice and true/false. LLMRubricGrading remains planned for C10.
 
 ## 4 Changes and rationale
 
@@ -82,6 +94,25 @@ saved quizzes cannot be overwritten. listQuizzes/getQuiz/describe support reopen
 them. These methods and the retrieval association belong in the updated UML.
 Adaptive suggestions remain F07; the current selector defaults to Medium.
 
+F08 adds explicit course scope to startAttempt/submitAttempt and provides
+getAttempt/listAttempts for reopening saved work. Objective answers use displayed
+option numbers, avoiding ambiguous option text. QuizRepository checks saved results
+against their immutable Quiz and preserves submission timestamps. These changes
+affect UC09, SD07 and the quiz/persistence class views.
+
+ProgressSummary stores submitted-attempt IDs and attempt/question result keys.
+This lets ProgressTracker count retakes separately while counting a retried result
+once. Progress is saved before the result's counted flag; stable event IDs prevent
+duplicate history. Duplicate notification also retries a failed history save.
+Older review-only progress JSON defaults the new fields to empty. Invalid saved
+history timestamps are backed up instead of escaping as an unhandled date error.
+
+The Stage 1 statsByConcept map in ProgressTracker is stored inside each course's
+ProgressSummary instead. This keeps the topic counts and their saved result keys
+together and avoids repeating courseId in every ConceptStats object. quizzesTaken
+is derived from saved attempt IDs. The updated progress class view must show this
+ownership and the new ID lists.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -90,7 +121,7 @@ billing records are not yet available.
 
 My work covered the project scope and design choices, API/model selection and
 connection setup. I read and reviewed the implementation, integrated the parts,
-and validated the Period 1 results. Review of the new quiz implementation is pending.
+and validated the Period 1 results. Review of the Period 2 implementation is pending.
 
 Representative interaction:
 
@@ -100,14 +131,14 @@ Representative interaction:
 - My contribution: reviewed class responsibilities and feature flow, checked integration, and validated the resulting implementation.
 - Outcome: material imports, summaries, concepts, cited answers and flashcard review were implemented and checked.
 
-Quiz addition: the input was the F06/UC07 design and its three question creators.
-AI support produced code and tests for mixed generation, storage and the GUI/CLI
-entry points. The result passed automated and real API checks; my review of this
-addition and the interactive quiz GUI check remain pending.
+Quiz additions used the F06/UC07 and F08/UC09 designs. AI support produced code and
+tests for mixed generation, objective grading, storage and GUI/CLI entry points.
+Generation passed a real API check; attempt/grading checks required no new model
+calls. My review of these additions and their interactive GUI check remain pending.
 
 ## 6 Development and verification
 
-The current implementation passed 73 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 93 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -125,6 +156,14 @@ CLI list/show reloaded the same quiz in new processes without API settings. Test
 and CLI checks covered invalid drafts, replacement limits, partial results, course
 isolation, saved question IDs, immutable lists and rejected overwrites. The quiz GUI
 compiled; its interactive walkthrough remains pending.
+
+C09 checked fresh attempt IDs, graded-only score denominators, blank answers,
+PENDING exclusion and repeated submissions after restart. The packaged CLI used
+the earlier real generated quiz, then saved two submissions with four graded
+answers, three correct answers and two history events. Course isolation and invalid
+answer IDs were checked; the original quiz and first submission were unchanged.
+No new API call was needed. A test forced a history-save failure, then confirmed
+that resubmission persisted one history event without counting results again.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

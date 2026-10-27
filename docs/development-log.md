@@ -21,21 +21,25 @@
 - Added summaries, concept extraction and questions with checked source citations.
 - Added flashcards, review records and basic progress/history using JSON files.
 - Added mixed quiz generation, three question creators and saved quizzes.
+- Added saved attempts, objective grading and graded-only quiz progress.
 
 ## Checks
 
-- All 73 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 93 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
 - Earlier GUI checks covered summaries and input errors.
 - The real quiz check generated multiple-choice, true/false and short-answer questions in one response. Separate CLI processes reloaded the same quiz and rejected access from another course.
 - Tests covered invalid drafts, bounded replacement, fewer-question results, saved IDs and immutable quiz content.
-- My review of the Period 1 implementation is complete. Review of the new quiz code, its GUI walkthrough and demonstration recordings remain to be done.
+- Attempt checks covered fresh retakes, blank answers, pending results, score denominators, course isolation and repeated submissions after restarting.
+- Two submitted CLI attempts produced four graded answers, three correct answers and two history events. The checks used no API credentials or new model calls.
+- Retrying a failed history save restored one event without counting the attempt again.
+- My review of the Period 1 implementation is complete. Review of the Period 2 code, its GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish quiz attempts, grading, study plans and the multi-step agent, then update the UML,
+Finish short-answer grading, study plans and the multi-step agent, then update the UML,
 report and demonstration videos.
 
 ## AI support

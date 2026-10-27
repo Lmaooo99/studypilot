@@ -2,10 +2,13 @@ package studypilot;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
@@ -19,7 +22,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTable;
 import javax.swing.SwingWorker;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.border.EmptyBorder;
 
 public class SwingGUI implements ActionListener {
@@ -38,6 +43,16 @@ public class SwingGUI implements ActionListener {
     private final JCheckBox trueFalse = new JCheckBox("True/false", true);
     private final JCheckBox shortAnswer = new JCheckBox("Short answer", true);
     private final JComboBox<Quiz> quizzes = new JComboBox<>();
+    private final JComboBox<QuizAttempt> attempts = new JComboBox<>();
+    private final JLabel attemptLabel = new JLabel("Start an attempt from a saved quiz.");
+    private QuizAttempt currentAttempt;
+    private final List<String> answerQuestionIds = new ArrayList<>();
+    private final DefaultTableModel answerRows = new DefaultTableModel(new String[] {"Question", "Your answer"}, 0) {
+        public boolean isCellEditable(int row, int column) {
+            return column == 1 && currentAttempt != null && !currentAttempt.isSubmitted();
+        }
+    };
+    private final JTable attemptAnswers = new JTable(answerRows);
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private final List<JButton> buttons = new ArrayList<>();
@@ -175,10 +190,67 @@ public class SwingGUI implements ActionListener {
         selection.add(new JLabel("Saved quiz"));
         selection.add(quizzes);
         selection.add(button("View quiz", "showQuiz"));
+        selection.add(button("Start attempt", "startAttempt"));
+        JPanel choices = new JPanel(new BorderLayout());
+        choices.add(generation, BorderLayout.NORTH);
+        choices.add(selection, BorderLayout.SOUTH);
         JPanel panel = new JPanel(new BorderLayout());
-        panel.add(generation, BorderLayout.NORTH);
-        panel.add(selection, BorderLayout.SOUTH);
+        panel.add(choices, BorderLayout.NORTH);
+        panel.add(attemptPanel(), BorderLayout.CENTER);
         return panel;
+    }
+
+    private JPanel attemptPanel() {
+        JPanel saved = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        attempts.setName("attempts");
+        saved.add(new JLabel("Saved attempt"));
+        saved.add(attempts);
+        saved.add(button("Open attempt", "openAttempt"));
+        saved.add(attemptLabel);
+        attemptAnswers.setName("attemptAnswers");
+        attemptAnswers.setPreferredScrollableViewportSize(new Dimension(900, 90));
+        JPanel submit = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        submit.add(button("Submit answers", "submitAttempt"));
+        submit.add(new JLabel("Multiple choice: option number. True/false: true or false. Blank answers score zero."));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(saved, BorderLayout.NORTH);
+        panel.add(new JScrollPane(attemptAnswers), BorderLayout.CENTER);
+        panel.add(submit, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private Map<String, String> enteredAnswers() {
+        if (attemptAnswers.isEditing()) {
+            attemptAnswers.getCellEditor().stopCellEditing();
+        }
+        Map<String, String> answers = new HashMap<>();
+        for (int i = 0; i < answerQuestionIds.size(); i++) {
+            Object value = answerRows.getValueAt(i, 1);
+            String answer = "";
+            if (value != null) {
+                answer = value.toString();
+            }
+            answers.put(answerQuestionIds.get(i), answer);
+        }
+        return answers;
+    }
+
+    private void showAttempt(QuizAttempt attempt, Quiz quiz) {
+        currentAttempt = attempt;
+        attemptLabel.setText("Attempt " + attempt.getId().substring(0, 8) + " - " + quiz.getTopic());
+        answerRows.setRowCount(0);
+        answerQuestionIds.clear();
+        Map<String, String> answers = attempt.getAnswers();
+        for (Question question : quiz.getQuestions()) {
+            answerQuestionIds.add(question.getId());
+            answerRows.addRow(new Object[] {question.getText(), answers.getOrDefault(question.getId(), "")});
+        }
+        for (int i = 0; i < attempts.getItemCount(); i++) {
+            if (attempts.getItemAt(i).getId().equals(attempt.getId())) {
+                attempts.setSelectedIndex(i);
+                break;
+            }
+        }
     }
 
     private List<QuestionType> selectedQuestionTypes() {
@@ -275,8 +347,14 @@ public class SwingGUI implements ActionListener {
                 throw new IllegalArgumentException("Flip the card before recording a review.");
             }
         }
-        if (action.equals("showQuiz") && quizzes.getSelectedItem() == null) {
+        if ((action.equals("showQuiz") || action.equals("startAttempt")) && quizzes.getSelectedItem() == null) {
             throw new IllegalArgumentException("Generate or select a saved quiz first.");
+        }
+        if (action.equals("openAttempt") && attempts.getSelectedItem() == null) {
+            throw new IllegalArgumentException("There are no saved attempts in this course.");
+        }
+        if (action.equals("submitAttempt") && currentAttempt == null) {
+            throw new IllegalArgumentException("Start or open an attempt first.");
         }
     }
 
@@ -304,6 +382,8 @@ public class SwingGUI implements ActionListener {
         trueFalse.setEnabled(enabled);
         shortAnswer.setEnabled(enabled);
         quizzes.setEnabled(enabled);
+        attempts.setEnabled(enabled);
+        attemptAnswers.setEnabled(enabled);
         for (JButton button : buttons) {
             button.setEnabled(enabled);
         }
@@ -335,7 +415,15 @@ public class SwingGUI implements ActionListener {
         cards.removeAllItems();
         Quiz oldQuiz = (Quiz) quizzes.getSelectedItem();
         quizzes.removeAllItems();
+        QuizAttempt oldAttempt = (QuizAttempt) attempts.getSelectedItem();
+        attempts.removeAllItems();
         Course course = (Course) courses.getSelectedItem();
+        if (currentAttempt != null && (course == null || !currentAttempt.getCourseId().equals(course.getId()))) {
+            currentAttempt = null;
+            answerRows.setRowCount(0);
+            answerQuestionIds.clear();
+            attemptLabel.setText("Start an attempt from a saved quiz.");
+        }
         if (course != null) {
             for (Material material : course.getMaterials()) {
                 materials.addItem(material);
@@ -351,6 +439,12 @@ public class SwingGUI implements ActionListener {
                 quizzes.addItem(quiz);
                 if (oldQuiz != null && oldQuiz.getId().equals(quiz.getId())) {
                     quizzes.setSelectedItem(quiz);
+                }
+            }
+            for (QuizAttempt attempt : facade.listAttempts(course.getId())) {
+                attempts.addItem(attempt);
+                if (oldAttempt != null && oldAttempt.getId().equals(attempt.getId())) {
+                    attempts.setSelectedItem(attempt);
                 }
             }
         } else {
@@ -376,6 +470,11 @@ public class SwingGUI implements ActionListener {
         private final List<QuestionType> questionTypes;
         private final Quiz selectedQuiz;
         private Quiz generatedQuiz;
+        private final QuizAttempt selectedAttempt;
+        private final String submittedAttemptId;
+        private final Map<String, String> submittedAnswers;
+        private QuizAttempt loadedAttempt;
+        private Quiz attemptedQuiz;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -392,6 +491,9 @@ public class SwingGUI implements ActionListener {
             difficulty = (Difficulty) difficulties.getSelectedItem();
             questionTypes = selectedQuestionTypes();
             selectedQuiz = (Quiz) quizzes.getSelectedItem();
+            selectedAttempt = (QuizAttempt) attempts.getSelectedItem();
+            submittedAttemptId = currentAttempt == null ? "" : currentAttempt.getId();
+            submittedAnswers = enteredAnswers();
         }
 
         protected String doInBackground() {
@@ -413,6 +515,8 @@ public class SwingGUI implements ActionListener {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {
                 return facade.getQuiz(course.getId(), selectedQuiz.getId()).describe();
+            } else if (action.equals("startAttempt") || action.equals("openAttempt") || action.equals("submitAttempt")) {
+                return useAttempt();
             }
             throw new IllegalArgumentException("Unknown GUI action.");
         }
@@ -465,12 +569,27 @@ public class SwingGUI implements ActionListener {
                     + ".\n\n" + generatedQuiz.describe();
         }
 
+        private String useAttempt() {
+            if (action.equals("startAttempt")) {
+                loadedAttempt = facade.startAttempt(course.getId(), selectedQuiz.getId());
+            } else if (action.equals("submitAttempt")) {
+                loadedAttempt = facade.submitAttempt(course.getId(), submittedAttemptId, submittedAnswers);
+            } else {
+                loadedAttempt = facade.getAttempt(course.getId(), selectedAttempt.getId());
+            }
+            attemptedQuiz = facade.getQuiz(course.getId(), loadedAttempt.getQuizId());
+            return loadedAttempt.describe(attemptedQuiz);
+        }
+
         protected void done() {
             try {
                 results.setText(get());
                 refreshCourses();
                 if (generatedQuiz != null) {
                     selectGeneratedQuiz();
+                }
+                if (loadedAttempt != null) {
+                    showAttempt(loadedAttempt, attemptedQuiz);
                 }
                 status.setText("Ready");
             } catch (InterruptedException e) {

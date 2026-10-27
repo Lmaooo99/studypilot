@@ -56,6 +56,15 @@ public class Quiz {
         return new ArrayList<>(questions);
     }
 
+    public Question getQuestion(String questionId) {
+        for (Question question : questions) {
+            if (question.getId().equals(questionId)) {
+                return question;
+            }
+        }
+        throw new IllegalArgumentException("Question not found in this quiz.");
+    }
+
     public String toString() {
         return topic + " [" + quizId.substring(0, 8) + "]";
     }

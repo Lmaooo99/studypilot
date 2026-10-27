@@ -2,6 +2,8 @@ package studypilot;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,5 +113,14 @@ public class ResponseParser {
             }
         }
         return questions;
+    }
+
+    public Map<String, String> parseAnswers(String text) {
+        JSONObject saved = parseObject(text).getJSONObject("answers");
+        Map<String, String> answers = new HashMap<>();
+        for (String id : saved.keySet()) {
+            answers.put(id, saved.getString(id));
+        }
+        return answers;
     }
 }

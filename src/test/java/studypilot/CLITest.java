@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -113,5 +114,46 @@ public class CLITest {
                 "--topic", "Observer", "--types", "essay"}));
         assertEquals(2, cli.runCommand(new String[] {"quiz", "list", "--course", course.getId(), "--wrong", "value"}));
         assertEquals(0, llm.getPrompts().size());
+    }
+
+    private Quiz createObjectiveQuiz() throws Exception {
+        Course course = facade.createCourse("CLI objective quiz");
+        Path file = Files.createTempFile("studypilot-cli-objective-", ".txt");
+        Files.writeString(file, "Observer is a pattern in which observers receive notifications.");
+        facade.importMaterial(course.getId(), file.toString());
+        llm.reply("{\"questions\":[{\"type\":\"TRUE_FALSE\",\"text\":\"Observers receive notifications.\","
+                + "\"correctAnswer\":\"true\",\"conceptName\":\"Observer\"}]}");
+        return facade.createQuiz(course.getId(), "Observer", 1, Difficulty.MEDIUM, Arrays.asList(QuestionType.TRUE_FALSE));
+    }
+
+    @Test
+    public void takesSubmitsAndReadsTheSameAttemptThroughCliCommands() throws Exception {
+        Quiz quiz = createObjectiveQuiz();
+        String courseId = quiz.getCourseId();
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "take", quiz.getId(), "--course", courseId}));
+        QuizAttempt attempt = facade.listAttempts(courseId).get(0);
+        Path answers = Files.createTempFile("studypilot-cli-answers-", ".json");
+        Files.writeString(answers, "{\"answers\":{\"" + quiz.getQuestions().get(0).getId() + "\":\"true\"}}");
+        String[] submit = {"quiz", "submit", attempt.getId(), "--course", courseId, "--answers", answers.toString()};
+        assertEquals(0, cli.runCommand(submit));
+        assertEquals(0, cli.runCommand(submit));
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "attempt", attempt.getId(), "--course", courseId}));
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "attempts", "--course", courseId}));
+        assertTrue(output.toString().contains("Score: 1/1 (100%)"));
+        assertEquals(1, facade.getProgress(courseId).getQuizzesTaken());
+        assertEquals(1, facade.getHistory(courseId).size());
+        assertEquals(1, llm.getPrompts().size());
+    }
+
+    @Test
+    public void rejectsANonTextAnswersFileWithoutSubmitting() throws Exception {
+        Quiz quiz = createObjectiveQuiz();
+        QuizAttempt attempt = facade.startAttempt(quiz.getCourseId(), quiz.getId());
+        Path file = Files.createTempFile("studypilot-invalid-answers-", ".json");
+        Files.writeString(file, "{\"answers\":{\"" + quiz.getQuestions().get(0).getId() + "\":true}}");
+        assertEquals(2, cli.runCommand(new String[] {"quiz", "submit", attempt.getId(), "--course", quiz.getCourseId(),
+                "--answers", file.toString()}));
+        assertTrue(errors.toString().contains("answers object of text values"));
+        assertFalse(facade.getAttempt(quiz.getCourseId(), attempt.getId()).isSubmitted());
     }
 }

@@ -7,9 +7,10 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
-records reviews and their history. Period 2 now adds F06 quiz generation. Quiz
-attempts, grading, adaptive difficulty, weak topics, study plans and the multi-step
-agent remain on the task board.
+records reviews and their history. Period 2 adds F06 quiz generation and the
+objective-grading part of F08, with saved attempts and quiz progress. Nonempty short
+answers remain pending. Short-answer grading, adaptive difficulty, weak topics,
+study plans and the multi-step agent remain on the task board.
 
 ## Requirements and build
 
@@ -172,7 +173,39 @@ replace missing ones. It reports the actual count, which may be smaller than req
 Quizzes are saved under `quizzes/QUIZ_ID.json`. Saved content cannot be overwritten;
 a newly generated quiz gets a new ID. Reading it after restart preserves the
 original question IDs, types, answers and rubrics. The displayed questions omit
-the answer key. Taking attempts and grading are the next implementation tasks.
+the answer key.
+
+## Quiz attempts and objective grading
+
+```sh
+java -jar target/studypilot.jar quiz take QUIZ_ID --course COURSE_ID
+java -jar target/studypilot.jar quiz submit ATTEMPT_ID --course COURSE_ID --answers data/answers.json
+java -jar target/studypilot.jar quiz attempt ATTEMPT_ID --course COURSE_ID
+java -jar target/studypilot.jar quiz attempts --course COURSE_ID
+```
+
+`quiz take` creates a new attempt every time and prints the question IDs. Put those
+IDs in an answers file, replacing the placeholders below:
+
+```json
+{"answers":{"QUESTION_ID_1":"1","QUESTION_ID_2":"true","QUESTION_ID_3":"My short answer"}}
+```
+
+Use the displayed 1-based option number for multiple choice and `true` or `false`
+for true/false. Omitted or blank answers score zero. Objective grading reads the
+saved answer key and needs no API key. Nonempty short answers remain PENDING in
+this version; automatic grading, retry and self-grading are still pending work.
+
+The Quizzes tab has Start attempt, an answer table, Submit answers and a saved
+attempt selector. Submitted answers cannot be edited; start a new attempt to retake
+the quiz. Repeating a submission returns its original answers, time and results.
+It does not grade again or add duplicate progress/history entries.
+
+Scores use only graded points and show the pending count separately. An attempt
+with no graded answers shows an unavailable score. Progress counts submitted
+attempts, but PENDING results do not enter graded-answer or topic statistics.
+Attempt and result IDs preserve these counts after restarting. Attempts are stored
+under `attempts/ATTEMPT_ID.json`; the original quiz is never changed by grading.
 
 ## Storage and verification
 

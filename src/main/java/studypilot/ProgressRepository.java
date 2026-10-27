@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.DateTimeException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,6 +31,17 @@ public class ProgressRepository {
             JSONObject item = new JSONObject();
             item.put("courseId", summary.getCourseId());
             item.put("reviewsDone", summary.getReviewsDone());
+            item.put("attemptIds", new JSONArray(summary.getAttemptIds()));
+            item.put("countedResultIds", new JSONArray(summary.getCountedResultIds()));
+            JSONArray stats = new JSONArray();
+            for (ConceptStats value : summary.getStats()) {
+                JSONObject topic = new JSONObject();
+                topic.put("conceptName", value.getConceptName());
+                topic.put("gradedCount", value.getGradedCount());
+                topic.put("correctCount", value.getCorrectCount());
+                stats.put(topic);
+            }
+            item.put("stats", stats);
             items.put(item);
         }
         JSONObject data = new JSONObject();
@@ -49,7 +61,17 @@ public class ProgressRepository {
                 JSONObject item = items.getJSONObject(i);
                 String courseId = item.getString("courseId");
                 int reviewsDone = item.getInt("reviewsDone");
-                ProgressSummary summary = new ProgressSummary(courseId, reviewsDone);
+                List<ConceptStats> stats = new ArrayList<>();
+                if (item.has("stats")) {
+                    JSONArray savedStats = item.getJSONArray("stats");
+                    for (int j = 0; j < savedStats.length(); j++) {
+                        JSONObject topic = savedStats.getJSONObject(j);
+                        stats.add(new ConceptStats(topic.getString("conceptName"),
+                                topic.getInt("gradedCount"), topic.getInt("correctCount")));
+                    }
+                }
+                ProgressSummary summary = new ProgressSummary(courseId, reviewsDone,
+                        loadIds(item, "attemptIds"), loadIds(item, "countedResultIds"), stats);
                 summaries.put(courseId, summary);
             }
         } catch (JSONException | IllegalStateException | IllegalArgumentException e) {
@@ -57,6 +79,18 @@ public class ProgressRepository {
             summaries.clear();
         }
         return summaries;
+    }
+
+    private List<String> loadIds(JSONObject data, String name) {
+        List<String> ids = new ArrayList<>();
+        // Older review-only progress files do not contain quiz fields.
+        if (data.has(name)) {
+            JSONArray values = data.getJSONArray(name);
+            for (int i = 0; i < values.length(); i++) {
+                ids.add(values.getString(i));
+            }
+        }
+        return ids;
     }
 
     public void saveHistory(List<StudyEvent> events) {
@@ -92,7 +126,7 @@ public class ProgressRepository {
                 String description = item.getString("description");
                 events.add(new StudyEvent(id, time, courseId, conceptName, description));
             }
-        } catch (JSONException | IllegalStateException | IllegalArgumentException e) {
+        } catch (JSONException | IllegalStateException | IllegalArgumentException | DateTimeException e) {
             recover(file, "history");
             events.clear();
         }
