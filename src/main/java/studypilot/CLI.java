@@ -2,6 +2,7 @@ package studypilot;
 
 import java.io.PrintStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +81,8 @@ public class CLI {
             return flashcardsCommand(args);
         } else if (command.equals("review")) {
             return reviewCommand(args);
+        } else if (command.equals("quiz")) {
+            return quizCommand(args);
         } else if (command.equals("progress") || command.equals("history")) {
             return progressCommand(args);
         }
@@ -102,6 +105,10 @@ public class CLI {
         output.println("  flashcards generate <materialId> --course <id> [--count <number>]");
         output.println("  flashcards show <cardId> --course <id>");
         output.println("  review <courseId> [--card <cardId> --remembered true|false]");
+        output.println("  quiz create --course <id> --topic <topic> [--count <number>] [--difficulty easy|medium|hard]");
+        output.println("      [--types multiple-choice,true-false,short-answer]");
+        output.println("  quiz list --course <id>");
+        output.println("  quiz show <quizId> --course <id>");
         output.println("  progress --course <id>");
         output.println("  history --course <id>");
     }
@@ -251,6 +258,46 @@ public class CLI {
                 output.println(event);
             }
         }
+        return 0;
+    }
+
+    private int quizCommand(String[] args) {
+        if (args.length >= 2 && args[1].equals("create")) {
+            return createQuizCommand(args);
+        }
+        if (args.length >= 2 && args[1].equals("list")) {
+            String courseId = required(options(args, 2, "--course"), "--course");
+            List<Quiz> quizzes = facade.listQuizzes(courseId);
+            if (quizzes.isEmpty()) {
+                output.println("No saved quizzes in this course.");
+            }
+            for (Quiz quiz : quizzes) {
+                output.println(quiz.getId() + "  " + quiz.getTopic() + "  " + quiz.getDifficulty()
+                        + "  questions=" + quiz.getQuestions().size());
+            }
+            return 0;
+        }
+        if (args.length >= 3 && args[1].equals("show")) {
+            String courseId = required(options(args, 3, "--course"), "--course");
+            output.println(facade.getQuiz(courseId, args[2]).describe());
+            return 0;
+        }
+        return unknownCommand();
+    }
+
+    private int createQuizCommand(String[] args) {
+        Map<String, String> flags = options(args, 2, "--course", "--topic", "--count", "--difficulty", "--types");
+        String courseId = required(flags, "--course");
+        String topic = required(flags, "--topic");
+        int count = Integer.parseInt(flags.getOrDefault("--count", "6"));
+        Difficulty difficulty = Difficulty.parse(flags.getOrDefault("--difficulty", "medium"));
+        List<QuestionType> types = new ArrayList<>();
+        for (String type : flags.getOrDefault("--types", "multiple-choice,true-false,short-answer").split(",", -1)) {
+            types.add(QuestionType.parse(type));
+        }
+        Quiz quiz = facade.createQuiz(courseId, topic, count, difficulty, types);
+        output.println("Questions generated: " + quiz.getQuestions().size() + ". Requested: " + count + ".");
+        output.println(quiz.describe());
         return 0;
     }
 

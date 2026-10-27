@@ -13,7 +13,7 @@ refer to the new commits.
 | C04 | connect LLM services and generate material summaries | [f2177e9](https://github.com/Lmaooo99/studypilot/commit/f2177e9b49ee54ce22c07884783402c462ed25b3) | 2026-10-25 05:32:09 | 2026-10-25 05:32:16 | 31 tests passed; real API summary and CLI checks |
 | C05 | extract and validate course concepts | [c807572](https://github.com/Lmaooo99/studypilot/commit/c8075726085d7fd93450b52fc8112e4c0b8c4eb3) | 2026-10-25 07:16:57 | 2026-10-25 07:17:04 | 35 tests passed; real API concepts, source checks and reload |
 | C06 | answer course questions with validated citations | [2722a4b](https://github.com/Lmaooo99/studypilot/commit/2722a4bd4ea72c39ffc50e7822605cd869b0467c) | 2026-10-25 08:47:19 | 2026-10-25 08:47:28 | 42 tests passed; real API answer and source-location checks |
-| C07 | add flashcard review and study event observers | [Current feature history](https://github.com/Lmaooo99/studypilot/commits/main/src/main/java/studypilot/FlashcardService.java) | See Git history | See Git history | 52 tests passed; real API cards, reviews, restart and backup checks |
+| C07 | add flashcard review and study event observers | [3705839](https://github.com/Lmaooo99/studypilot/commit/3705839cf0db69bb21acb4da10070212d3aeba7c) | 2026-10-25 10:03:27 | 2026-10-25 10:17:43 | 52 tests passed; real API cards, reviews, restart and backup checks |
 
-Each feature version was built and checked separately. The current implementation
-passed 52 tests. C07 is the current flashcard feature commit.
+Each feature version was built and checked separately. The final Period 1 implementation
+passed 52 tests. C07 is the final code commit for that period.

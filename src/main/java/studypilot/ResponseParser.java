@@ -88,4 +88,28 @@ public class ResponseParser {
         }
         return cards;
     }
+
+    public List<RawQuestion> parseRawQuestions(String text) {
+        JSONArray items = parseObject(text).getJSONArray("questions");
+        List<RawQuestion> questions = new ArrayList<>();
+        for (int i = 0; i < items.length(); i++) {
+            try {
+                JSONObject item = items.getJSONObject(i);
+                QuestionType type = QuestionType.parse(item.getString("type"));
+                List<String> options = new ArrayList<>();
+                if (type == QuestionType.MULTIPLE_CHOICE) {
+                    options = parseStringList(item.getJSONArray("options"));
+                }
+                String rubric = "";
+                if (type == QuestionType.SHORT_ANSWER) {
+                    rubric = item.getString("rubric");
+                }
+                questions.add(new RawQuestion(type, item.getString("text"), options,
+                        item.getString("correctAnswer"), rubric, item.getString("conceptName")));
+            } catch (JSONException | IllegalArgumentException e) {
+                // One malformed draft must not discard the other questions.
+            }
+        }
+        return questions;
+    }
 }

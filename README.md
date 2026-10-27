@@ -7,8 +7,9 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
-records reviews and their history. Quizzes, grading, adaptive difficulty, weak
-topics, study plans, and the multi-step agent remain scheduled for Periods 2 and 3.
+records reviews and their history. Period 2 now adds F06 quiz generation. Quiz
+attempts, grading, adaptive difficulty, weak topics, study plans and the multi-step
+agent remain on the task board.
 
 ## Requirements and build
 
@@ -106,7 +107,7 @@ an embedding model. Semantic answer validation remains part of Stage 3.
 
 Plain Java and Swing follow the Stage 1 design. JSON repositories use explicit
 field mapping. PDFBox handles PDF text extraction. Tests use JUnit 4.
-The planned patterns are Facade, Strategy, Adapter, Factory Method, and Observer.
+The implemented patterns are Facade, Strategy, Adapter, Factory Method and Observer.
 
 To follow the code, start with a single operation such as importing a material:
 
@@ -146,6 +147,33 @@ remembered count divided by the review count. Review statistics do not rank weak
 quiz topics. ProgressTracker notifies HistoryRecorder and the GUI's DashboardView.
 Review counts, card mastery, and history are restored after restarting the app.
 
+## Quiz generation
+
+```sh
+java -jar target/studypilot.jar quiz create --course COURSE_ID --topic "Observer" --count 3 --difficulty medium --types multiple-choice,true-false,short-answer
+java -jar target/studypilot.jar quiz list --course COURSE_ID
+java -jar target/studypilot.jar quiz show QUIZ_ID --course COURSE_ID
+```
+
+The Quizzes tab offers the same topic, count, difficulty and type choices, plus a
+saved-quiz selector. Medium is the default; adaptive suggestions are still pending.
+Request 1-50 questions and at least one per selected type. Counts are balanced
+across the selected types. QuizService retrieves up to five relevant chunks and
+sends them to the model. No matching material means no model call.
+
+QuestionCreator.buildQuestion checks common fields and calls the factory method
+implemented by MCQQuestionCreator, TrueFalseQuestionCreator or
+ShortAnswerQuestionCreator. Multiple-choice options must be distinct and contain
+the correct answer. True/false answers must be unambiguous, and short answers need
+a model answer and a rubric. Malformed and repeated questions are discarded.
+The service keeps valid questions and makes at most two additional requests to
+replace missing ones. It reports the actual count, which may be smaller than requested.
+
+Quizzes are saved under `quizzes/QUIZ_ID.json`. Saved content cannot be overwritten;
+a newly generated quiz gets a new ID. Reading it after restart preserves the
+original question IDs, types, answers and rubrics. The displayed questions omit
+the answer key. Taking attempts and grading are the next implementation tasks.
+
 ## Storage and verification
 
 Runtime files are under DATA_DIR, which defaults to the ignored `data` folder.
@@ -163,15 +191,15 @@ not call a paid API. HTTP adapter tests use a local HTTP server. Test doubles ar
 excluded from the application JAR. Live checks of summaries, concepts, cited
 answers and card generation are recorded separately in the development log.
 
-The implemented patterns so far are Facade, Adapter, retrieval Strategy and
-Observer. Factory Method is scheduled with typed quizzes. Full Stage 3 deterministic
-testing and KUMA evaluation, the final seven-section report, updated UML and
-feature recordings remain in progress.
+Full Stage 3 deterministic testing and KUMA evaluation, the final seven-section
+report, updated UML and feature recordings remain in progress. The quiz GUI has
+compiled; its interactive walkthrough is still pending.
 
 ## Stage 2 tracking
 
 - [Task board](docs/stage2-tasks.md)
 - [Period 1 code commits](docs/period-1-commits.md)
+- [Period 2 code commits](docs/period-2-commits.md)
 - [Implementation working record](docs/implementation-working-record.md)
 - [Usage checkpoint](docs/usage-checkpoint.json)
 

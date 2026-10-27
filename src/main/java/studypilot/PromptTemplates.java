@@ -38,6 +38,19 @@ public class PromptTemplates {
                 + "Use concise, nonempty questions and answers.\n" + context(chunks);
     }
 
+    public String quizPrompt(String topic, int count, Difficulty difficulty, List<QuestionType> types, List<Chunk> chunks) {
+        return "Create " + count + " distinct quiz questions about " + topic + " at " + difficulty + " difficulty. "
+                + "Use only the supplied material. Allowed types: " + types + ". Include each listed type and balance their counts. "
+                + "Return JSON only: {\"questions\":[{\"type\":\"MULTIPLE_CHOICE\",\"text\":\"...\","
+                + "\"options\":[\"option one\",\"option two\",\"option three\",\"option four\"],"
+                + "\"correctAnswer\":\"option one\",\"conceptName\":\"...\",\"rubric\":\"\"}]}. "
+                + "Every question needs nonempty text, conceptName and correctAnswer. "
+                + "MULTIPLE_CHOICE needs distinct options; correctAnswer must be the full text of one option. "
+                + "TRUE_FALSE needs correctAnswer as the string true or false. "
+                + "SHORT_ANSWER needs a model answer in correctAnswer and a nonempty grading rubric. "
+                + "If the material is insufficient, return fewer questions instead of inventing facts.\n" + context(chunks);
+    }
+
     private String context(List<Chunk> chunks) {
         StringBuilder text = new StringBuilder("MATERIAL DATA BEGIN\n");
         for (Chunk chunk : chunks) {

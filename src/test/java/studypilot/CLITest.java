@@ -41,7 +41,7 @@ public class CLITest {
 
     @Test
     public void reportsMissingCommandArgumentsWithoutThrowingAnException() {
-        String[] commands = {"course", "material", "summarize", "concepts", "ask", "flashcards", "review"};
+        String[] commands = {"course", "material", "summarize", "concepts", "ask", "flashcards", "review", "quiz"};
         for (String command : commands) {
             assertEquals("Incomplete command: " + command, 2, cli.runCommand(new String[] {command}));
         }
@@ -86,5 +86,32 @@ public class CLITest {
         Course course = facade.createCourse("CLI review validation");
         assertEquals(2, cli.runCommand(new String[] {"review", course.getId(), "--card", "missing", "--remembered", "maybe"}));
         assertEquals(0, facade.getProgress(course.getId()).getReviewsDone());
+    }
+
+    @Test
+    public void createsListsAndShowsAQuizUsingTheSelectedCourse() throws Exception {
+        Course course = facade.createCourse("CLI quiz");
+        Path file = Files.createTempFile("studypilot-cli-quiz-", ".txt");
+        Files.writeString(file, "An observer receives notifications.");
+        facade.importMaterial(course.getId(), file.toString());
+        llm.reply("{\"questions\":[{\"type\":\"TRUE_FALSE\",\"text\":\"An observer receives notifications.\","
+                + "\"correctAnswer\":\"true\",\"conceptName\":\"Observer\"}]}");
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "create", "--course", course.getId(),
+                "--topic", "Observer", "--count", "1", "--types", "true-false", "--difficulty", "easy"}));
+        assertTrue(output.toString().contains("Questions generated: 1. Requested: 1."));
+        String id = facade.listQuizzes(course.getId()).get(0).getId();
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "list", "--course", course.getId()}));
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "show", id, "--course", course.getId()}));
+        assertTrue(output.toString().contains(id));
+        assertTrue(output.toString().contains("Difficulty: EASY"));
+    }
+
+    @Test
+    public void rejectsUnknownQuizFlagsAndTypesBeforeCallingTheModel() {
+        Course course = facade.createCourse("CLI quiz arguments");
+        assertEquals(2, cli.runCommand(new String[] {"quiz", "create", "--course", course.getId(),
+                "--topic", "Observer", "--types", "essay"}));
+        assertEquals(2, cli.runCommand(new String[] {"quiz", "list", "--course", course.getId(), "--wrong", "value"}));
+        assertEquals(0, llm.getPrompts().size());
     }
 }

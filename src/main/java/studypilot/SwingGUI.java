@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -30,6 +31,13 @@ public class SwingGUI implements ActionListener {
     private final JTextField courseName = new JTextField(20);
     private final JTextField question = new JTextField(60);
     private final JTextField cardCount = new JTextField("5", 4);
+    private final JTextField quizTopic = new JTextField(24);
+    private final JTextField quizCount = new JTextField("6", 4);
+    private final JComboBox<Difficulty> difficulties = new JComboBox<>(Difficulty.values());
+    private final JCheckBox multipleChoice = new JCheckBox("Multiple choice", true);
+    private final JCheckBox trueFalse = new JCheckBox("True/false", true);
+    private final JCheckBox shortAnswer = new JCheckBox("Short answer", true);
+    private final JComboBox<Quiz> quizzes = new JComboBox<>();
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private final List<JButton> buttons = new ArrayList<>();
@@ -84,7 +92,7 @@ public class SwingGUI implements ActionListener {
         tabs.addTab("Courses and materials", coursePanel());
         tabs.addTab("Questions", questionPanel());
         tabs.addTab("Flashcards", flashcardPanel());
-        tabs.addTab("Quizzes", plannedPanel("Quizzes"));
+        tabs.addTab("Quizzes", quizPanel());
         dashboard = new DashboardView(facade);
         facade.observeProgress(dashboard);
         tabs.addTab("Progress", dashboard);
@@ -143,6 +151,48 @@ public class SwingGUI implements ActionListener {
         JPanel panel = new JPanel();
         panel.add(new JLabel(name + " - planned implementation"));
         return panel;
+    }
+
+    private JPanel quizPanel() {
+        JPanel generation = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        quizTopic.setName("quizTopic");
+        quizCount.setName("quizCount");
+        difficulties.setName("quizDifficulty");
+        difficulties.setSelectedItem(Difficulty.MEDIUM);
+        generation.add(new JLabel("Topic"));
+        generation.add(quizTopic);
+        generation.add(new JLabel("Questions"));
+        generation.add(quizCount);
+        generation.add(new JLabel("Difficulty"));
+        generation.add(difficulties);
+        generation.add(button("Generate quiz", "createQuiz"));
+
+        JPanel selection = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        selection.add(multipleChoice);
+        selection.add(trueFalse);
+        selection.add(shortAnswer);
+        quizzes.setName("quizzes");
+        selection.add(new JLabel("Saved quiz"));
+        selection.add(quizzes);
+        selection.add(button("View quiz", "showQuiz"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(generation, BorderLayout.NORTH);
+        panel.add(selection, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private List<QuestionType> selectedQuestionTypes() {
+        List<QuestionType> types = new ArrayList<>();
+        if (multipleChoice.isSelected()) {
+            types.add(QuestionType.MULTIPLE_CHOICE);
+        }
+        if (trueFalse.isSelected()) {
+            types.add(QuestionType.TRUE_FALSE);
+        }
+        if (shortAnswer.isSelected()) {
+            types.add(QuestionType.SHORT_ANSWER);
+        }
+        return types;
     }
 
     private JButton button(String label, String action) {
@@ -225,6 +275,9 @@ public class SwingGUI implements ActionListener {
                 throw new IllegalArgumentException("Flip the card before recording a review.");
             }
         }
+        if (action.equals("showQuiz") && quizzes.getSelectedItem() == null) {
+            throw new IllegalArgumentException("Generate or select a saved quiz first.");
+        }
     }
 
     private void runTask(String action, String filePath) {
@@ -244,6 +297,13 @@ public class SwingGUI implements ActionListener {
         question.setEnabled(enabled);
         cardCount.setEnabled(enabled);
         styles.setEnabled(enabled);
+        quizTopic.setEnabled(enabled);
+        quizCount.setEnabled(enabled);
+        difficulties.setEnabled(enabled);
+        multipleChoice.setEnabled(enabled);
+        trueFalse.setEnabled(enabled);
+        shortAnswer.setEnabled(enabled);
+        quizzes.setEnabled(enabled);
         for (JButton button : buttons) {
             button.setEnabled(enabled);
         }
@@ -273,6 +333,8 @@ public class SwingGUI implements ActionListener {
         answerShown = false;
         materials.removeAllItems();
         cards.removeAllItems();
+        Quiz oldQuiz = (Quiz) quizzes.getSelectedItem();
+        quizzes.removeAllItems();
         Course course = (Course) courses.getSelectedItem();
         if (course != null) {
             for (Material material : course.getMaterials()) {
@@ -285,6 +347,12 @@ public class SwingGUI implements ActionListener {
                 cards.addItem(card);
             }
             dashboard.setCourseId(course.getId());
+            for (Quiz quiz : facade.listQuizzes(course.getId())) {
+                quizzes.addItem(quiz);
+                if (oldQuiz != null && oldQuiz.getId().equals(quiz.getId())) {
+                    quizzes.setSelectedItem(quiz);
+                }
+            }
         } else {
             dashboard.setCourseId(null);
         }
@@ -302,6 +370,12 @@ public class SwingGUI implements ActionListener {
         private final String questionText;
         private final String style;
         private final String requestedCount;
+        private final String topicText;
+        private final String requestedQuizCount;
+        private final Difficulty difficulty;
+        private final List<QuestionType> questionTypes;
+        private final Quiz selectedQuiz;
+        private Quiz generatedQuiz;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -313,6 +387,11 @@ public class SwingGUI implements ActionListener {
             questionText = question.getText();
             style = (String) styles.getSelectedItem();
             requestedCount = cardCount.getText();
+            topicText = quizTopic.getText();
+            requestedQuizCount = quizCount.getText();
+            difficulty = (Difficulty) difficulties.getSelectedItem();
+            questionTypes = selectedQuestionTypes();
+            selectedQuiz = (Quiz) quizzes.getSelectedItem();
         }
 
         protected String doInBackground() {
@@ -330,6 +409,10 @@ public class SwingGUI implements ActionListener {
                 return generateFlashcards();
             } else if (action.equals("remembered") || action.equals("notYet")) {
                 return reviewCard();
+            } else if (action.equals("createQuiz")) {
+                return createQuiz();
+            } else if (action.equals("showQuiz")) {
+                return facade.getQuiz(course.getId(), selectedQuiz.getId()).describe();
             }
             throw new IllegalArgumentException("Unknown GUI action.");
         }
@@ -375,10 +458,20 @@ public class SwingGUI implements ActionListener {
             return "Review recorded. Reviews: " + updated.getReviewCount() + ", mastery: " + updated.getMastery();
         }
 
+        private String createQuiz() {
+            int count = Integer.parseInt(requestedQuizCount);
+            generatedQuiz = facade.createQuiz(course.getId(), topicText, count, difficulty, questionTypes);
+            return "Questions generated: " + generatedQuiz.getQuestions().size() + ". Requested: " + count
+                    + ".\n\n" + generatedQuiz.describe();
+        }
+
         protected void done() {
             try {
                 results.setText(get());
                 refreshCourses();
+                if (generatedQuiz != null) {
+                    selectGeneratedQuiz();
+                }
                 status.setText("Ready");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -392,6 +485,15 @@ public class SwingGUI implements ActionListener {
             } finally {
                 busy = false;
                 setControlsEnabled(true);
+            }
+        }
+
+        private void selectGeneratedQuiz() {
+            for (int i = 0; i < quizzes.getItemCount(); i++) {
+                if (quizzes.getItemAt(i).getId().equals(generatedQuiz.getId())) {
+                    quizzes.setSelectedIndex(i);
+                    break;
+                }
             }
         }
     }

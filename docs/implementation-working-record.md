@@ -4,7 +4,7 @@ Notes for the Stage 2 implementation report, covering the current implementation
 
 ## 1 Project overview and status
 
-StudyPilot helps students study their own course materials. F01-F05 are implemented
+StudyPilot helps students study their own course materials. F01-F06 are implemented
 with basic automated and live API verification. F11 currently covers review activity
 and history. The other original features remain explicit later-period tasks.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
@@ -19,7 +19,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F03 Concepts | Hybrid | Implemented | ConceptService merges and checks relationships; ResponseParser validates structured fields | extractConcepts, parseConcepts | Facade, Adapter | A, pending |
 | F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | A, pending |
 | F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A, pending |
-| F06 Quiz generation | Hybrid | Not implemented | Planned QuizService, QuestionCreator and typed products | Planned createQuiz/buildQuestion | Planned Factory Method | B, pending |
+| F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
 | F07 Adaptive difficulty | Deterministic | Not implemented | Planned quiz rules and graded statistics | Planned suggestDifficulty | Planned Facade | B, pending |
 | F08 Attempts/grading | Hybrid | Not implemented | Planned attempts, grading strategies and pending handling | Planned submitAttempt/retryPendingGrading/selfGrade | Planned Strategy | B, pending |
 | F09 Weak topics | Hybrid | Not implemented | Planned WeakTopicAnalyzer and graded statistics | Planned analyze | Planned Adapter | B, pending |
@@ -35,6 +35,11 @@ saves card counts, updates ProgressTracker and notifies HistoryRecorder/Dashboar
 All rows refer to the same feature IDs in the original Stage 1 report; no new feature
 has been substituted for an original feature.
 
+F06 passes the GUI/CLI request through AgentFacade to QuizService. RetrievalStrategy
+selects chunks, quizPrompt supplies the context, and LLMClient returns drafts.
+ResponseParser reads them; the matching QuestionCreator builds each valid product.
+QuizRepository saves the Quiz and the GUI/CLI shows its questions and actual count.
+
 ## 3 Implemented design patterns
 
 Facade: SwingGUI and CLI call AgentFacade, which delegates to the domain services.
@@ -42,7 +47,10 @@ Adapter: OpenAIAdapter implements LLMClient and converts requests/replies throug
 OpenAIApiClient. Strategy: QuestionAnswerService holds RetrievalStrategy; keyword and
 TF-IDF implementations are selected by local configuration. Observer: ProgressTracker
 extends Subject; HistoryRecorder and DashboardView implement Observer and react to
-actual review events. Factory Method will be implemented with typed quizzes in C08.
+actual review events. Factory Method uses the abstract QuestionCreator. Its common
+buildQuestion operation calls createQuestion, which the three concrete creators
+override to construct MultipleChoiceQuestion, TrueFalseQuestion or ShortAnswerQuestion.
+QuizService holds the type-to-creator map and does not construct the products itself.
 The updated implementation UML remains a later delivery task.
 
 ## 4 Changes and rationale
@@ -64,6 +72,16 @@ CLI has one method per command group. SwingGUI uses ActionListener and one priva
 StudyWorker. These private implementation details must be reflected in the later
 updated class diagram.
 
+For F06, QuizService reuses the configured RetrievalStrategy to select relevant
+chunks. This adds a retrieval association to the Stage 1 QuizService design and
+affects UC07/SD06. Generation balances selected types, keeps valid drafts and makes
+at most two replacement requests. Invalid or repeated drafts are not saved. A quiz
+may contain fewer questions than requested; the UI and CLI show both counts.
+QuizRepository and plain restore constructors preserve question IDs and types;
+saved quizzes cannot be overwritten. listQuizzes/getQuiz/describe support reopening
+them. These methods and the retrieval association belong in the updated UML.
+Adaptive suggestions remain F07; the current selector defaults to Medium.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -72,7 +90,7 @@ billing records are not yet available.
 
 My work covered the project scope and design choices, API/model selection and
 connection setup. I read and reviewed the implementation, integrated the parts,
-and validated the results.
+and validated the Period 1 results. Review of the new quiz implementation is pending.
 
 Representative interaction:
 
@@ -82,9 +100,14 @@ Representative interaction:
 - My contribution: reviewed class responsibilities and feature flow, checked integration, and validated the resulting implementation.
 - Outcome: material imports, summaries, concepts, cited answers and flashcard review were implemented and checked.
 
+Quiz addition: the input was the F06/UC07 design and its three question creators.
+AI support produced code and tests for mixed generation, storage and the GUI/CLI
+entry points. The result passed automated and real API checks; my review of this
+addition and the interactive quiz GUI check remain pending.
+
 ## 6 Development and verification
 
-The complete implementation passed 52 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 73 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -93,9 +116,15 @@ flashcards. Review counts and history were restored after restarting. GUI checks
 covered startup, a real summary, busy/ready controls and an empty course name.
 The final GUI walkthrough and demonstration recordings remain to be completed.
 
-The latest CLI check recorded two reviews, mastery 0.5 and two history events,
+The Period 1 review check recorded two reviews, mastery 0.5 and two history events,
 then loaded the same values in new processes. Course isolation, rejected review
 values and backups of damaged progress/history files were also checked.
+
+The F06 live check generated three questions, one of each type, in one model call.
+CLI list/show reloaded the same quiz in new processes without API settings. Tests
+and CLI checks covered invalid drafts, replacement limits, partial results, course
+isolation, saved question IDs, immutable lists and rejected overwrites. The quiz GUI
+compiled; its interactive walkthrough remains pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
@@ -105,7 +134,7 @@ entries. Test doubles are limited to the test directory.
 Current limits include no OCR, keyword/TF-IDF retrieval, and citation checking based
 on retrieved IDs. This check does not prove that every answer sentence is supported.
 The application uses one writer per data directory; separate JSON files are not
-updated as a single transaction. Quiz and task statistics, later features, updated
+updated as a single transaction. Quiz-attempt and task statistics, later features, updated
 UML and Stage 3 evaluation remain on the task board.
 
 ## 7 Demonstration index

@@ -8,6 +8,7 @@ public class AgentFacade {
     private final ConceptService conceptService;
     private final QuestionAnswerService questionAnswerService;
     private final FlashcardService flashcardService;
+    private final QuizService quizService;
     private final ProgressTracker progressTracker;
     private final ProgressRepository progressRepository;
     private final HistoryRecorder historyRecorder;
@@ -31,6 +32,7 @@ public class AgentFacade {
             retrieval = new TfIdfRetrieval();
         }
         questionAnswerService = new QuestionAnswerService(retrieval, llmClient, templates, parser, new CitationValidator());
+        quizService = new QuizService(llmClient, templates, parser, new QuizRepository(config.getDataDirectory()), retrieval);
         progressRepository = new ProgressRepository(config.getDataDirectory());
         progressTracker = new ProgressTracker(progressRepository);
         historyRecorder = new HistoryRecorder(progressTracker, progressRepository);
@@ -82,6 +84,20 @@ public class AgentFacade {
         flashcardService.review(course, course.getFlashcard(cardId), remembered);
     }
 
+    public Quiz createQuiz(String courseId, String topic, int count, Difficulty difficulty, List<QuestionType> types) {
+        return quizService.createQuiz(getCourse(courseId), topic, count, difficulty, types);
+    }
+
+    public Quiz getQuiz(String courseId, String quizId) {
+        getCourse(courseId);
+        return quizService.getQuiz(courseId, quizId);
+    }
+
+    public List<Quiz> listQuizzes(String courseId) {
+        getCourse(courseId);
+        return quizService.listQuizzes(courseId);
+    }
+
     public ProgressSummary getProgress(String courseId) {
         getCourse(courseId);
         return progressTracker.getSummary(courseId);
@@ -101,7 +117,7 @@ public class AgentFacade {
     }
 
     public String getImplementationStatus() {
-        return "Available: F01-F05 (courses, materials, summaries, concepts, cited questions, flashcards and review)."
-                + "\nF11 currently records reviews and their history. Quizzes, study plans and the agent are planned for later periods.";
+        return "Available: F01-F06 (courses, materials, summaries, concepts, cited questions, flashcards, review and quiz generation)."
+                + "\nF11 currently records reviews and their history. Quiz attempts/grading, adaptive difficulty, weak topics, study plans and the agent remain planned.";
     }
 }
