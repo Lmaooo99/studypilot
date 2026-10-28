@@ -33,6 +33,7 @@ public class ProgressRepository {
             item.put("reviewsDone", summary.getReviewsDone());
             item.put("attemptIds", new JSONArray(summary.getAttemptIds()));
             item.put("countedResultIds", new JSONArray(summary.getCountedResultIds()));
+            item.put("completedTaskIds", new JSONArray(summary.getCompletedTaskIds()));
             JSONArray stats = new JSONArray();
             for (ConceptStats value : summary.getStats()) {
                 JSONObject topic = new JSONObject();
@@ -71,7 +72,8 @@ public class ProgressRepository {
                     }
                 }
                 ProgressSummary summary = new ProgressSummary(courseId, reviewsDone,
-                        loadIds(item, "attemptIds"), loadIds(item, "countedResultIds"), stats);
+                        loadIds(item, "attemptIds"), loadIds(item, "countedResultIds"), stats,
+                        loadIds(item, "completedTaskIds"));
                 summaries.put(courseId, summary);
             }
         } catch (JSONException | IllegalStateException | IllegalArgumentException e) {
@@ -83,7 +85,7 @@ public class ProgressRepository {
 
     private List<String> loadIds(JSONObject data, String name) {
         List<String> ids = new ArrayList<>();
-        // Older review-only progress files do not contain quiz fields.
+        // Older progress files do not contain every quiz or plan field.
         if (data.has(name)) {
             JSONArray values = data.getJSONArray(name);
             for (int i = 0; i < values.length(); i++) {

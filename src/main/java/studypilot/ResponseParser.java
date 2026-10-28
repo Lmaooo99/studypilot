@@ -1,5 +1,6 @@
 package studypilot;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -139,5 +140,20 @@ public class ResponseParser {
             throw new JSONException("Missing grading explanation");
         }
         return new QuestionResult(question, GradingStatus.GRADED, points, explanation.trim());
+    }
+
+    public List<StudyTask> parseStudyTasks(String text) {
+        JSONArray items = parseObject(text).getJSONArray("tasks");
+        List<StudyTask> tasks = new ArrayList<>();
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            if (!(item.get("minutes") instanceof Integer)) {
+                throw new JSONException("Task minutes must be a JSON integer");
+            }
+            tasks.add(new StudyTask(LocalDate.parse(item.getString("date")),
+                    TaskType.valueOf(item.getString("type")), item.getString("conceptName"),
+                    item.getString("description"), item.getInt("minutes")));
+        }
+        return tasks;
     }
 }

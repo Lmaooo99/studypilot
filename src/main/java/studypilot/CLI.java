@@ -4,6 +4,8 @@ import java.io.PrintStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -90,6 +92,8 @@ public class CLI {
             String courseId = required(options(args, 1, "--course"), "--course");
             output.println(facade.getWeakTopics(courseId));
             return 0;
+        } else if (command.equals("plan")) {
+            return planCommand(args);
         } else if (command.equals("progress") || command.equals("history")) {
             return progressCommand(args);
         }
@@ -126,7 +130,47 @@ public class CLI {
         output.println("  quiz selfgrade <attemptId> <questionId> <right|wrong> --course <id>");
         output.println("  progress --course <id>");
         output.println("  weak-topics --course <id>");
+        output.println("  plan --course <id> --exam YYYY-MM-DD --hours <whole number>");
+        output.println("  plan list --course <id>");
+        output.println("  plan show <planId> --course <id>");
+        output.println("  plan complete <planId> <taskId> --course <id>");
         output.println("  history --course <id>");
+    }
+
+    private int planCommand(String[] args) {
+        if (args.length >= 2 && args[1].equals("list")) {
+            String courseId = required(options(args, 2, "--course"), "--course");
+            List<StudyPlan> plans = facade.listStudyPlans(courseId);
+            if (plans.isEmpty()) {
+                output.println("No saved study plans in this course.");
+            }
+            for (StudyPlan plan : plans) {
+                output.println(plan.getId() + "  " + plan);
+            }
+            return 0;
+        }
+        if (args.length >= 3 && args[1].equals("show")) {
+            String courseId = required(options(args, 3, "--course"), "--course");
+            output.println(facade.getStudyPlan(courseId, args[2]).describe());
+            return 0;
+        }
+        if (args.length >= 4 && args[1].equals("complete")) {
+            String courseId = required(options(args, 4, "--course"), "--course");
+            facade.completeTask(courseId, args[2], args[3]);
+            output.println(facade.getStudyPlan(courseId, args[2]).describe());
+            return 0;
+        }
+        Map<String, String> flags = options(args, 1, "--course", "--exam", "--hours");
+        String courseId = required(flags, "--course");
+        LocalDate exam;
+        try {
+            exam = LocalDate.parse(required(flags, "--exam"));
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Use an exam date in YYYY-MM-DD format.");
+        }
+        int hours = Integer.parseInt(required(flags, "--hours"));
+        output.println(facade.createStudyPlan(courseId, exam, hours).describe());
+        return 0;
     }
 
     private int courseCommand(String[] args) {

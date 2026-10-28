@@ -8,9 +8,10 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
 records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficulty
-suggestions, F08 saved attempts with objective and model-based grading, and F09
-weak-topic reports. Failed grades can be retried or self-assessed against the saved
-answer and rubric. Study plans and the multi-step agent remain on the task board.
+suggestions, F08 saved attempts with objective and model-based grading, F09
+weak-topic reports and F10 dated study plans. Failed grades can be retried or
+self-assessed against the saved answer and rubric. The multi-step agent remains
+on the task board.
 
 ## Requirements and build
 
@@ -273,11 +274,46 @@ a real model call may append its token counts to the existing usage log. The Jav
 code fixes the numbers and order. AI advice still needs semantic evaluation in
 Stage 3.
 
+## Study plans
+
+```sh
+java -jar target/studypilot.jar plan --course COURSE_ID --exam YYYY-MM-DD --hours 2
+java -jar target/studypilot.jar plan list --course COURSE_ID
+java -jar target/studypilot.jar plan show PLAN_ID --course COURSE_ID
+java -jar target/studypilot.jar plan complete PLAN_ID TASK_ID --course COURSE_ID
+```
+
+Replace the date with today or a later exam date. Import course material first.
+Hours per day must be a whole number from 1 to 24. The Study plans tab has the same
+date/hour inputs, saved plans and tasks. To record a completed task, select it,
+tick Completed selected task and choose Save completion.
+
+The model proposes reading, card review and quiz activities. Java checks the task
+fields, dates and total minutes for each day before saving. Generation makes at
+most three proposal attempts, using any validation errors to request a correction.
+If every proposal fails, no plan is saved. A proposal that exceeds the daily budget
+is asked to reduce task lengths or scope; the saved plan shows a notice when this
+happens.
+
+The prompt uses measured graded-topic counts and up to the first eight material
+chunks. It does not call the weak-topic explanation service. Without enough graded
+history, the first task must be a diagnostic quiz today, and the plan identifies
+this limitation. Study tasks are a schedule: completing an activity and marking it
+done are student actions. Generating a plan does not execute its quizzes or reviews.
+Use the Flashcards and Quizzes features to prepare any activities you need.
+
+Saved plan/task IDs and completion states survive restart. Completing the same task
+again does not add another count or history event. If progress or history cannot be
+saved after the task's done flag, repeat the completion to finish recording it.
+Plans from another course and task IDs outside the selected plan are rejected.
+Task descriptions still need review; fitting the time budget does not prove that
+the schedule covers the whole course.
+
 ## Storage and verification
 
 Runtime files are under DATA_DIR, which defaults to the ignored `data` folder.
-Courses use `courses/COURSE_ID.json`; review progress and history use `progress.json`
-and `history.json`. Unreadable progress/history is moved to a unique `.bak-*` file,
+Courses use `courses/COURSE_ID.json`; plans use `plans/PLAN_ID.json`. Progress and
+history use `progress.json` and `history.json`. Unreadable progress/history is moved to a unique `.bak-*` file,
 then starts empty with a warning. Individual JSON saves use temporary-file
 replacement. Use one writable application instance per data directory.
 
@@ -288,11 +324,12 @@ replacement. Use one writable application instance per data directory.
 The default tests use temporary directories and a test-only MockLLMClient. They do
 not call a paid API. HTTP adapter tests use a local HTTP server. Test doubles are
 excluded from the application JAR. Live checks of summaries, concepts, cited
-answers and card generation are recorded separately in the development log.
+answers, cards, quizzes, grading, weak-topic explanations and plans are recorded
+separately in the development log.
 
 Full Stage 3 deterministic testing and KUMA evaluation, the final seven-section
-report, updated UML and feature recordings remain in progress. The quiz GUI has
-compiled; its interactive walkthrough is still pending.
+report, updated UML and feature recordings remain in progress. The Period 2 GUI
+controls have compiled; their interactive walkthrough is still pending.
 
 ## Stage 2 tracking
 

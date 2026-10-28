@@ -4,10 +4,10 @@ Notes for the Stage 2 implementation report, covering the current implementation
 
 ## 1 Project overview and status
 
-StudyPilot helps students study their own course materials. F01-F09 are implemented
+StudyPilot helps students study their own course materials. F01-F10 are implemented
 with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
-quiz submissions, graded-answer counts and history. The other original features
+quiz submissions, graded-answer counts, completed tasks and history. The other original features
 remain explicit later-period tasks.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
@@ -25,8 +25,8 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B, pending |
 | F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
 | F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
-| F10 Study plans | Hybrid | Not implemented | Planned StudyPlanGenerator, StudyPlan and StudyTask | Planned generate/validatePlan/markTaskDone | Planned Observer | C, pending |
-| F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews and quiz submissions; ProgressSummary/ConceptStats count graded results once; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, getSummary, update, getHistory | Facade, Observer | B, pending |
+| F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C, pending |
+| F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews, quiz submissions and completed tasks; ProgressSummary/ConceptStats prevent duplicate counts; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, recordTaskDone, getSummary, update, getHistory | Facade, Observer | B, pending |
 | F12 Natural-language agent | AI | Not implemented | Planned controller, planner, six tools and memory | Planned handleRequest/createPlan/execute | Planned Facade/Adapter | C, pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
@@ -70,6 +70,20 @@ LLMClient. WeakTopicReport always retains the computed ranking, including when t
 explanation fails. With no eligible topic, it reports insufficient data without a
 model call or a weakest-topic claim.
 
+F10 starts at the Study plans tab or plan CLI command. AgentFacade calls
+StudyPlanGenerator.generate, which reads CourseService materials and eligible
+ProgressTracker statistics. studyPlanPrompt requests dated activities;
+parseStudyTasks reads the reply, and validatePlan checks dates and daily minutes.
+Invalid proposals receive their violations in a correction prompt, up to three
+proposals total. Only a valid plan reaches StudyPlanRepository.savePlan. With no
+eligible graded history, its first task must be a diagnostic quiz today.
+
+Task completion passes the course, plan and task IDs through AgentFacade to
+markTaskDone. The generator loads the plan, marks the selected task and saves it
+before calling ProgressTracker.recordTaskDone. Saved task IDs prevent another
+count for a repeated action; the stable event ID prevents another history entry.
+The existing observers update history and the dashboard.
+
 ## 3 Implemented design patterns
 
 Facade: SwingGUI and CLI call AgentFacade, which delegates to the domain services.
@@ -77,7 +91,7 @@ Adapter: OpenAIAdapter implements LLMClient and converts requests/replies throug
 OpenAIApiClient. Strategy: QuestionAnswerService holds RetrievalStrategy; keyword and
 TF-IDF implementations are selected by local configuration. Observer: ProgressTracker
 extends Subject; HistoryRecorder and DashboardView implement Observer and react to
-actual review events. Factory Method uses the abstract QuestionCreator. Its common
+actual study events. Factory Method uses the abstract QuestionCreator. Its common
 buildQuestion operation calls createQuestion, which the three concrete creators
 override to construct MultipleChoiceQuestion, TrueFalseQuestion or ShortAnswerQuestion.
 QuizService holds the type-to-creator map and does not construct the products itself.
@@ -162,6 +176,25 @@ default 5, to implement the configurable Stage 1 minimum. No storage schema chan
 WeakTopicReport getters and formatting, the CLI command and the Progress tab button
 belong in the updated class views and UC11/SD09. No new pattern was added.
 
+F10 retains the Stage 1 plan, task, generator and repository classes and the four
+TaskType values. New inputs accept integer hours from 1 to 24, with today through
+the exam date as the inclusive range. Model context uses up to eight material
+chunks and eligible graded counts. The configurable F09 minimum also controls
+whether a diagnostic is required. No separate F09 explanation call is needed.
+
+StudyPlan adds a notice for insufficient history or a proposal that exceeded the
+daily budget. Ordinary restore constructors preserve IDs and done flags; listPlans,
+getPlan and describe support reopening schedules. Reading and completion add
+explicit courseId scope. The GUI uses a selected task and completion checkbox.
+These details affect UC12/UC13, SD10/SD11 and the plan/UI class views.
+
+ProgressSummary adds completedTaskIds and addTask(taskId), rather than an unchecked
+counter increment. ProgressRepository persists that list and defaults it to empty
+for older files. ProgressTracker uses a stable task event ID. A repeated completion
+repairs a failed progress/history save after the plan was saved, without counting
+twice. This changes the progress class view and SD11; it uses the existing Observer
+and introduces no new pattern.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -186,11 +219,12 @@ points. Generation and short-answer grading passed real API checks. Objective
 grading, pending self-assessment and repeat-action checks required no model calls.
 C11 adds the deterministic difficulty logic, GUI/CLI selection and boundary tests.
 C12 adds the weak-topic analyzer/report, ranking rules, fallback and related tests.
+C13 adds the plan workflow, constraints, saved task completion and related checks.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 147 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 170 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -242,6 +276,16 @@ minimum, invalid settings and a course with no history. All study records remain
 unchanged; only the successful model call added a usage record. The Progress button
 compiles; its interactive GUI walkthrough remains pending.
 
+C13 tested invalid dates/hours, task JSON, three-attempt limits, budget correction,
+diagnostic-first plans without history and measured-topic context. Tests covered
+saved IDs, malformed files, course/task scope and completion retries after plan,
+progress or history failures. A real API reply produced six tasks across three days,
+each totaling 60 minutes. The first was a diagnostic quiz. Separate CLI processes
+restored the plan, rejected cross-course access and recorded the same completion
+only once. Existing course, quiz and attempt files were unchanged; earlier progress
+and history records were retained. The study-plan GUI compiles; interaction remains
+pending.
+
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
 preserving saved summaries after a failed request and avoiding duplicate history
@@ -250,9 +294,12 @@ entries. Test doubles are limited to the test directory.
 Current limits include no OCR, keyword/TF-IDF retrieval, and citation checking based
 on retrieved IDs. This check does not prove that every answer sentence is supported.
 The application uses one writer per data directory; separate JSON files are not
-updated as a single transaction. Task statistics, complete storage recovery, later
-features, updated UML and Stage 3 evaluation remain on the task board. A valid model
-grade does not prove that its semantic judgment is correct.
+updated as a single transaction. A task's done flag can be saved before a later
+progress/history failure; repeating completion repairs that recording. Complete
+storage recovery, the agent, updated UML and Stage 3 evaluation remain on the task
+board. Plan context is limited to eight material chunks; validation checks schedule
+constraints, not complete syllabus coverage. A valid model grade does not prove
+that its semantic judgment is correct.
 
 ## 7 Demonstration index
 

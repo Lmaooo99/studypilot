@@ -8,7 +8,8 @@ Period: October 27-November 2, 2026. Times use America/Toronto.
 | C09 | create quiz attempts and grade objective answers | [22156e6](https://github.com/Lmaooo99/studypilot/commit/22156e64286fb3323ea0d95b3dedf4f748b772c2) | 2026-10-27 08:09:25 | 2026-10-27 08:09:27 | 93 tests passed; packaged CLI attempts, graded/pending results, restart and duplicate-submission checks |
 | C10 | grade short answers and resolve pending results | [a6aeaa2](https://github.com/Lmaooo99/studypilot/commit/a6aeaa2d231184064fe5fb112ac72ce30de3bec7) | 2026-10-28 14:24:58 | 2026-10-28 14:25:01 | 110 tests passed; real API grading, pending retry, self-assessment and restart checks |
 | C11 | suggest quiz difficulty from graded performance | [9658d77](https://github.com/Lmaooo99/studypilot/commit/9658d770360feaaccce130ddac6963d86a707584) | 2026-10-28 15:44:52 | 2026-10-28 15:44:55 | 130 tests passed; threshold, isolation, pending-exclusion and override checks; read-only CLI restart checks |
-| C12 | identify weak topics and explain study priorities | [Weak-topic feature history](https://github.com/Lmaooo99/studypilot/commits/main/src/main/java/studypilot/WeakTopicAnalyzer.java) | See Git history | See Git history | 147 tests passed; real explanation, missing-key fallback, minimum, scope and unchanged-study-record checks |
+| C12 | identify weak topics and explain study priorities | [4848e82](https://github.com/Lmaooo99/studypilot/commit/4848e82611b5cf76c28e5af04a83679dee5b0399) | 2026-10-28 17:15:42 | 2026-10-28 17:15:50 | 147 tests passed; real explanation, missing-key fallback, minimum, scope and unchanged-study-record checks |
+| C13 | generate and complete validated study plans | [Study-plan feature history](https://github.com/Lmaooo99/studypilot/commits/main/src/main/java/studypilot/StudyPlanGenerator.java) | See Git history | See Git history | 170 tests passed; real dated plan, budget validation, CLI restart, scope and repeated-completion checks |
 
-C13-C14 remain planned. Objective grading and self-assessment require no API calls.
-The quiz and attempt GUI has compiled; its interactive walkthrough remains pending.
+C14 remains planned. Objective grading, self-assessment and task completion require no API calls.
+The Period 2 GUI controls have compiled; their interactive walkthrough remains pending.

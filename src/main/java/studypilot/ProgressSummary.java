@@ -11,6 +11,7 @@ public class ProgressSummary {
     private int reviewsDone;
     private final List<String> attemptIds;
     private final List<String> countedResultIds;
+    private final List<String> completedTaskIds;
     private final Map<String, ConceptStats> stats = new HashMap<>();
 
     public ProgressSummary(String courseId, int reviewsDone) {
@@ -19,6 +20,12 @@ public class ProgressSummary {
 
     public ProgressSummary(String courseId, int reviewsDone, List<String> attemptIds,
                            List<String> countedResultIds, List<ConceptStats> savedStats) {
+        this(courseId, reviewsDone, attemptIds, countedResultIds, savedStats, new ArrayList<String>());
+    }
+
+    public ProgressSummary(String courseId, int reviewsDone, List<String> attemptIds,
+                           List<String> countedResultIds, List<ConceptStats> savedStats,
+                           List<String> completedTaskIds) {
         if (reviewsDone < 0) {
             throw new IllegalArgumentException("Invalid saved review count.");
         }
@@ -26,6 +33,7 @@ public class ProgressSummary {
         this.reviewsDone = reviewsDone;
         this.attemptIds = copyIds(attemptIds);
         this.countedResultIds = copyIds(countedResultIds);
+        this.completedTaskIds = copyIds(completedTaskIds);
         for (ConceptStats value : savedStats) {
             String key = value.getConceptName().toLowerCase(Locale.ROOT);
             if (stats.containsKey(key)) {
@@ -73,6 +81,20 @@ public class ProgressSummary {
         return new ArrayList<>(countedResultIds);
     }
 
+    public int getTasksDone() {
+        return completedTaskIds.size();
+    }
+
+    public List<String> getCompletedTaskIds() {
+        return new ArrayList<>(completedTaskIds);
+    }
+
+    public void addTask(String taskId) {
+        if (!completedTaskIds.contains(taskId)) {
+            completedTaskIds.add(taskId);
+        }
+    }
+
     public List<ConceptStats> getStats() {
         return new ArrayList<>(stats.values());
     }
@@ -115,6 +137,7 @@ public class ProgressSummary {
 
     public String toString() {
         return "Reviews completed: " + reviewsDone + "; quizzes taken: " + getQuizzesTaken()
-                + "; graded answers: " + getGradedCount() + "; correct answers: " + getCorrectCount();
+                + "; graded answers: " + getGradedCount() + "; correct answers: " + getCorrectCount()
+                + "; tasks completed: " + getTasksDone();
     }
 }

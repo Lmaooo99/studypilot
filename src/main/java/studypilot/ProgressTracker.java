@@ -121,4 +121,20 @@ public class ProgressTracker extends Subject {
     public StudyEvent getLastEvent() {
         return lastEvent;
     }
+
+    public void recordTaskDone(String courseId, StudyTask task) {
+        if (!task.isDone()) {
+            throw new IllegalArgumentException("Only a completed task can update progress.");
+        }
+        ProgressSummary summary = summaries.get(courseId);
+        if (summary == null) {
+            summary = new ProgressSummary(courseId, 0);
+            summaries.put(courseId, summary);
+        }
+        summary.addTask(task.getId());
+        repository.saveSummaries(summaries);
+        lastEvent = new StudyEvent("task-" + task.getId(), LocalDateTime.now(), courseId,
+                task.getConceptName(), "Completed study task " + task.getId() + ": " + task.getDescription());
+        notifyObservers();
+    }
 }

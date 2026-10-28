@@ -47,6 +47,7 @@ public class ProgressRepositoryTest {
         assertEquals(3, summary.getReviewsDone());
         assertEquals(0, summary.getQuizzesTaken());
         assertEquals(0, summary.getGradedCount());
+        assertEquals(0, summary.getTasksDone());
     }
 
     @Test

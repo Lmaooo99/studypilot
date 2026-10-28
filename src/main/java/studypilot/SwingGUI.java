@@ -5,6 +5,8 @@ import java.awt.FlowLayout;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -57,6 +59,11 @@ public class SwingGUI implements ActionListener {
         }
     };
     private final JTable attemptAnswers = new JTable(answerRows);
+    private final JTextField examDate = new JTextField(LocalDate.now().plusDays(7).toString(), 10);
+    private final JTextField dailyHours = new JTextField("2", 3);
+    private final JComboBox<StudyPlan> studyPlans = new JComboBox<>();
+    private final JComboBox<StudyTask> studyTasks = new JComboBox<>();
+    private final JCheckBox taskCompleted = new JCheckBox("Completed selected task");
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private final List<JButton> buttons = new ArrayList<>();
@@ -115,7 +122,7 @@ public class SwingGUI implements ActionListener {
         dashboard = new DashboardView(facade);
         facade.observeProgress(dashboard);
         tabs.addTab("Progress", progressPanel());
-        tabs.addTab("Study plans", plannedPanel("Study plans"));
+        tabs.addTab("Study plans", studyPlanPanel());
         tabs.addTab("Assistant", plannedPanel("Assistant"));
         return tabs;
     }
@@ -127,6 +134,53 @@ public class SwingGUI implements ActionListener {
         panel.add(actions, BorderLayout.NORTH);
         panel.add(dashboard, BorderLayout.CENTER);
         return panel;
+    }
+
+    private JPanel studyPlanPanel() {
+        JPanel generation = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        examDate.setName("examDate");
+        dailyHours.setName("dailyHours");
+        generation.add(new JLabel("Exam date (YYYY-MM-DD)"));
+        generation.add(examDate);
+        generation.add(new JLabel("Hours per day (1-24)"));
+        generation.add(dailyHours);
+        generation.add(button("New plan", "createStudyPlan"));
+        JPanel saved = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        studyPlans.setName("studyPlans");
+        studyPlans.addActionListener(this);
+        saved.add(new JLabel("Saved plan"));
+        saved.add(studyPlans);
+        saved.add(button("View plan", "showStudyPlan"));
+        JPanel completion = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        studyTasks.setName("studyTasks");
+        studyTasks.addActionListener(this);
+        taskCompleted.setName("taskCompleted");
+        completion.add(studyTasks);
+        completion.add(taskCompleted);
+        completion.add(button("Save completion", "completeTask"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(generation, BorderLayout.NORTH);
+        panel.add(saved, BorderLayout.CENTER);
+        panel.add(completion, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private void refreshPlanTasks() {
+        loading = true;
+        studyTasks.removeAllItems();
+        StudyPlan plan = (StudyPlan) studyPlans.getSelectedItem();
+        if (plan != null) {
+            for (StudyTask task : plan.getTasks()) {
+                studyTasks.addItem(task);
+            }
+        }
+        loading = false;
+        showTaskCompletion();
+    }
+
+    private void showTaskCompletion() {
+        StudyTask task = (StudyTask) studyTasks.getSelectedItem();
+        taskCompleted.setSelected(task != null && task.isDone());
     }
 
     private JPanel coursePanel() {
@@ -339,6 +393,10 @@ public class SwingGUI implements ActionListener {
             refreshMaterials(null);
         } else if (event.getSource() == cards) {
             showCardFront();
+        } else if (event.getSource() == studyPlans) {
+            refreshPlanTasks();
+        } else if (event.getSource() == studyTasks) {
+            showTaskCompletion();
         } else {
             try {
                 String action = event.getActionCommand();
@@ -417,6 +475,12 @@ public class SwingGUI implements ActionListener {
         if ((action.equals("retryPendingGrading") || action.equals("selfGrade")) && !currentAttempt.isSubmitted()) {
             throw new IllegalArgumentException("Submit the attempt before resolving pending answers.");
         }
+        if ((action.equals("showStudyPlan") || action.equals("completeTask")) && studyPlans.getSelectedItem() == null) {
+            throw new IllegalArgumentException("Create or select a saved study plan first.");
+        }
+        if (action.equals("completeTask") && (studyTasks.getSelectedItem() == null || !taskCompleted.isSelected())) {
+            throw new IllegalArgumentException("Select a task and tick Completed before saving. Completed tasks cannot be undone.");
+        }
     }
 
     private void runTask(String action, String filePath) {
@@ -445,6 +509,11 @@ public class SwingGUI implements ActionListener {
         quizzes.setEnabled(enabled);
         attempts.setEnabled(enabled);
         attemptAnswers.setEnabled(enabled);
+        examDate.setEnabled(enabled);
+        dailyHours.setEnabled(enabled);
+        studyPlans.setEnabled(enabled);
+        studyTasks.setEnabled(enabled);
+        taskCompleted.setEnabled(enabled);
         for (JButton button : buttons) {
             button.setEnabled(enabled);
         }
@@ -479,6 +548,8 @@ public class SwingGUI implements ActionListener {
         quizzes.removeAllItems();
         QuizAttempt oldAttempt = (QuizAttempt) attempts.getSelectedItem();
         attempts.removeAllItems();
+        StudyPlan oldPlan = (StudyPlan) studyPlans.getSelectedItem();
+        studyPlans.removeAllItems();
         Course course = (Course) courses.getSelectedItem();
         if (currentAttempt != null && (course == null || !currentAttempt.getCourseId().equals(course.getId()))) {
             currentAttempt = null;
@@ -510,10 +581,17 @@ public class SwingGUI implements ActionListener {
                     attempts.setSelectedItem(attempt);
                 }
             }
+            for (StudyPlan plan : facade.listStudyPlans(course.getId())) {
+                studyPlans.addItem(plan);
+                if (oldPlan != null && oldPlan.getId().equals(plan.getId())) {
+                    studyPlans.setSelectedItem(plan);
+                }
+            }
         } else {
             dashboard.setCourseId(null);
         }
         loading = false;
+        refreshPlanTasks();
     }
 
     // SwingWorker runs file and network operations without blocking the window.
@@ -541,6 +619,11 @@ public class SwingGUI implements ActionListener {
         private Quiz attemptedQuiz;
         private final String questionToSelfGrade;
         private final boolean selfAssessment;
+        private final String requestedExamDate;
+        private final String requestedHours;
+        private final StudyPlan selectedPlan;
+        private final StudyTask selectedStudyTask;
+        private StudyPlan loadedPlan;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -562,6 +645,10 @@ public class SwingGUI implements ActionListener {
             submittedAnswers = enteredAnswers();
             questionToSelfGrade = selfGradeQuestionId;
             selfAssessment = selfGradeCorrect;
+            requestedExamDate = examDate.getText();
+            requestedHours = dailyHours.getText();
+            selectedPlan = (StudyPlan) studyPlans.getSelectedItem();
+            selectedStudyTask = (StudyTask) studyTasks.getSelectedItem();
         }
 
         protected String doInBackground() {
@@ -584,6 +671,8 @@ public class SwingGUI implements ActionListener {
                 return loadedSuggestion.toString();
             } else if (action.equals("weakTopics")) {
                 return facade.getWeakTopics(course.getId()).toString();
+            } else if (action.equals("createStudyPlan") || action.equals("showStudyPlan") || action.equals("completeTask")) {
+                return useStudyPlan();
             } else if (action.equals("createQuiz")) {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {
@@ -598,6 +687,24 @@ public class SwingGUI implements ActionListener {
         private String createCourse() {
             Course created = facade.createCourse(name);
             return "Created course: " + created.getName() + "\nCourse ID: " + created.getId();
+        }
+
+        private String useStudyPlan() {
+            if (action.equals("createStudyPlan")) {
+                LocalDate exam;
+                try {
+                    exam = LocalDate.parse(requestedExamDate.trim());
+                } catch (DateTimeParseException e) {
+                    throw new IllegalArgumentException("Use an exam date in YYYY-MM-DD format.");
+                }
+                loadedPlan = facade.createStudyPlan(course.getId(), exam, Integer.parseInt(requestedHours.trim()));
+            } else {
+                if (action.equals("completeTask")) {
+                    facade.completeTask(course.getId(), selectedPlan.getId(), selectedStudyTask.getId());
+                }
+                loadedPlan = facade.getStudyPlan(course.getId(), selectedPlan.getId());
+            }
+            return loadedPlan.describe();
         }
 
         private String importMaterial() {
@@ -683,6 +790,9 @@ public class SwingGUI implements ActionListener {
                 if (loadedAttempt != null) {
                     showAttempt(loadedAttempt, attemptedQuiz);
                 }
+                if (loadedPlan != null) {
+                    selectStudyPlan();
+                }
                 status.setText("Ready");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -706,6 +816,25 @@ public class SwingGUI implements ActionListener {
                     break;
                 }
             }
+        }
+
+        private void selectStudyPlan() {
+            for (int i = 0; i < studyPlans.getItemCount(); i++) {
+                if (studyPlans.getItemAt(i).getId().equals(loadedPlan.getId())) {
+                    studyPlans.setSelectedIndex(i);
+                    break;
+                }
+            }
+            refreshPlanTasks();
+            if (selectedStudyTask != null) {
+                for (int i = 0; i < studyTasks.getItemCount(); i++) {
+                    if (studyTasks.getItemAt(i).getId().equals(selectedStudyTask.getId())) {
+                        studyTasks.setSelectedIndex(i);
+                        break;
+                    }
+                }
+            }
+            showTaskCompletion();
         }
     }
 }
