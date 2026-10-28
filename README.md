@@ -8,9 +8,9 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
 records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficulty
-suggestions and F08 saved attempts with objective and model-based grading. Failed
-grades can be retried or self-assessed against the saved answer and rubric. Weak
-topics, study plans and the multi-step agent remain on the task board.
+suggestions, F08 saved attempts with objective and model-based grading, and F09
+weak-topic reports. Failed grades can be retried or self-assessed against the saved
+answer and rubric. Study plans and the multi-step agent remain on the task board.
 
 ## Requirements and build
 
@@ -248,6 +248,30 @@ pending short-answer row to read the comparison and choose Correct, Incorrect or
 Cancel. Newly resolved results update progress once; the original answers and
 submission time stay unchanged. Model grading can still make semantic mistakes;
 its quality will be evaluated in Stage 3.
+
+## Weak-topic reports
+
+```sh
+java -jar target/studypilot.jar weak-topics --course COURSE_ID
+```
+
+The Progress tab's Weak topics button runs the same report. Topics are ranked by
+fully correct answers divided by graded answers, lowest accuracy first; tied names
+are ordered alphabetically. PENDING answers and flashcard mastery do not count.
+Topics with too few stored graded results appear under Insufficient data. With no
+eligible topics, the report says there is not enough data and makes no model call.
+
+`WEAK_TOPIC_MIN_RESULTS` defaults to 5 in local configuration and must be a positive
+integer. This setting controls weak-topic reports; difficulty suggestions still
+require five graded answers. Topic names come from stored quiz results, so a topic
+with no graded results cannot be ranked.
+
+For an eligible ranking, the model makes one brief explanation from the computed
+counts. If the reply fails or is empty, the ranking stays visible and the report
+says the AI explanation is unavailable. The report is not saved and does not change study records;
+a real model call may append its token counts to the existing usage log. The Java
+code fixes the numbers and order. AI advice still needs semantic evaluation in
+Stage 3.
 
 ## Storage and verification
 

@@ -24,10 +24,11 @@
 - Added saved attempts, objective grading and graded-only quiz progress.
 - Added short-answer rubric grading, pending retries and self-assessment against the saved answer.
 - Added graded-history difficulty suggestions with reasons and a manual override.
+- Added weak-topic rankings, insufficient-data labels and an AI explanation with a fallback.
 
 ## Checks
 
-- All 130 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 147 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -41,11 +42,13 @@
 - Repeated grading and self-assessment preserved the original answers and submission times. Invalid scores stayed pending; resolved answers entered progress only once.
 - Difficulty tests covered the five-answer minimum, exact 50%/80% boundaries, pending exclusion, topic/course isolation and generation overrides.
 - Packaged CLI checks restored the suggestions in new processes and confirmed that reading them changed no saved files or made API calls.
+- Weak-topic tests covered sorting, tied names, minimum samples, pending/review exclusion, course scope and explanation failure.
+- A real API check explained three ranked topics. Missing-key and high-minimum checks retained the report without an AI explanation. Progress, history, quizzes and attempts were unchanged.
 - My review of the Period 1 implementation is complete. Review of the Period 2 code, its GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish weak topics, study plans and the multi-step agent, then update the UML,
+Finish study plans and the multi-step agent, then update the UML,
 report and demonstration videos.
 
 ## AI support

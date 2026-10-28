@@ -114,10 +114,19 @@ public class SwingGUI implements ActionListener {
         tabs.addTab("Quizzes", quizPanel());
         dashboard = new DashboardView(facade);
         facade.observeProgress(dashboard);
-        tabs.addTab("Progress", dashboard);
+        tabs.addTab("Progress", progressPanel());
         tabs.addTab("Study plans", plannedPanel("Study plans"));
         tabs.addTab("Assistant", plannedPanel("Assistant"));
         return tabs;
+    }
+
+    private JPanel progressPanel() {
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actions.add(button("Weak topics", "weakTopics"));
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(actions, BorderLayout.NORTH);
+        panel.add(dashboard, BorderLayout.CENTER);
+        return panel;
     }
 
     private JPanel coursePanel() {
@@ -573,6 +582,8 @@ public class SwingGUI implements ActionListener {
             } else if (action.equals("suggestDifficulty")) {
                 loadedSuggestion = facade.suggestDifficulty(course.getId(), topicText);
                 return loadedSuggestion.toString();
+            } else if (action.equals("weakTopics")) {
+                return facade.getWeakTopics(course.getId()).toString();
             } else if (action.equals("createQuiz")) {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {

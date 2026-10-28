@@ -19,6 +19,27 @@ public class AppConfigTest {
         AppConfig config = new AppConfig(directory);
         assertEquals(directory.resolve("data"), config.getDataDirectory());
         assertEquals("gpt-6.1-sol", config.getModel());
+        assertEquals(5, config.getWeakTopicMinResults());
+    }
+
+    @Test
+    public void readsTheWeakTopicMinimum() throws Exception {
+        Files.writeString(directory.resolve(".env"), "WEAK_TOPIC_MIN_RESULTS=3\n");
+        assertEquals(3, new AppConfig(directory).getWeakTopicMinResults());
+    }
+
+    @Test
+    public void rejectsAnInvalidWeakTopicMinimum() throws Exception {
+        String[] values = {"0", "-1", "text", "1.5", "999999999999999999999"};
+        for (String value : values) {
+            Files.writeString(directory.resolve(".env"), "WEAK_TOPIC_MIN_RESULTS=" + value + "\n");
+            try {
+                new AppConfig(directory).getWeakTopicMinResults();
+                fail("The weak-topic minimum must be a positive integer.");
+            } catch (IllegalArgumentException e) {
+                assertTrue(e.getMessage().contains("WEAK_TOPIC_MIN_RESULTS"));
+            }
+        }
     }
 
     @Test

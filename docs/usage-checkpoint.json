@@ -100,22 +100,22 @@
     "tokens_note": "Additional real API checks after the earlier recorded windows. Token counts came from service responses."
   },
   "application_totals_for_recorded_checks": {
-    "call_count": 16,
+    "call_count": 17,
     "tokens": {
-      "prompt_tokens": 79309,
-      "completion_tokens": 2918,
-      "total_tokens": 82227
+      "prompt_tokens": 79471,
+      "completion_tokens": 3018,
+      "total_tokens": 82489
     },
     "money_cost": null,
     "note": "Totals combine the recorded application-check windows. Requests with unavailable usage, including the earlier timeout, are excluded."
   },
   "period_2_verification": {
-    "recorded_at": "2026-10-27T12:47:55.604694+00:00",
-    "application_usage_record_count": 2,
+    "recorded_at": "2026-10-28T20:11:03.727409+00:00",
+    "application_usage_record_count": 3,
     "application_tokens_reported_by_completed_calls": {
-      "prompt_tokens": 9225,
-      "completion_tokens": 371,
-      "total_tokens": 9596
+      "prompt_tokens": 9387,
+      "completion_tokens": 471,
+      "total_tokens": 9858
     },
     "application_calls": [
       {
@@ -135,6 +135,15 @@
         "time": "2026-10-27T12:46:40.208776Z",
         "feature": "F08",
         "batch": "C10"
+      },
+      {
+        "completion_tokens": 100,
+        "prompt_tokens": 162,
+        "total_tokens": 262,
+        "model": "gpt-6.1-sol",
+        "time": "2026-10-28T20:07:07.983763Z",
+        "feature": "F09",
+        "batch": "C12"
       }
     ],
     "application_money_cost": null,
@@ -142,6 +151,6 @@
     "development_tokens": null,
     "development_money_cost": null,
     "development_usage_note": "Additional development-session usage has not yet been recorded in this checkpoint.",
-    "tokens_note": "Token counts came from actual service responses during the F06 generation and F08 grading checks."
+    "tokens_note": "Token counts came from actual service responses during the F06 generation, F08 grading and F09 explanation checks."
   }
 }

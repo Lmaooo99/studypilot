@@ -10,6 +10,7 @@ public class AgentFacade {
     private final QuestionAnswerService questionAnswerService;
     private final FlashcardService flashcardService;
     private final QuizService quizService;
+    private final WeakTopicAnalyzer weakTopicAnalyzer;
     private final ProgressTracker progressTracker;
     private final ProgressRepository progressRepository;
     private final HistoryRecorder historyRecorder;
@@ -40,6 +41,7 @@ public class AgentFacade {
         flashcardService = new FlashcardService(llmClient, templates, parser, repository, progressTracker);
         quizService = new QuizService(llmClient, templates, parser,
                 new QuizRepository(config.getDataDirectory()), retrieval, progressTracker);
+        weakTopicAnalyzer = new WeakTopicAnalyzer(progressTracker, llmClient, templates, config.getWeakTopicMinResults());
     }
 
     public Course createCourse(String name) {
@@ -140,6 +142,11 @@ public class AgentFacade {
         return quizService.selfGrade(courseId, attemptId, questionId, correct);
     }
 
+    public WeakTopicReport getWeakTopics(String courseId) {
+        getCourse(courseId);
+        return weakTopicAnalyzer.analyze(courseId);
+    }
+
     public ProgressSummary getProgress(String courseId) {
         getCourse(courseId);
         return progressTracker.getSummary(courseId);
@@ -159,8 +166,8 @@ public class AgentFacade {
     }
 
     public String getImplementationStatus() {
-        return "Available: F01-F08 (courses, materials, summaries, concepts, cited questions, flashcards, review, quiz generation and difficulty suggestions)."
+        return "Available: F01-F09 (courses, materials, summaries, concepts, cited questions, flashcards, review, quizzes, difficulty suggestions and weak-topic reports)."
                 + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
-                + "\nF11 records reviews, quiz submissions, graded answers and history. Weak topics, study plans and the agent remain planned.";
+                + "\nF11 records reviews, quiz submissions, graded answers and history. Study plans and the agent remain planned.";
     }
 }

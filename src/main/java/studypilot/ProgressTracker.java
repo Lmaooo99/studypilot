@@ -1,6 +1,8 @@
 package studypilot;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class ProgressTracker extends Subject {
@@ -63,6 +65,31 @@ public class ProgressTracker extends Subject {
             return 0;
         }
         return stats.getGradedCount();
+    }
+
+    public List<ConceptStats> getRankedStats(String courseId, int minResults) {
+        if (minResults < 0) {
+            throw new IllegalArgumentException("The minimum result count cannot be negative.");
+        }
+        List<ConceptStats> ranked = new ArrayList<>();
+        for (ConceptStats stats : getSummary(courseId).getStats()) {
+            if (stats.getGradedCount() < minResults) {
+                continue;
+            }
+            int position = 0;
+            for (ConceptStats current : ranked) {
+                if (stats.getAccuracy() < current.getAccuracy()) {
+                    break;
+                }
+                if (stats.getAccuracy() == current.getAccuracy()
+                        && stats.getConceptName().compareToIgnoreCase(current.getConceptName()) < 0) {
+                    break;
+                }
+                position++;
+            }
+            ranked.add(position, new ConceptStats(stats.getConceptName(), stats.getGradedCount(), stats.getCorrectCount()));
+        }
+        return ranked;
     }
 
     public void recordQuizAttempt(QuizAttempt attempt) {

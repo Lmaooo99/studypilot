@@ -86,6 +86,10 @@ public class CLI {
             return reviewCommand(args);
         } else if (command.equals("quiz")) {
             return quizCommand(args);
+        } else if (command.equals("weak-topics")) {
+            String courseId = required(options(args, 1, "--course"), "--course");
+            output.println(facade.getWeakTopics(courseId));
+            return 0;
         } else if (command.equals("progress") || command.equals("history")) {
             return progressCommand(args);
         }
@@ -121,6 +125,7 @@ public class CLI {
         output.println("  quiz model-answer <attemptId> <questionId> --course <id>");
         output.println("  quiz selfgrade <attemptId> <questionId> <right|wrong> --course <id>");
         output.println("  progress --course <id>");
+        output.println("  weak-topics --course <id>");
         output.println("  history --course <id>");
     }
 

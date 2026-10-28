@@ -4,7 +4,7 @@ Notes for the Stage 2 implementation report, covering the current implementation
 
 ## 1 Project overview and status
 
-StudyPilot helps students study their own course materials. F01-F08 are implemented
+StudyPilot helps students study their own course materials. F01-F09 are implemented
 with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
 quiz submissions, graded-answer counts and history. The other original features
@@ -24,7 +24,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
 | F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B, pending |
 | F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
-| F09 Weak topics | Hybrid | Not implemented | Planned WeakTopicAnalyzer and graded statistics | Planned analyze | Planned Adapter | B, pending |
+| F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
 | F10 Study plans | Hybrid | Not implemented | Planned StudyPlanGenerator, StudyPlan and StudyTask | Planned generate/validatePlan/markTaskDone | Planned Observer | C, pending |
 | F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews and quiz submissions; ProgressSummary/ConceptStats count graded results once; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, getSummary, update, getHistory | Facade, Observer | B, pending |
 | F12 Natural-language agent | AI | Not implemented | Planned controller, planner, six tools and memory | Planned handleRequest/createPlan/execute | Planned Facade/Adapter | C, pending |
@@ -61,6 +61,14 @@ ProgressTracker reads graded counts and accuracy from the course's ProgressSumma
 chooseDifficulty applies the minimum sample and accuracy rules; DifficultySuggestion
 returns the level and reason. The GUI/CLI shows the suggestion and passes the chosen
 level into F06. Reading a suggestion makes no model call and saves nothing.
+
+F09 starts at the Progress tab or weak-topics CLI command. AgentFacade checks the
+course and calls WeakTopicAnalyzer.analyze. ProgressTracker.getRankedStats returns
+eligible topics in ascending accuracy order and copied counts. The analyzer lists
+smaller samples separately and passes the eligible data through weakTopicPrompt to
+LLMClient. WeakTopicReport always retains the computed ranking, including when the
+explanation fails. With no eligible topic, it reports insufficient data without a
+model call or a weakest-topic claim.
 
 ## 3 Implemented design patterns
 
@@ -146,6 +154,14 @@ a Suggested choice and Show suggestion; CLI quiz create uses the suggestion when
 no valid override is supplied. These details affect UC07/UC08, SD06 and the quiz/UI
 class views. The feature and its Facade use still match Stage 1.
 
+F09 follows the Stage 1 analyzer/report and SD09 flow. getRankedStats accepts zero
+to retrieve tracked topics for the insufficient-data list. Tied accuracies use topic
+name order, and returned ConceptStats are copies so later grading cannot change a
+report's snapshot. AppConfig adds the positive WEAK_TOPIC_MIN_RESULTS setting,
+default 5, to implement the configurable Stage 1 minimum. No storage schema changed.
+WeakTopicReport getters and formatting, the CLI command and the Progress tab button
+belong in the updated class views and UC11/SD09. No new pattern was added.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -169,11 +185,12 @@ tests for mixed generation, objective/rubric grading, storage and GUI/CLI entry
 points. Generation and short-answer grading passed real API checks. Objective
 grading, pending self-assessment and repeat-action checks required no model calls.
 C11 adds the deterministic difficulty logic, GUI/CLI selection and boundary tests.
+C12 adds the weak-topic analyzer/report, ranking rules, fallback and related tests.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 130 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 147 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -217,6 +234,13 @@ kept Medium, 80% selected Hard, 50% selected Medium and a lower accuracy selecte
 Easy. Every suggestion read left saved data unchanged and required no model call.
 The updated GUI opened, but the interactive walkthrough remains pending because
 the native controls could not be operated reliably during this check.
+
+C12 tested ordering, ties, the configurable minimum, pending and review exclusion,
+course isolation, snapshots and explanation failure. A real API reply explained
+three eligible topics. Separate CLI runs checked missing-key fallback, a higher
+minimum, invalid settings and a course with no history. All study records remained
+unchanged; only the successful model call added a usage record. The Progress button
+compiles; its interactive GUI walkthrough remains pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

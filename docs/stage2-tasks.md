@@ -25,7 +25,7 @@ period-1-commits.md and period-2-commits.md.
 | 2 | C09 | Attempts and objective grading | Implemented |
 | 2 | C10 | Short-answer grading and pending results | Implemented |
 | 2 | C11 | Adaptive difficulty | Implemented |
-| 2 | C12 | Weak-topic ranking and explanation | Planned |
+| 2 | C12 | Weak-topic ranking and explanation | Implemented |
 | 2 | C13 | Validated study plans and task completion | Planned |
 | 2 | C14 | Agent tools, planning, memory and trace | Planned |
 | 3 | C15 | Step references, validation and bounded recovery | Planned |
@@ -41,8 +41,8 @@ reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete F09-F10, F12 and the rest of F11 in their periods.
-- Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD13/SD14, retaining UMLet sources and images.
+- Complete F10, F12 and the rest of F11 in their periods.
+- Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD09/SD13/SD14, retaining UMLet sources and images.
 - Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
 - Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
 - Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
@@ -76,7 +76,7 @@ reject files containing only an encoding marker.
 ## Period 2 checks so far
 
 - C08 adds mixed quizzes with the three Stage 1 question creators, bounded replacement and immutable JSON storage.
-- The current Java 17 build, `./mvnw -q clean verify`, passed 130 tests.
+- The current Java 17 build, `./mvnw -q clean verify`, passed 147 tests.
 - A real API response produced three questions, one of each type. CLI list/show loaded the same IDs and content in new processes without credentials.
 - Course isolation, missing credentials, unrelated topics and invalid counts were checked without changing the saved quiz.
 - The Quizzes tab compiles. Its interactive walkthrough and student review remain pending.
@@ -88,3 +88,5 @@ reject files containing only an encoding marker.
 - Tests reject invalid, fractional, coerced and out-of-range grades. A failed history save can be retried without another model call or duplicate counts.
 - C11 adds exact-topic difficulty suggestions, the five-result minimum, accuracy thresholds, reasons and explicit overrides.
 - CLI checks observed Medium at four graded answers, Hard at 80%, Medium at 50%, and Easy below 50%, across separate processes. Suggestion queries changed no files and used no API key.
+- C12 ranks eligible topics from graded quiz results and lists smaller samples separately. Its configurable minimum defaults to five.
+- A real explanation call used three topic counts. Missing credentials and insufficient history kept the computed report available without invented advice. Study records were unchanged.

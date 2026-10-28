@@ -57,6 +57,19 @@ public class AppConfig {
         return mode;
     }
 
+    public int getWeakTopicMinResults() {
+        int minimum;
+        try {
+            minimum = Integer.parseInt(get("WEAK_TOPIC_MIN_RESULTS", "5"));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("WEAK_TOPIC_MIN_RESULTS must be a positive integer.");
+        }
+        if (minimum < 1) {
+            throw new IllegalArgumentException("WEAK_TOPIC_MIN_RESULTS must be a positive integer.");
+        }
+        return minimum;
+    }
+
     public void validateLlmSettings() {
         validateApiKey();
         validateBaseUrl();
