@@ -7,10 +7,10 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
-records reviews and their history. Period 2 adds F06 quiz generation and the
-objective-grading part of F08, with saved attempts and quiz progress. Nonempty short
-answers remain pending. Short-answer grading, adaptive difficulty, weak topics,
-study plans and the multi-step agent remain on the task board.
+records reviews and quiz history. Period 2 adds F06 quiz generation and F08 saved
+attempts, objective grading and model-based short-answer grading. Failed grades can
+be retried or self-assessed against the saved answer and rubric. Adaptive difficulty,
+weak topics, study plans and the multi-step agent remain on the task board.
 
 ## Requirements and build
 
@@ -175,7 +175,7 @@ a newly generated quiz gets a new ID. Reading it after restart preserves the
 original question IDs, types, answers and rubrics. The displayed questions omit
 the answer key.
 
-## Quiz attempts and objective grading
+## Quiz attempts and grading
 
 ```sh
 java -jar target/studypilot.jar quiz take QUIZ_ID --course COURSE_ID
@@ -193,8 +193,10 @@ IDs in an answers file, replacing the placeholders below:
 
 Use the displayed 1-based option number for multiple choice and `true` or `false`
 for true/false. Omitted or blank answers score zero. Objective grading reads the
-saved answer key and needs no API key. Nonempty short answers remain PENDING in
-this version; automatic grading, retry and self-grading are still pending work.
+saved answer key and needs no API key. Each nonempty short answer makes one model
+call using the saved question, model answer and rubric. A grade is accepted only
+when it contains an integer within the question's point range and a nonempty
+explanation. A service failure or invalid reply leaves that answer PENDING.
 
 The Quizzes tab has Start attempt, an answer table, Submit answers and a saved
 attempt selector. Submitted answers cannot be edited; start a new attempt to retake
@@ -206,6 +208,28 @@ with no graded answers shows an unavailable score. Progress counts submitted
 attempts, but PENDING results do not enter graded-answer or topic statistics.
 Attempt and result IDs preserve these counts after restarting. Attempts are stored
 under `attempts/ATTEMPT_ID.json`; the original quiz is never changed by grading.
+
+To resolve pending short answers:
+
+```sh
+java -jar target/studypilot.jar quiz regrade ATTEMPT_ID --course COURSE_ID
+java -jar target/studypilot.jar quiz model-answer ATTEMPT_ID QUESTION_ID --course COURSE_ID
+java -jar target/studypilot.jar quiz selfgrade ATTEMPT_ID QUESTION_ID right --course COURSE_ID
+```
+
+`quiz attempt` prints pending question IDs. `regrade` calls the model once for each
+pending answer and leaves earlier grades unchanged. With no pending answers, it
+reports that there is nothing to grade and makes no model call. `model-answer`
+shows the saved model answer, rubric and your answer. Compare them, then use
+`selfgrade` with `right` for full points or `wrong` for zero. Self-assessment needs
+no API key and is labeled in the explanation. An already graded answer cannot be
+self-graded again.
+
+The GUI offers Retry pending grading and Self-grade selected answer. Select a
+pending short-answer row to read the comparison and choose Correct, Incorrect or
+Cancel. Newly resolved results update progress once; the original answers and
+submission time stay unchanged. Model grading can still make semantic mistakes;
+its quality will be evaluated in Stage 3.
 
 ## Storage and verification
 

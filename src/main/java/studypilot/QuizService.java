@@ -24,7 +24,7 @@ public class QuizService {
         this.repository = repository;
         this.retrieval = retrieval;
         this.tracker = tracker;
-        grader = new QuizGrader();
+        grader = new QuizGrader(llmClient, templates, parser);
         creators.put(QuestionType.MULTIPLE_CHOICE, new MCQQuestionCreator());
         creators.put(QuestionType.TRUE_FALSE, new TrueFalseQuestionCreator());
         creators.put(QuestionType.SHORT_ANSWER, new ShortAnswerQuestionCreator());
@@ -177,12 +177,61 @@ public class QuizService {
         if (!attempt.isSubmitted()) {
             attempt.submit(checkedAnswers(quiz, answers));
             grader.grade(quiz, attempt);
-            repository.saveAttempt(attempt);
         }
         // Retry progress/history persistence, without grading or replacing saved answers again.
+        return saveResults(attempt);
+    }
+
+    private QuizAttempt saveResults(QuizAttempt attempt) {
+        repository.saveAttempt(attempt);
         tracker.recordQuizAttempt(attempt);
         repository.saveAttempt(attempt);
         return attempt;
+    }
+
+    public QuizAttempt retryPendingGrading(String courseId, String attemptId) {
+        QuizAttempt attempt = getAttempt(courseId, attemptId);
+        if (!attempt.isSubmitted()) {
+            throw new IllegalArgumentException("Submit the attempt before retrying grading.");
+        }
+        if (attempt.getPendingCount() == 0) {
+            return saveResults(attempt);
+        }
+        Quiz quiz = getQuiz(courseId, attempt.getQuizId());
+        grader.regradePending(quiz, attempt);
+        return saveResults(attempt);
+    }
+
+    public ShortAnswerQuestion getPendingQuestion(String courseId, String attemptId, String questionId) {
+        QuizAttempt attempt = getAttempt(courseId, attemptId);
+        Quiz quiz = getQuiz(courseId, attempt.getQuizId());
+        return pendingQuestion(quiz, attempt, questionId);
+    }
+
+    private ShortAnswerQuestion pendingQuestion(Quiz quiz, QuizAttempt attempt, String questionId) {
+        if (!attempt.isSubmitted()) {
+            throw new IllegalArgumentException("Submit the attempt before resolving pending answers.");
+        }
+        Question question = quiz.getQuestion(questionId);
+        if (!(question instanceof ShortAnswerQuestion)
+                || attempt.getResult(questionId).getStatus() != GradingStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending short answers can be self-graded.");
+        }
+        return (ShortAnswerQuestion) question;
+    }
+
+    public QuizAttempt selfGrade(String courseId, String attemptId, String questionId, boolean correct) {
+        QuizAttempt attempt = getAttempt(courseId, attemptId);
+        Quiz quiz = getQuiz(courseId, attempt.getQuizId());
+        Question question = pendingQuestion(quiz, attempt, questionId);
+        int points = 0;
+        String explanation = "Student self-assessment: incorrect.";
+        if (correct) {
+            points = question.getPoints();
+            explanation = "Student self-assessment: correct.";
+        }
+        attempt.replacePendingResult(new QuestionResult(question, GradingStatus.GRADED, points, explanation));
+        return saveResults(attempt);
     }
 
     private Map<String, String> checkedAnswers(Quiz quiz, Map<String, String> answers) {

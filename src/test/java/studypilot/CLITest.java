@@ -5,6 +5,8 @@ import java.io.PrintStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -155,5 +157,52 @@ public class CLITest {
                 "--answers", file.toString()}));
         assertTrue(errors.toString().contains("answers object of text values"));
         assertFalse(facade.getAttempt(quiz.getCourseId(), attempt.getId()).isSubmitted());
+    }
+
+    private QuizAttempt createPendingCliAttempt() throws Exception {
+        Course course = facade.createCourse("CLI pending answer");
+        Path file = Files.createTempFile("studypilot-cli-pending-", ".txt");
+        Files.writeString(file, "Observer lets a subject notify subscribers.");
+        facade.importMaterial(course.getId(), file.toString());
+        llm.reply("{\"questions\":[{\"type\":\"SHORT_ANSWER\",\"text\":\"Explain Observer.\","
+                + "\"correctAnswer\":\"The subject notifies subscribers.\",\"rubric\":\"Mention notifications.\",\"conceptName\":\"Observer\"}]}");
+        Quiz quiz = facade.createQuiz(course.getId(), "Observer", 1, Difficulty.MEDIUM, Arrays.asList(QuestionType.SHORT_ANSWER));
+        QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
+        Map<String, String> answers = new HashMap<>();
+        answers.put(quiz.getQuestions().get(0).getId(), "The subject notifies subscribers.");
+        llm.failNext();
+        return facade.submitAttempt(course.getId(), attempt.getId(), answers);
+    }
+
+    @Test
+    public void previewsAndRetriesPendingGradingThroughTheCli() throws Exception {
+        QuizAttempt attempt = createPendingCliAttempt();
+        String course = attempt.getCourseId();
+        String question = attempt.getResults().get(0).getQuestionId();
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "attempt", attempt.getId(), "--course", course}));
+        assertTrue(output.toString().contains("Pending question IDs:"));
+        assertTrue(output.toString().contains(question));
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "model-answer", attempt.getId(), question, "--course", course}));
+        assertTrue(output.toString().contains("Model answer: The subject notifies subscribers."));
+        llm.reply("{\"pointsEarned\":1,\"explanation\":\"Complete answer.\"}");
+        String[] retry = {"quiz", "regrade", attempt.getId(), "--course", course};
+        assertEquals(0, cli.runCommand(retry));
+        assertEquals(0, cli.runCommand(retry));
+        assertTrue(output.toString().contains("No pending answers to grade."));
+        assertEquals(1, facade.getProgress(course).getGradedCount());
+        assertEquals(3, llm.getPrompts().size());
+    }
+
+    @Test
+    public void selfGradesOnlyPendingAnswersAndRequiresAnExplicitVerdict() throws Exception {
+        QuizAttempt attempt = createPendingCliAttempt();
+        String course = attempt.getCourseId();
+        String question = attempt.getResults().get(0).getQuestionId();
+        assertEquals(2, cli.runCommand(new String[] {"quiz", "selfgrade", attempt.getId(), question, "maybe", "--course", course}));
+        assertEquals(0, cli.runCommand(new String[] {"quiz", "selfgrade", attempt.getId(), question, "right", "--course", course}));
+        assertEquals(2, cli.runCommand(new String[] {"quiz", "selfgrade", attempt.getId(), question, "wrong", "--course", course}));
+        assertEquals(1, facade.getProgress(course).getGradedCount());
+        assertEquals(1, facade.getProgress(course).getCorrectCount());
+        assertEquals(2, llm.getPrompts().size());
     }
 }

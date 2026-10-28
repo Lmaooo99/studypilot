@@ -46,8 +46,11 @@ public class SwingGUI implements ActionListener {
     private final JComboBox<QuizAttempt> attempts = new JComboBox<>();
     private final JLabel attemptLabel = new JLabel("Start an attempt from a saved quiz.");
     private QuizAttempt currentAttempt;
+    private Quiz currentQuiz;
+    private String selfGradeQuestionId;
+    private boolean selfGradeCorrect;
     private final List<String> answerQuestionIds = new ArrayList<>();
-    private final DefaultTableModel answerRows = new DefaultTableModel(new String[] {"Question", "Your answer"}, 0) {
+    private final DefaultTableModel answerRows = new DefaultTableModel(new String[] {"Question", "Your answer", "Status"}, 0) {
         public boolean isCellEditable(int row, int column) {
             return column == 1 && currentAttempt != null && !currentAttempt.isSubmitted();
         }
@@ -209,9 +212,16 @@ public class SwingGUI implements ActionListener {
         saved.add(attemptLabel);
         attemptAnswers.setName("attemptAnswers");
         attemptAnswers.setPreferredScrollableViewportSize(new Dimension(900, 90));
-        JPanel submit = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        submit.add(button("Submit answers", "submitAttempt"));
-        submit.add(new JLabel("Multiple choice: option number. True/false: true or false. Blank answers score zero."));
+        attemptAnswers.getColumnModel().getColumn(0).setPreferredWidth(450);
+        attemptAnswers.getColumnModel().getColumn(1).setPreferredWidth(350);
+        attemptAnswers.getColumnModel().getColumn(2).setPreferredWidth(100);
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        actions.add(button("Submit answers", "submitAttempt"));
+        actions.add(button("Retry pending grading", "retryPendingGrading"));
+        actions.add(button("Self-grade selected answer", "selfGrade"));
+        JPanel submit = new JPanel(new BorderLayout());
+        submit.add(actions, BorderLayout.NORTH);
+        submit.add(new JLabel("Multiple choice: option number. True/false: true or false. Blank answers score zero."), BorderLayout.SOUTH);
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(saved, BorderLayout.NORTH);
         panel.add(new JScrollPane(attemptAnswers), BorderLayout.CENTER);
@@ -237,13 +247,18 @@ public class SwingGUI implements ActionListener {
 
     private void showAttempt(QuizAttempt attempt, Quiz quiz) {
         currentAttempt = attempt;
+        currentQuiz = quiz;
         attemptLabel.setText("Attempt " + attempt.getId().substring(0, 8) + " - " + quiz.getTopic());
         answerRows.setRowCount(0);
         answerQuestionIds.clear();
         Map<String, String> answers = attempt.getAnswers();
         for (Question question : quiz.getQuestions()) {
             answerQuestionIds.add(question.getId());
-            answerRows.addRow(new Object[] {question.getText(), answers.getOrDefault(question.getId(), "")});
+            String gradingStatus = "Not submitted";
+            if (attempt.isSubmitted()) {
+                gradingStatus = attempt.getResult(question.getId()).getStatus().name();
+            }
+            answerRows.addRow(new Object[] {question.getText(), answers.getOrDefault(question.getId(), ""), gradingStatus});
         }
         for (int i = 0; i < attempts.getItemCount(); i++) {
             if (attempts.getItemAt(i).getId().equals(attempt.getId())) {
@@ -265,6 +280,35 @@ public class SwingGUI implements ActionListener {
             types.add(QuestionType.SHORT_ANSWER);
         }
         return types;
+    }
+
+    private void chooseSelfGrade() {
+        checkSelection("selfGrade");
+        int row = attemptAnswers.getSelectedRow();
+        if (row < 0) {
+            throw new IllegalArgumentException("Select a pending short-answer row first.");
+        }
+        String questionId = answerQuestionIds.get(row);
+        Question question = currentQuiz.getQuestion(questionId);
+        if (!(question instanceof ShortAnswerQuestion)
+                || currentAttempt.getResult(questionId).getStatus() != GradingStatus.PENDING) {
+            throw new IllegalArgumentException("Only pending short answers can be self-graded.");
+        }
+        String text = "Question: " + question.getText() + "\n\nYour answer: "
+                + currentAttempt.getAnswers().get(questionId) + "\n\nModel answer: " + question.getCorrectAnswer()
+                + "\n\nRubric: " + ((ShortAnswerQuestion) question).getRubric();
+        JTextArea comparison = new JTextArea(text, 12, 60);
+        comparison.setEditable(false);
+        comparison.setLineWrap(true);
+        comparison.setWrapStyleWord(true);
+        String[] choices = {"Correct", "Incorrect", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(window, new JScrollPane(comparison), "Self-grade pending answer",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, choices, choices[2]);
+        if (choice == 0 || choice == 1) {
+            selfGradeQuestionId = questionId;
+            selfGradeCorrect = choice == 0;
+            runTask("selfGrade", null);
+        }
     }
 
     private JButton button(String label, String action) {
@@ -291,6 +335,8 @@ public class SwingGUI implements ActionListener {
                     flipCard();
                 } else if (action.equals("importMaterial")) {
                     chooseMaterial();
+                } else if (action.equals("selfGrade")) {
+                    chooseSelfGrade();
                 } else {
                     runTask(action, null);
                 }
@@ -353,8 +399,12 @@ public class SwingGUI implements ActionListener {
         if (action.equals("openAttempt") && attempts.getSelectedItem() == null) {
             throw new IllegalArgumentException("There are no saved attempts in this course.");
         }
-        if (action.equals("submitAttempt") && currentAttempt == null) {
+        if ((action.equals("submitAttempt") || action.equals("retryPendingGrading") || action.equals("selfGrade"))
+                && currentAttempt == null) {
             throw new IllegalArgumentException("Start or open an attempt first.");
+        }
+        if ((action.equals("retryPendingGrading") || action.equals("selfGrade")) && !currentAttempt.isSubmitted()) {
+            throw new IllegalArgumentException("Submit the attempt before resolving pending answers.");
         }
     }
 
@@ -420,6 +470,7 @@ public class SwingGUI implements ActionListener {
         Course course = (Course) courses.getSelectedItem();
         if (currentAttempt != null && (course == null || !currentAttempt.getCourseId().equals(course.getId()))) {
             currentAttempt = null;
+            currentQuiz = null;
             answerRows.setRowCount(0);
             answerQuestionIds.clear();
             attemptLabel.setText("Start an attempt from a saved quiz.");
@@ -475,6 +526,8 @@ public class SwingGUI implements ActionListener {
         private final Map<String, String> submittedAnswers;
         private QuizAttempt loadedAttempt;
         private Quiz attemptedQuiz;
+        private final String questionToSelfGrade;
+        private final boolean selfAssessment;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -494,6 +547,8 @@ public class SwingGUI implements ActionListener {
             selectedAttempt = (QuizAttempt) attempts.getSelectedItem();
             submittedAttemptId = currentAttempt == null ? "" : currentAttempt.getId();
             submittedAnswers = enteredAnswers();
+            questionToSelfGrade = selfGradeQuestionId;
+            selfAssessment = selfGradeCorrect;
         }
 
         protected String doInBackground() {
@@ -515,7 +570,8 @@ public class SwingGUI implements ActionListener {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {
                 return facade.getQuiz(course.getId(), selectedQuiz.getId()).describe();
-            } else if (action.equals("startAttempt") || action.equals("openAttempt") || action.equals("submitAttempt")) {
+            } else if (action.equals("startAttempt") || action.equals("openAttempt") || action.equals("submitAttempt")
+                    || action.equals("retryPendingGrading") || action.equals("selfGrade")) {
                 return useAttempt();
             }
             throw new IllegalArgumentException("Unknown GUI action.");
@@ -570,15 +626,23 @@ public class SwingGUI implements ActionListener {
         }
 
         private String useAttempt() {
+            String notice = "";
             if (action.equals("startAttempt")) {
                 loadedAttempt = facade.startAttempt(course.getId(), selectedQuiz.getId());
             } else if (action.equals("submitAttempt")) {
                 loadedAttempt = facade.submitAttempt(course.getId(), submittedAttemptId, submittedAnswers);
+            } else if (action.equals("retryPendingGrading")) {
+                if (facade.getAttempt(course.getId(), submittedAttemptId).getPendingCount() == 0) {
+                    notice = "No pending answers to grade.\n\n";
+                }
+                loadedAttempt = facade.retryPendingGrading(course.getId(), submittedAttemptId);
+            } else if (action.equals("selfGrade")) {
+                loadedAttempt = facade.selfGrade(course.getId(), submittedAttemptId, questionToSelfGrade, selfAssessment);
             } else {
                 loadedAttempt = facade.getAttempt(course.getId(), selectedAttempt.getId());
             }
             attemptedQuiz = facade.getQuiz(course.getId(), loadedAttempt.getQuizId());
-            return loadedAttempt.describe(attemptedQuiz);
+            return notice + loadedAttempt.describe(attemptedQuiz);
         }
 
         protected void done() {

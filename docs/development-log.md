@@ -22,10 +22,11 @@
 - Added flashcards, review records and basic progress/history using JSON files.
 - Added mixed quiz generation, three question creators and saved quizzes.
 - Added saved attempts, objective grading and graded-only quiz progress.
+- Added short-answer rubric grading, pending retries and self-assessment against the saved answer.
 
 ## Checks
 
-- All 93 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 110 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -35,11 +36,13 @@
 - Attempt checks covered fresh retakes, blank answers, pending results, score denominators, course isolation and repeated submissions after restarting.
 - Two submitted CLI attempts produced four graded answers, three correct answers and two history events. The checks used no API credentials or new model calls.
 - Retrying a failed history save restored one event without counting the attempt again.
+- A real short-answer grading check resolved one pending answer with one model call. Another attempt used offline self-assessment. After restart, the two attempts had six graded answers, five correct answers and four history events.
+- Repeated grading and self-assessment preserved the original answers and submission times. Invalid scores stayed pending; resolved answers entered progress only once.
 - My review of the Period 1 implementation is complete. Review of the Period 2 code, its GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish short-answer grading, study plans and the multi-step agent, then update the UML,
+Finish adaptive difficulty, weak topics, study plans and the multi-step agent, then update the UML,
 report and demonstration videos.
 
 ## AI support

@@ -86,6 +86,29 @@ public class QuizAttempt {
         results.add(result);
     }
 
+    public QuestionResult getResult(String questionId) {
+        for (QuestionResult result : results) {
+            if (result.getQuestionId().equals(questionId)) {
+                return result;
+            }
+        }
+        throw new IllegalArgumentException("Question result not found in this attempt.");
+    }
+
+    public void replacePendingResult(QuestionResult result) {
+        for (int i = 0; i < results.size(); i++) {
+            QuestionResult previous = results.get(i);
+            if (previous.getQuestionId().equals(result.getQuestionId())) {
+                if (previous.getStatus() != GradingStatus.PENDING) {
+                    throw new IllegalArgumentException("Only a pending result can be replaced.");
+                }
+                results.set(i, result);
+                return;
+            }
+        }
+        throw new IllegalArgumentException("Question result not found in this attempt.");
+    }
+
     public int getPendingCount() {
         int pending = 0;
         for (QuestionResult result : results) {

@@ -5,8 +5,8 @@ Notes for the Stage 2 implementation report, covering the current implementation
 ## 1 Project overview and status
 
 StudyPilot helps students study their own course materials. F01-F06 are implemented
-with basic automated and live API verification. F08 currently supports saved attempts
-and objective grading; nonempty short answers remain pending. F11 covers reviews,
+with basic automated and live API verification. F08 supports saved attempts,
+objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
 quiz submissions, graded-answer counts and history. The other original features
 remain explicit later-period tasks.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
@@ -23,7 +23,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A, pending |
 | F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
 | F07 Adaptive difficulty | Deterministic | Not implemented | Planned quiz rules and graded statistics | Planned suggestDifficulty | Planned Facade | B, pending |
-| F08 Attempts/grading | Deterministic so far | Partial | QuizAttempt stores the first submission; QuizGrader uses ExactMatchGrading for objective questions; QuestionResult records GRADED/PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, getScore, getPendingCount, saveAttempt, loadAttempt | Facade, Strategy, Observer | B, pending |
+| F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
 | F09 Weak topics | Hybrid | Not implemented | Planned WeakTopicAnalyzer and graded statistics | Planned analyze | Planned Adapter | B, pending |
 | F10 Study plans | Hybrid | Not implemented | Planned StudyPlanGenerator, StudyPlan and StudyTask | Planned generate/validatePlan/markTaskDone | Planned Observer | C, pending |
 | F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews and quiz submissions; ProgressSummary/ConceptStats count graded results once; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, getSummary, update, getHistory | Facade, Observer | B, pending |
@@ -43,10 +43,18 @@ ResponseParser reads them; the matching QuestionCreator builds each valid produc
 QuizRepository saves the Quiz and the GUI/CLI shows its questions and actual count.
 
 F08 starts a saved QuizAttempt through AgentFacade/QuizService. Submission validates
-answer IDs, then QuizGrader chooses ExactMatchGrading for objective answers. Missing
-answers score zero and nonempty short answers remain PENDING. The saved attempt is
-passed to ProgressTracker, which persists graded-only statistics and notifies the
-observers. Repeating the same submission reuses the stored answers and grades.
+answer IDs, then QuizGrader chooses ExactMatchGrading for objective answers or
+LLMRubricGrading for nonempty short answers. Missing answers score zero. The rubric
+strategy calls the model once with the saved answer and rubric; ResponseParser
+checks the integer score and explanation. Invalid or failed grades remain PENDING.
+The saved attempt passes to ProgressTracker, which persists graded-only statistics
+and notifies the observers. Repeating a submission reuses its answers and grades.
+
+A pending retry loads the same attempt and grades only its pending answers. For
+self-assessment, getPendingQuestion returns the saved model answer and rubric;
+selfGrade records full or zero points with an explicit self-assessment explanation.
+Only a pending short answer can change. Newly graded results are counted once,
+while the original answer map and submission timestamp stay unchanged.
 
 ## 3 Implemented design patterns
 
@@ -61,9 +69,10 @@ override to construct MultipleChoiceQuestion, TrueFalseQuestion or ShortAnswerQu
 QuizService holds the type-to-creator map and does not construct the products itself.
 The updated implementation UML remains a later delivery task.
 
-For objective grading, QuizGrader is also a Strategy context and holds
-GradingStrategy objects. ExactMatchGrading implements that interface for multiple
-choice and true/false. LLMRubricGrading remains planned for C10.
+QuizGrader is also a Strategy context and holds GradingStrategy objects.
+ExactMatchGrading handles multiple choice and true/false; LLMRubricGrading handles
+short answers. Both implement the same grade method. This is the same Strategy
+pattern used for retrieval, so it does not add another pattern to the count.
 
 ## 4 Changes and rationale
 
@@ -113,6 +122,15 @@ together and avoids repeating courseId in every ConceptStats object. quizzesTake
 is derived from saved attempt IDs. The updated progress class view must show this
 ownership and the new ID lists.
 
+F08 pending resolution adds ResponseParser.parseGrading, QuizAttempt.getResult and
+replacePendingResult, plus a getPendingQuestion helper in QuizService/AgentFacade
+for answer/rubric comparison. PromptTemplates keeps the Stage 1 three-string
+gradingPrompt signature; its question argument now includes the saved model answer
+and maximum points. The GUI adds a status column and a selected-answer comparison
+dialog, while CLI adds regrade/model-answer/selfgrade commands. UC10, SD08 and the
+grading/UI class views must show these operations. History events use the time of
+the grading update; QuizAttempt retains the first submission time.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -132,13 +150,14 @@ Representative interaction:
 - Outcome: material imports, summaries, concepts, cited answers and flashcard review were implemented and checked.
 
 Quiz additions used the F06/UC07 and F08/UC09 designs. AI support produced code and
-tests for mixed generation, objective grading, storage and GUI/CLI entry points.
-Generation passed a real API check; attempt/grading checks required no new model
-calls. My review of these additions and their interactive GUI check remain pending.
+tests for mixed generation, objective/rubric grading, storage and GUI/CLI entry
+points. Generation and short-answer grading passed real API checks. Objective
+grading, pending self-assessment and repeat-action checks required no model calls.
+My review of these additions and their interactive GUI check remain pending.
 
 ## 6 Development and verification
 
-The current implementation passed 93 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 110 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -165,6 +184,15 @@ answer IDs were checked; the original quiz and first submission were unchanged.
 No new API call was needed. A test forced a history-save failure, then confirmed
 that resubmission persisted one history event without counting results again.
 
+C10 checked valid and invalid rubric grades, partial points, pending-only retries,
+self-assessment, course scope and recovery after a failed history save. A real API
+call graded a previously pending answer against its stored model answer and rubric.
+The second attempt was self-assessed offline. Separate CLI processes restored six
+graded answers, five correct answers and four history events across the two attempts.
+No pending answer entered the counts before resolution. Repeated requests left the
+original answers, submission times and quiz unchanged. The new GUI controls compile;
+their interactive walkthrough is still pending.
+
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
 preserving saved summaries after a failed request and avoiding duplicate history
@@ -173,8 +201,9 @@ entries. Test doubles are limited to the test directory.
 Current limits include no OCR, keyword/TF-IDF retrieval, and citation checking based
 on retrieved IDs. This check does not prove that every answer sentence is supported.
 The application uses one writer per data directory; separate JSON files are not
-updated as a single transaction. Quiz-attempt and task statistics, later features, updated
-UML and Stage 3 evaluation remain on the task board.
+updated as a single transaction. Task statistics, complete storage recovery, later
+features, updated UML and Stage 3 evaluation remain on the task board. A valid model
+grade does not prove that its semantic judgment is correct.
 
 ## 7 Demonstration index
 

@@ -116,6 +116,9 @@ public class CLI {
         output.println("  quiz submit <attemptId> --course <id> --answers <jsonFile>");
         output.println("  quiz attempt <attemptId> --course <id>");
         output.println("  quiz attempts --course <id>");
+        output.println("  quiz regrade <attemptId> --course <id>");
+        output.println("  quiz model-answer <attemptId> <questionId> --course <id>");
+        output.println("  quiz selfgrade <attemptId> <questionId> <right|wrong> --course <id>");
         output.println("  progress --course <id>");
         output.println("  history --course <id>");
     }
@@ -300,8 +303,15 @@ public class CLI {
             }
             return 0;
         }
-        if (args.length >= 3 && (args[1].equals("take") || args[1].equals("submit") || args[1].equals("attempt"))) {
+        if (args.length >= 3 && (args[1].equals("take") || args[1].equals("submit")
+                || args[1].equals("attempt") || args[1].equals("regrade"))) {
             return quizAttemptCommand(args);
+        }
+        if (args.length >= 4 && args[1].equals("model-answer")) {
+            return modelAnswerCommand(args);
+        }
+        if (args.length >= 5 && args[1].equals("selfgrade")) {
+            return selfGradeCommand(args);
         }
         return unknownCommand();
     }
@@ -320,17 +330,51 @@ public class CLI {
         } else if (args[1].equals("submit")) {
             Map<String, String> answers = readAnswers(required(flags, "--answers"));
             attempt = facade.submitAttempt(courseId, args[2], answers);
+        } else if (args[1].equals("regrade")) {
+            int pending = facade.getAttempt(courseId, args[2]).getPendingCount();
+            attempt = facade.retryPendingGrading(courseId, args[2]);
+            if (pending == 0) {
+                output.println("No pending answers to grade.");
+            }
         } else {
             attempt = facade.getAttempt(courseId, args[2]);
         }
         Quiz quiz = facade.getQuiz(courseId, attempt.getQuizId());
         output.println(attempt.describe(quiz));
-        if (!attempt.isSubmitted()) {
-            output.println("Question IDs for the answers file:");
+        if (!attempt.isSubmitted() || attempt.getPendingCount() > 0) {
+            String label = "Question IDs for the answers file:";
+            if (attempt.isSubmitted()) {
+                label = "Pending question IDs:";
+            }
+            output.println(label);
             for (Question question : quiz.getQuestions()) {
-                output.println(question.getId() + "  " + question.getText());
+                if (!attempt.isSubmitted() || attempt.getResult(question.getId()).getStatus() == GradingStatus.PENDING) {
+                    output.println(question.getId() + "  " + question.getText());
+                }
             }
         }
+        return 0;
+    }
+
+    private int modelAnswerCommand(String[] args) {
+        String courseId = required(options(args, 4, "--course"), "--course");
+        ShortAnswerQuestion question = facade.getPendingQuestion(courseId, args[2], args[3]);
+        QuizAttempt attempt = facade.getAttempt(courseId, args[2]);
+        output.println("Question: " + question.getText());
+        output.println("Your answer: " + attempt.getAnswers().get(question.getId()));
+        output.println("Model answer: " + question.getCorrectAnswer());
+        output.println("Rubric: " + question.getRubric());
+        output.println("Compare your answer, then use quiz selfgrade with right or wrong.");
+        return 0;
+    }
+
+    private int selfGradeCommand(String[] args) {
+        String courseId = required(options(args, 5, "--course"), "--course");
+        if (!args[4].equals("right") && !args[4].equals("wrong")) {
+            throw new IllegalArgumentException("Self-grade must be right or wrong.");
+        }
+        QuizAttempt attempt = facade.selfGrade(courseId, args[2], args[3], args[4].equals("right"));
+        output.println(attempt.describe(facade.getQuiz(courseId, attempt.getQuizId())));
         return 0;
     }
 

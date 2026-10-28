@@ -23,7 +23,7 @@ period-1-commits.md and period-2-commits.md.
 | 1 | C07 | Flashcards, reviews and Observer notifications | Implemented |
 | 2 | C08 | Mixed quizzes and Factory Method | Implemented |
 | 2 | C09 | Attempts and objective grading | Implemented |
-| 2 | C10 | Short-answer grading and pending results | Planned |
+| 2 | C10 | Short-answer grading and pending results | Implemented |
 | 2 | C11 | Adaptive difficulty | Planned |
 | 2 | C12 | Weak-topic ranking and explanation | Planned |
 | 2 | C13 | Validated study plans and task completion | Planned |
@@ -41,8 +41,8 @@ reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete F07-F10, F12 and the rest of F11 in their periods.
-- Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD13/SD14, retaining UMLet sources and images.
+- Complete F07, F09-F10, F12 and the rest of F11 in their periods.
+- Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD13/SD14, retaining UMLet sources and images.
 - Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
 - Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
 - Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
@@ -76,10 +76,13 @@ reject files containing only an encoding marker.
 ## Period 2 checks so far
 
 - C08 adds mixed quizzes with the three Stage 1 question creators, bounded replacement and immutable JSON storage.
-- The current Java 17 build, `./mvnw -q clean verify`, passed 93 tests.
+- The current Java 17 build, `./mvnw -q clean verify`, passed 110 tests.
 - A real API response produced three questions, one of each type. CLI list/show loaded the same IDs and content in new processes without credentials.
 - Course isolation, missing credentials, unrelated topics and invalid counts were checked without changing the saved quiz.
 - The Quizzes tab compiles. Its interactive walkthrough and student review remain pending.
-- C09 adds saved attempts, objective grading, blank-answer handling and pending short answers. Automatic short-answer grading and resolution remain C10.
+- C09 adds saved attempts, objective grading, blank-answer handling and pending short answers. C10 adds rubric grading, pending retries and self-assessment.
 - Separate CLI processes confirmed two submitted attempts, four graded answers, three correct answers and two history events. A repeated submission preserved the first result and timestamp.
-- Grading did not change the saved quiz or require an API key. Saved attempt/result IDs prevent duplicate quiz and topic counts.
+- Objective grading did not change the saved quiz or require an API key. Saved attempt/result IDs prevent duplicate quiz and topic counts.
+- C10 checked a real grading reply: one pending short answer became graded after one API call. A second attempt was resolved by self-assessment without an API key.
+- Across separate CLI processes, the two attempts had six graded answers, five correct answers and four history events. Repeated actions preserved answers, submission times and counts.
+- Tests reject invalid, fractional, coerced and out-of-range grades. A failed history save can be retried without another model call or duplicate counts.

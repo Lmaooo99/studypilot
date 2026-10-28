@@ -75,7 +75,7 @@ public class QuizAttemptTest {
         assertEquals(1, facade.getProgress(course.getId()).getQuizzesTaken());
         assertEquals(2, facade.getProgress(course.getId()).getGradedCount());
         assertEquals(1, facade.getProgress(course.getId()).getCorrectCount());
-        assertEquals(0, llm.getPrompts().size());
+        assertEquals(1, llm.getPrompts().size());
     }
 
     @Test

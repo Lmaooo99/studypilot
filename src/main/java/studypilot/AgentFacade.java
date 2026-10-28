@@ -120,6 +120,21 @@ public class AgentFacade {
         return quizService.submitAttempt(courseId, attemptId, answers);
     }
 
+    public QuizAttempt retryPendingGrading(String courseId, String attemptId) {
+        getCourse(courseId);
+        return quizService.retryPendingGrading(courseId, attemptId);
+    }
+
+    public ShortAnswerQuestion getPendingQuestion(String courseId, String attemptId, String questionId) {
+        getCourse(courseId);
+        return quizService.getPendingQuestion(courseId, attemptId, questionId);
+    }
+
+    public QuizAttempt selfGrade(String courseId, String attemptId, String questionId, boolean correct) {
+        getCourse(courseId);
+        return quizService.selfGrade(courseId, attemptId, questionId, correct);
+    }
+
     public ProgressSummary getProgress(String courseId) {
         getCourse(courseId);
         return progressTracker.getSummary(courseId);
@@ -140,7 +155,7 @@ public class AgentFacade {
 
     public String getImplementationStatus() {
         return "Available: F01-F06 (courses, materials, summaries, concepts, cited questions, flashcards, review and quiz generation)."
-                + "\nF08 supports saved attempts and objective grading; nonempty short answers remain pending."
-                + "\nF11 records reviews, quiz submissions, graded answers and history. Short-answer grading, adaptive difficulty, weak topics, study plans and the agent remain planned.";
+                + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
+                + "\nF11 records reviews, quiz submissions, graded answers and history. Adaptive difficulty, weak topics, study plans and the agent remain planned.";
     }
 }

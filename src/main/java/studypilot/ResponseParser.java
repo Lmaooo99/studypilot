@@ -123,4 +123,21 @@ public class ResponseParser {
         }
         return answers;
     }
+
+    public QuestionResult parseGrading(String text, Question question) {
+        JSONObject data = parseObject(text);
+        Object value = data.get("pointsEarned");
+        if (!(value instanceof Integer)) {
+            throw new JSONException("Grading points must be a JSON integer");
+        }
+        int points = (Integer) value;
+        if (points < 0 || points > question.getPoints()) {
+            throw new JSONException("Grading points must be within the question's range");
+        }
+        String explanation = data.getString("explanation");
+        if (explanation.isBlank()) {
+            throw new JSONException("Missing grading explanation");
+        }
+        return new QuestionResult(question, GradingStatus.GRADED, points, explanation.trim());
+    }
 }

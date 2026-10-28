@@ -1,5 +1,6 @@
 package studypilot;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class ProgressTracker extends Subject {
@@ -59,9 +60,9 @@ public class ProgressTracker extends Subject {
         int graded = attempt.getResults().size() - attempt.getPendingCount();
         // Repeated submissions use the same event ID, so history stays idempotent.
         String eventId = attempt.getId() + "-graded-" + graded;
-        String description = "Submitted quiz attempt " + attempt.getId() + "; graded answers: " + graded
+        String description = "Quiz attempt " + attempt.getId() + "; graded answers: " + graded
                 + "; pending: " + attempt.getPendingCount();
-        lastEvent = new StudyEvent(eventId, attempt.getSubmittedAt(), courseId, "", description);
+        lastEvent = new StudyEvent(eventId, LocalDateTime.now(), courseId, "", description);
         notifyObservers();
     }
 
