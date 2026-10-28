@@ -7,10 +7,10 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
 questions with checked citation IDs, and flashcard generation/review. F11 currently
-records reviews and quiz history. Period 2 adds F06 quiz generation and F08 saved
-attempts, objective grading and model-based short-answer grading. Failed grades can
-be retried or self-assessed against the saved answer and rubric. Adaptive difficulty,
-weak topics, study plans and the multi-step agent remain on the task board.
+records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficulty
+suggestions and F08 saved attempts with objective and model-based grading. Failed
+grades can be retried or self-assessed against the saved answer and rubric. Weak
+topics, study plans and the multi-step agent remain on the task board.
 
 ## Requirements and build
 
@@ -157,8 +157,8 @@ java -jar target/studypilot.jar quiz show QUIZ_ID --course COURSE_ID
 ```
 
 The Quizzes tab offers the same topic, count, difficulty and type choices, plus a
-saved-quiz selector. Medium is the default; adaptive suggestions are still pending.
-Request 1-50 questions and at least one per selected type. Counts are balanced
+saved-quiz selector. Suggested is the default difficulty choice; a specific level
+overrides it. Request 1-50 questions and at least one per selected type. Counts are balanced
 across the selected types. QuizService retrieves up to five relevant chunks and
 sends them to the model. No matching material means no model call.
 
@@ -174,6 +174,24 @@ Quizzes are saved under `quizzes/QUIZ_ID.json`. Saved content cannot be overwrit
 a newly generated quiz gets a new ID. Reading it after restart preserves the
 original question IDs, types, answers and rubrics. The displayed questions omit
 the answer key.
+
+## Suggested difficulty
+
+```sh
+java -jar target/studypilot.jar quiz difficulty --course COURSE_ID --topic "Observer"
+```
+
+The suggestion uses graded quiz answers for the exact saved concept name, shown as
+Topic beside each answer result. Names ignore case and outer spaces. Different
+concepts and courses are kept separate. PENDING answers and flashcard reviews do
+not contribute. Accuracy is fully correct answers divided by graded answers. With
+fewer than five graded answers, the level is Medium. Otherwise accuracy below 50%
+gives Easy, accuracy at or above 80% gives Hard, and the rest gives Medium. The output explains the level and sample count; with no results it says so.
+
+The query needs no API key, makes no model call and changes no saved data. The GUI's
+Show suggestion button shows the same level and reason. Quiz creation uses the
+suggestion unless a level is selected in the GUI or supplied with `--difficulty` in
+the CLI. An invalid CLI difficulty value prints a warning and uses the suggestion.
 
 ## Quiz attempts and grading
 

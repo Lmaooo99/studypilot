@@ -110,6 +110,7 @@ public class CLI {
         output.println("  review <courseId> [--card <cardId> --remembered true|false]");
         output.println("  quiz create --course <id> --topic <topic> [--count <number>] [--difficulty easy|medium|hard]");
         output.println("      [--types multiple-choice,true-false,short-answer]");
+        output.println("  quiz difficulty --course <id> --topic <topic>");
         output.println("  quiz list --course <id>");
         output.println("  quiz show <quizId> --course <id>");
         output.println("  quiz take <quizId> --course <id>");
@@ -275,6 +276,14 @@ public class CLI {
         if (args.length >= 2 && args[1].equals("create")) {
             return createQuizCommand(args);
         }
+        if (args.length >= 2 && args[1].equals("difficulty")) {
+            Map<String, String> flags = options(args, 2, "--course", "--topic");
+            String topic = required(flags, "--topic");
+            DifficultySuggestion suggestion = facade.suggestDifficulty(required(flags, "--course"), topic);
+            output.println("Topic: " + topic.trim());
+            output.println(suggestion);
+            return 0;
+        }
         if (args.length >= 2 && args[1].equals("list")) {
             String courseId = required(options(args, 2, "--course"), "--course");
             List<Quiz> quizzes = facade.listQuizzes(courseId);
@@ -391,15 +400,29 @@ public class CLI {
         String courseId = required(flags, "--course");
         String topic = required(flags, "--topic");
         int count = Integer.parseInt(flags.getOrDefault("--count", "6"));
-        Difficulty difficulty = Difficulty.parse(flags.getOrDefault("--difficulty", "medium"));
         List<QuestionType> types = new ArrayList<>();
         for (String type : flags.getOrDefault("--types", "multiple-choice,true-false,short-answer").split(",", -1)) {
             types.add(QuestionType.parse(type));
         }
+        DifficultySuggestion suggestion = facade.suggestDifficulty(courseId, topic);
+        Difficulty difficulty = selectedDifficulty(flags.get("--difficulty"), suggestion);
+        output.println(suggestion);
+        output.println("Selected difficulty: " + difficulty);
         Quiz quiz = facade.createQuiz(courseId, topic, count, difficulty, types);
         output.println("Questions generated: " + quiz.getQuestions().size() + ". Requested: " + count + ".");
         output.println(quiz.describe());
         return 0;
+    }
+
+    private Difficulty selectedDifficulty(String override, DifficultySuggestion suggestion) {
+        if (override != null) {
+            try {
+                return Difficulty.parse(override);
+            } catch (IllegalArgumentException e) {
+                output.println("Invalid difficulty override; using the suggestion.");
+            }
+        }
+        return suggestion.getLevel();
     }
 
     private int unknownCommand() {

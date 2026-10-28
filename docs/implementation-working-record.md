@@ -4,7 +4,7 @@ Notes for the Stage 2 implementation report, covering the current implementation
 
 ## 1 Project overview and status
 
-StudyPilot helps students study their own course materials. F01-F06 are implemented
+StudyPilot helps students study their own course materials. F01-F08 are implemented
 with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
 quiz submissions, graded-answer counts and history. The other original features
@@ -22,7 +22,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | A, pending |
 | F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A, pending |
 | F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
-| F07 Adaptive difficulty | Deterministic | Not implemented | Planned quiz rules and graded statistics | Planned suggestDifficulty | Planned Facade | B, pending |
+| F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B, pending |
 | F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
 | F09 Weak topics | Hybrid | Not implemented | Planned WeakTopicAnalyzer and graded statistics | Planned analyze | Planned Adapter | B, pending |
 | F10 Study plans | Hybrid | Not implemented | Planned StudyPlanGenerator, StudyPlan and StudyTask | Planned generate/validatePlan/markTaskDone | Planned Observer | C, pending |
@@ -55,6 +55,12 @@ self-assessment, getPendingQuestion returns the saved model answer and rubric;
 selfGrade records full or zero points with an explicit self-assessment explanation.
 Only a pending short answer can change. Newly graded results are counted once,
 while the original answer map and submission timestamp stay unchanged.
+
+F07 passes the course and topic through AgentFacade to QuizService.suggestDifficulty.
+ProgressTracker reads graded counts and accuracy from the course's ProgressSummary.
+chooseDifficulty applies the minimum sample and accuracy rules; DifficultySuggestion
+returns the level and reason. The GUI/CLI shows the suggestion and passes the chosen
+level into F06. Reading a suggestion makes no model call and saves nothing.
 
 ## 3 Implemented design patterns
 
@@ -101,7 +107,7 @@ may contain fewer questions than requested; the UI and CLI show both counts.
 QuizRepository and plain restore constructors preserve question IDs and types;
 saved quizzes cannot be overwritten. listQuizzes/getQuiz/describe support reopening
 them. These methods and the retrieval association belong in the updated UML.
-Adaptive suggestions remain F07; the current selector defaults to Medium.
+F07 now supplies the default difficulty. A valid explicit level overrides it.
 
 F08 adds explicit course scope to startAttempt/submitAttempt and provides
 getAttempt/listAttempts for reopening saved work. Objective answers use displayed
@@ -131,6 +137,15 @@ dialog, while CLI adds regrade/model-answer/selfgrade commands. UC10, SD08 and t
 grading/UI class views must show these operations. History events use the time of
 the grading update; QuizAttempt retains the first submission time.
 
+F07 restores the Stage 1 DifficultySuggestion, suggestDifficulty/chooseDifficulty
+and ProgressTracker.getAccuracy/getGradedCount operations. Topic lookup uses the
+existing ConceptStats names, with exact matching after trimming and ignoring case.
+QuizAttempt.describe now shows those names so students can reuse the right topic.
+There is no inference that differently named concepts are equivalent. The GUI adds
+a Suggested choice and Show suggestion; CLI quiz create uses the suggestion when
+no valid override is supplied. These details affect UC07/UC08, SD06 and the quiz/UI
+class views. The feature and its Facade use still match Stage 1.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -153,11 +168,12 @@ Quiz additions used the F06/UC07 and F08/UC09 designs. AI support produced code 
 tests for mixed generation, objective/rubric grading, storage and GUI/CLI entry
 points. Generation and short-answer grading passed real API checks. Objective
 grading, pending self-assessment and repeat-action checks required no model calls.
-My review of these additions and their interactive GUI check remain pending.
+C11 adds the deterministic difficulty logic, GUI/CLI selection and boundary tests.
+My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 110 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 130 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -192,6 +208,15 @@ graded answers, five correct answers and four history events across the two atte
 No pending answer entered the counts before resolution. Repeated requests left the
 original answers, submission times and quiz unchanged. The new GUI controls compile;
 their interactive walkthrough is still pending.
+
+C11 tested the five-result minimum, both exact thresholds, pending exclusion,
+resolved results, course/topic isolation and restart persistence. CLI generation
+tests verified default, valid override and invalid-override fallback using a test
+LLM. Packaged CLI checks used saved quiz attempts without credentials: four results
+kept Medium, 80% selected Hard, 50% selected Medium and a lower accuracy selected
+Easy. Every suggestion read left saved data unchanged and required no model call.
+The updated GUI opened, but the interactive walkthrough remains pending because
+the native controls could not be operated reliably during this check.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

@@ -140,6 +140,34 @@ public class QuizService {
         return false;
     }
 
+    public DifficultySuggestion suggestDifficulty(String courseId, String topic) {
+        if (topic == null || topic.isBlank()) {
+            throw new IllegalArgumentException("Enter a quiz topic.");
+        }
+        double accuracy = tracker.getAccuracy(courseId, topic);
+        int gradedCount = tracker.getGradedCount(courseId, topic);
+        Difficulty level = chooseDifficulty(accuracy, gradedCount);
+        String reason = "No graded answers for this topic; using MEDIUM.";
+        if (gradedCount > 0) {
+            reason = "Accuracy " + Math.round(accuracy * 100) + "% over " + gradedCount + " graded answers.";
+            if (gradedCount < 5) {
+                reason += " At least 5 are needed; using MEDIUM.";
+            }
+        }
+        return new DifficultySuggestion(level, accuracy, gradedCount, reason);
+    }
+
+    private Difficulty chooseDifficulty(double accuracy, int gradedCount) {
+        if (gradedCount < 5) {
+            return Difficulty.MEDIUM;
+        } else if (accuracy < 0.5) {
+            return Difficulty.EASY;
+        } else if (accuracy >= 0.8) {
+            return Difficulty.HARD;
+        }
+        return Difficulty.MEDIUM;
+    }
+
     public Quiz getQuiz(String courseId, String quizId) {
         Quiz quiz = repository.loadQuiz(quizId);
         if (!quiz.getCourseId().equals(courseId)) {

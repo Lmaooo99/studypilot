@@ -90,6 +90,11 @@ public class AgentFacade {
         return quizService.createQuiz(getCourse(courseId), topic, count, difficulty, types);
     }
 
+    public DifficultySuggestion suggestDifficulty(String courseId, String topic) {
+        getCourse(courseId);
+        return quizService.suggestDifficulty(courseId, topic);
+    }
+
     public Quiz getQuiz(String courseId, String quizId) {
         getCourse(courseId);
         return quizService.getQuiz(courseId, quizId);
@@ -154,8 +159,8 @@ public class AgentFacade {
     }
 
     public String getImplementationStatus() {
-        return "Available: F01-F06 (courses, materials, summaries, concepts, cited questions, flashcards, review and quiz generation)."
+        return "Available: F01-F08 (courses, materials, summaries, concepts, cited questions, flashcards, review, quiz generation and difficulty suggestions)."
                 + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
-                + "\nF11 records reviews, quiz submissions, graded answers and history. Adaptive difficulty, weak topics, study plans and the agent remain planned.";
+                + "\nF11 records reviews, quiz submissions, graded answers and history. Weak topics, study plans and the agent remain planned.";
     }
 }

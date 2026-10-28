@@ -165,6 +165,7 @@ public class QuizAttempt {
         text.append("Pending: " + getPendingCount() + "\n");
         for (QuestionResult result : results) {
             text.append("\n" + quiz.getQuestion(result.getQuestionId()).getText() + "\n");
+            text.append("Topic: " + result.getConceptName() + "\n");
             text.append(result.getStatus() + " - " + result.getExplanation() + "\n");
         }
         return text.toString();

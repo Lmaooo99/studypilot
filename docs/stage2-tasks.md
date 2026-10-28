@@ -24,7 +24,7 @@ period-1-commits.md and period-2-commits.md.
 | 2 | C08 | Mixed quizzes and Factory Method | Implemented |
 | 2 | C09 | Attempts and objective grading | Implemented |
 | 2 | C10 | Short-answer grading and pending results | Implemented |
-| 2 | C11 | Adaptive difficulty | Planned |
+| 2 | C11 | Adaptive difficulty | Implemented |
 | 2 | C12 | Weak-topic ranking and explanation | Planned |
 | 2 | C13 | Validated study plans and task completion | Planned |
 | 2 | C14 | Agent tools, planning, memory and trace | Planned |
@@ -41,7 +41,7 @@ reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete F07, F09-F10, F12 and the rest of F11 in their periods.
+- Complete F09-F10, F12 and the rest of F11 in their periods.
 - Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD13/SD14, retaining UMLet sources and images.
 - Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
 - Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
@@ -76,7 +76,7 @@ reject files containing only an encoding marker.
 ## Period 2 checks so far
 
 - C08 adds mixed quizzes with the three Stage 1 question creators, bounded replacement and immutable JSON storage.
-- The current Java 17 build, `./mvnw -q clean verify`, passed 110 tests.
+- The current Java 17 build, `./mvnw -q clean verify`, passed 130 tests.
 - A real API response produced three questions, one of each type. CLI list/show loaded the same IDs and content in new processes without credentials.
 - Course isolation, missing credentials, unrelated topics and invalid counts were checked without changing the saved quiz.
 - The Quizzes tab compiles. Its interactive walkthrough and student review remain pending.
@@ -86,3 +86,5 @@ reject files containing only an encoding marker.
 - C10 checked a real grading reply: one pending short answer became graded after one API call. A second attempt was resolved by self-assessment without an API key.
 - Across separate CLI processes, the two attempts had six graded answers, five correct answers and four history events. Repeated actions preserved answers, submission times and counts.
 - Tests reject invalid, fractional, coerced and out-of-range grades. A failed history save can be retried without another model call or duplicate counts.
+- C11 adds exact-topic difficulty suggestions, the five-result minimum, accuracy thresholds, reasons and explicit overrides.
+- CLI checks observed Medium at four graded answers, Hard at 80%, Medium at 50%, and Easy below 50%, across separate processes. Suggestion queries changed no files and used no API key.

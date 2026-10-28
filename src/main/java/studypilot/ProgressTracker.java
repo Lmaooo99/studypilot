@@ -40,6 +40,31 @@ public class ProgressTracker extends Subject {
         return summary;
     }
 
+    private ConceptStats findStats(String courseId, String topic) {
+        for (ConceptStats stats : getSummary(courseId).getStats()) {
+            if (stats.getConceptName().equalsIgnoreCase(topic.trim())) {
+                return stats;
+            }
+        }
+        return null;
+    }
+
+    public double getAccuracy(String courseId, String topic) {
+        ConceptStats stats = findStats(courseId, topic);
+        if (stats == null) {
+            return 0;
+        }
+        return stats.getAccuracy();
+    }
+
+    public int getGradedCount(String courseId, String topic) {
+        ConceptStats stats = findStats(courseId, topic);
+        if (stats == null) {
+            return 0;
+        }
+        return stats.getGradedCount();
+    }
+
     public void recordQuizAttempt(QuizAttempt attempt) {
         if (!attempt.isSubmitted()) {
             throw new IllegalArgumentException("Only a submitted attempt can update progress.");

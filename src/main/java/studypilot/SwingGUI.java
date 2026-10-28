@@ -38,7 +38,8 @@ public class SwingGUI implements ActionListener {
     private final JTextField cardCount = new JTextField("5", 4);
     private final JTextField quizTopic = new JTextField(24);
     private final JTextField quizCount = new JTextField("6", 4);
-    private final JComboBox<Difficulty> difficulties = new JComboBox<>(Difficulty.values());
+    private final JComboBox<String> difficulties = new JComboBox<>(new String[] {"Suggested", "EASY", "MEDIUM", "HARD"});
+    private final JLabel difficultyReason = new JLabel("Enter a topic and choose Show suggestion to view its graded history.");
     private final JCheckBox multipleChoice = new JCheckBox("Multiple choice", true);
     private final JCheckBox trueFalse = new JCheckBox("True/false", true);
     private final JCheckBox shortAnswer = new JCheckBox("Short answer", true);
@@ -176,13 +177,13 @@ public class SwingGUI implements ActionListener {
         quizTopic.setName("quizTopic");
         quizCount.setName("quizCount");
         difficulties.setName("quizDifficulty");
-        difficulties.setSelectedItem(Difficulty.MEDIUM);
         generation.add(new JLabel("Topic"));
         generation.add(quizTopic);
         generation.add(new JLabel("Questions"));
         generation.add(quizCount);
         generation.add(new JLabel("Difficulty"));
         generation.add(difficulties);
+        generation.add(button("Show suggestion", "suggestDifficulty"));
         generation.add(button("Generate quiz", "createQuiz"));
 
         JPanel selection = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -196,7 +197,8 @@ public class SwingGUI implements ActionListener {
         selection.add(button("Start attempt", "startAttempt"));
         JPanel choices = new JPanel(new BorderLayout());
         choices.add(generation, BorderLayout.NORTH);
-        choices.add(selection, BorderLayout.SOUTH);
+        choices.add(selection, BorderLayout.CENTER);
+        choices.add(difficultyReason, BorderLayout.SOUTH);
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(choices, BorderLayout.NORTH);
         panel.add(attemptPanel(), BorderLayout.CENTER);
@@ -460,6 +462,7 @@ public class SwingGUI implements ActionListener {
 
     private void refreshMaterials(String materialId) {
         loading = true;
+        difficultyReason.setText("Enter a topic and choose Show suggestion to view its graded history.");
         answerShown = false;
         materials.removeAllItems();
         cards.removeAllItems();
@@ -517,7 +520,8 @@ public class SwingGUI implements ActionListener {
         private final String requestedCount;
         private final String topicText;
         private final String requestedQuizCount;
-        private final Difficulty difficulty;
+        private final String difficultyChoice;
+        private DifficultySuggestion loadedSuggestion;
         private final List<QuestionType> questionTypes;
         private final Quiz selectedQuiz;
         private Quiz generatedQuiz;
@@ -541,7 +545,7 @@ public class SwingGUI implements ActionListener {
             requestedCount = cardCount.getText();
             topicText = quizTopic.getText();
             requestedQuizCount = quizCount.getText();
-            difficulty = (Difficulty) difficulties.getSelectedItem();
+            difficultyChoice = (String) difficulties.getSelectedItem();
             questionTypes = selectedQuestionTypes();
             selectedQuiz = (Quiz) quizzes.getSelectedItem();
             selectedAttempt = (QuizAttempt) attempts.getSelectedItem();
@@ -566,6 +570,9 @@ public class SwingGUI implements ActionListener {
                 return generateFlashcards();
             } else if (action.equals("remembered") || action.equals("notYet")) {
                 return reviewCard();
+            } else if (action.equals("suggestDifficulty")) {
+                loadedSuggestion = facade.suggestDifficulty(course.getId(), topicText);
+                return loadedSuggestion.toString();
             } else if (action.equals("createQuiz")) {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {
@@ -620,8 +627,14 @@ public class SwingGUI implements ActionListener {
 
         private String createQuiz() {
             int count = Integer.parseInt(requestedQuizCount);
+            loadedSuggestion = facade.suggestDifficulty(course.getId(), topicText);
+            Difficulty difficulty = loadedSuggestion.getLevel();
+            if (!"Suggested".equals(difficultyChoice)) {
+                difficulty = Difficulty.parse(difficultyChoice);
+            }
             generatedQuiz = facade.createQuiz(course.getId(), topicText, count, difficulty, questionTypes);
-            return "Questions generated: " + generatedQuiz.getQuestions().size() + ". Requested: " + count
+            return loadedSuggestion + "\nSelected difficulty: " + difficulty
+                    + "\nQuestions generated: " + generatedQuiz.getQuestions().size() + ". Requested: " + count
                     + ".\n\n" + generatedQuiz.describe();
         }
 
@@ -649,6 +662,10 @@ public class SwingGUI implements ActionListener {
             try {
                 results.setText(get());
                 refreshCourses();
+                if (loadedSuggestion != null) {
+                    difficultyReason.setText("Suggested for \"" + topicText.trim() + "\": "
+                            + loadedSuggestion.getLevel() + "; " + loadedSuggestion.getReason());
+                }
                 if (generatedQuiz != null) {
                     selectGeneratedQuiz();
                 }
