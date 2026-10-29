@@ -10,8 +10,9 @@ questions with checked citation IDs, and flashcard generation/review. F11 curren
 records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficulty
 suggestions, F08 saved attempts with objective and model-based grading, F09
 weak-topic reports and F10 dated study plans. Failed grades can be retried or
-self-assessed against the saved answer and rubric. The multi-step agent remains
-on the task board.
+self-assessed against the saved answer and rubric. The assistant now plans and
+runs six tools with saved conversation context. Agent recovery and step-result
+references remain on the task board.
 
 ## Requirements and build
 
@@ -309,10 +310,46 @@ Plans from another course and task IDs outside the selected plan are rejected.
 Task descriptions still need review; fitting the time budget does not prove that
 the schedule covers the whole course.
 
+## Study assistant
+
+```sh
+java -jar target/studypilot.jar agent "Show progress, then summarize notes.md briefly" --course COURSE_ID --json
+java -jar target/studypilot.jar agent "Summarize the same material in bullet style" --course COURSE_ID --session SESSION_ID --json
+```
+
+Use an imported file name in the first request. A new request without --session
+creates a UUID session. Reuse the returned sessionId for a follow-up, including
+after restarting. A saved session belongs to one course and cannot be reused for
+another course. The Assistant tab has a request box, session field and New chat
+button. It shows new messages in the current window, with the execution trace in
+the results area.
+
+The planner receives course/material names and IDs, available tool descriptions
+and the last ten saved messages. It chooses among summarize, answer, quiz,
+weakTopics, studyPlan and progress. These tools call the same services as the
+other GUI/CLI features. Each plan contains at most eight steps. The application
+rejects unknown tools, repeated step IDs, missing/extra arguments and attempts to
+change the selected course through tool arguments.
+
+The result includes the session ID, status, final answer, plan, actual tool results
+and trace. The final answer uses the tool outputs. A tool with insufficient data
+asks for clarification; for example, no graded history cannot establish a weakest
+topic. A failed step stops the request and keeps earlier results. JSON output is
+one object on stdout; failures return exit code 1 and invalid command input returns
+2. A clarification is a normal response with exit code 0.
+
+This version executes literal arguments in one plan. Resolving step-result
+references and retrying/replanning failed agent steps are still pending. Existing
+services keep their own bounded generation retries. An unusable planner reply is
+retried once. Conversation files preserve both the request and reply. If saving
+conversation memory fails, the result reports that failure while retaining any
+completed tool results.
+
 ## Storage and verification
 
 Runtime files are under DATA_DIR, which defaults to the ignored `data` folder.
-Courses use `courses/COURSE_ID.json`; plans use `plans/PLAN_ID.json`. Progress and
+Courses use `courses/COURSE_ID.json`; plans use `plans/PLAN_ID.json`; assistant
+messages use `conversations/SESSION_ID.json`. Progress and
 history use `progress.json` and `history.json`. Unreadable progress/history is moved to a unique `.bak-*` file,
 then starts empty with a warning. Individual JSON saves use temporary-file
 replacement. Use one writable application instance per data directory.

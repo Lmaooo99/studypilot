@@ -9,6 +9,8 @@ with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
 quiz submissions, graded-answer counts, completed tasks and history. The other original features
 remain explicit later-period tasks.
+F12 now supports one-plan tool execution, conversation memory and trace output;
+step references and agent retry/replan recovery remain incomplete.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
 
@@ -27,7 +29,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
 | F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C, pending |
 | F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews, quiz submissions and completed tasks; ProgressSummary/ConceptStats prevent duplicate counts; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, recordTaskDone, getSummary, update, getHistory | Facade, Observer | B, pending |
-| F12 Natural-language agent | AI | Not implemented | Planned controller, planner, six tools and memory | Planned handleRequest/createPlan/execute | Planned Facade/Adapter | C, pending |
+| F12 Natural-language agent | AI | Partial | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, executionPlanPrompt, parseExecutionPlan, validatePlan, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C, pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
 Course with Material and Chunk objects. F02/F03/F05 send material chunks through
@@ -83,6 +85,20 @@ markTaskDone. The generator loads the plan, marks the selected task and saves it
 before calling ProgressTracker.recordTaskDone. Saved task IDs prevent another
 count for a repeated action; the stable event ID prevents another history entry.
 The existing observers update history and the dashboard.
+
+F12 passes a course, session ID and request through AgentFacade to AgentController.
+MemoryManager loads earlier messages. AgentPlanner sends actual material IDs, tool
+descriptions and recent messages through executionPlanPrompt and LLMClient, then
+parseExecutionPlan reads the steps. The controller checks the eight-step limit and
+ToolManager validates names, step IDs and parameter names/presence before execution.
+The manager injects the trusted course ID and dispatches each step to its Tool.
+
+SummarizeTool calls SummaryService; AnswerTool uses QuestionAnswerService retrieval
+and citation checks; QuizTool calls QuizService; WeakTopicTool calls WeakTopicAnalyzer;
+StudyPlanTool calls StudyPlanGenerator; ProgressTool reads ProgressTracker. The
+controller continues on OK, clarifies insufficient data and stops on failure.
+AgentResult retains the actual outputs and decisions. MemoryManager.addMessage
+saves both user and assistant messages through MemoryRepository.
 
 ## 3 Implemented design patterns
 
@@ -195,6 +211,24 @@ repairs a failed progress/history save after the plan was saved, without countin
 twice. This changes the progress class view and SD11; it uses the existing Observer
 and introduces no new pattern.
 
+F12 adds explicit courseId parameters to runAgent, handleRequest, createPlan,
+ToolManager.execute and conversation persistence. Tool arguments cannot override
+that scope. AgentPlanner receives course/material IDs from CourseService; Tool adds
+required/optional argument-name methods for basic validation. PlanStep adds stepId;
+ToolResult adds a string data map for saved object IDs and measured topic values.
+AgentResult adds status, sessionId and structured plan/results alongside its original
+answer, clarification flag and trace. These changes affect UC15, SD13/SD14 and the
+agent/tool/memory class views.
+
+MemoryRepository stores course-bound UUID sessions and preserves unreadable files
+with an error. All messages are saved; only the last ten enter planning context.
+The GUI session field reuses saved context after restart, while its transcript
+shows the messages exchanged in the current window. Agent-level step retries,
+replanning with successful results and step references remain C15 work. Current
+decide returns CONTINUE, CLARIFY or ABORT; the RETRY/REPLAN enum values retain the
+Stage 1 names for that later implementation. Underlying services keep their own
+retry limits. No additional design pattern was introduced.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -220,11 +254,12 @@ grading, pending self-assessment and repeat-action checks required no model call
 C11 adds the deterministic difficulty logic, GUI/CLI selection and boundary tests.
 C12 adds the weak-topic analyzer/report, ranking rules, fallback and related tests.
 C13 adds the plan workflow, constraints, saved task completion and related checks.
+C14 connects the planner, six tools, conversation storage, trace and GUI/CLI entry.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 170 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 202 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -286,6 +321,22 @@ only once. Existing course, quiz and attempt files were unchanged; earlier progr
 and history records were retained. The study-plan GUI compiles; interaction remains
 pending.
 
+C14 passed 202 tests covering all six registered service connections, plan bounds,
+parameter checks, partial results, clarification, memory and CLI JSON. The first
+live run obtained a plan and progress, then stopped after summary generation timed
+out, retaining those results and both conversation messages. A later CLI invocation
+completed progress and summary. Another process reused that session and summarized
+the same material in bullet style, with four saved user/assistant messages.
+
+A real weak-topic request on a course with no graded history returned
+INSUFFICIENT_DATA and a question. Offline checks rejected session/course mismatch,
+invalid flags and damaged conversation data; missing credentials produced a failed
+JSON result. Earlier study records were preserved, apart from the requested summary
+updates. Six completed API responses were recorded across the four live invocations.
+The two unsuccessful summary attempts have unavailable token usage and billing.
+The Assistant panel compiles; its native walkthrough and student review remain
+pending. Agent-level recovery/references still require C15.
+
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
 preserving saved summaries after a failed request and avoiding duplicate history
@@ -296,7 +347,7 @@ on retrieved IDs. This check does not prove that every answer sentence is suppor
 The application uses one writer per data directory; separate JSON files are not
 updated as a single transaction. A task's done flag can be saved before a later
 progress/history failure; repeating completion repairs that recording. Complete
-storage recovery, the agent, updated UML and Stage 3 evaluation remain on the task
+storage recovery, agent recovery/references, updated UML and Stage 3 evaluation remain on the task
 board. Plan context is limited to eight material chunks; validation checks schedule
 constraints, not complete syllabus coverage. A valid model grade does not prove
 that its semantic judgment is correct.

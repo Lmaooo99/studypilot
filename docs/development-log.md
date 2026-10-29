@@ -26,10 +26,11 @@
 - Added graded-history difficulty suggestions with reasons and a manual override.
 - Added weak-topic rankings, insufficient-data labels and an AI explanation with a fallback.
 - Added dated study plans, time-budget checks and saved task completion.
+- Connected the assistant planner, six tools, saved conversations and execution traces.
 
 ## Checks
 
-- All 170 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 202 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -47,12 +48,14 @@
 - A real API check explained three ranked topics. Missing-key and high-minimum checks retained the report without an AI explanation. Progress, history, quizzes and attempts were unchanged.
 - Plan tests covered dates, daily budgets, bounded correction, diagnostic quizzes without history, storage and completion failures.
 - A real API reply produced six tasks over three days, at 60 minutes per day. Separate CLI processes restored the plan and recorded one completion once, including after a repeated action. Earlier study records were preserved.
+- Agent tests covered the six service-backed tools, plan validation, partial results, clarification, saved messages, course/session isolation and CLI JSON.
+- A real run kept progress when summary generation timed out. A later CLI invocation completed progress and summary; a follow-up restored the same material from saved context. A no-history request asked for clarification instead of claiming a weakest topic.
 - My review of the Period 1 implementation is complete. Review of the Period 2 code, its GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish the multi-step agent, then update the UML,
-report and demonstration videos.
+Finish agent step references and retry/replan recovery, then complete the remaining
+verification, UML, report and demonstration videos.
 
 ## AI support
 

@@ -94,6 +94,8 @@ public class CLI {
             return 0;
         } else if (command.equals("plan")) {
             return planCommand(args);
+        } else if (command.equals("agent")) {
+            return agentCommand(args);
         } else if (command.equals("progress") || command.equals("history")) {
             return progressCommand(args);
         }
@@ -134,6 +136,7 @@ public class CLI {
         output.println("  plan list --course <id>");
         output.println("  plan show <planId> --course <id>");
         output.println("  plan complete <planId> <taskId> --course <id>");
+        output.println("  agent \"<request>\" --course <id> [--session <id>] [--json]");
         output.println("  history --course <id>");
     }
 
@@ -170,6 +173,40 @@ public class CLI {
         }
         int hours = Integer.parseInt(required(flags, "--hours"));
         output.println(facade.createStudyPlan(courseId, exam, hours).describe());
+        return 0;
+    }
+
+    private int agentCommand(String[] args) {
+        if (args.length < 2) {
+            return unknownCommand();
+        }
+        boolean json = false;
+        List<String> options = new ArrayList<>();
+        for (int i = 2; i < args.length; i++) {
+            if (args[i].equals("--json")) {
+                if (json) {
+                    throw new IllegalArgumentException("The --json option must appear only once.");
+                }
+                json = true;
+            } else {
+                options.add(args[i]);
+            }
+        }
+        Map<String, String> flags = options(options.toArray(new String[0]), 0, "--course", "--session");
+        AgentResult result = facade.runAgent(required(flags, "--course"), flags.get("--session"), args[1]);
+        if (json) {
+            output.println(result.toJson());
+        } else {
+            output.println("Session ID: " + result.getSessionId());
+            output.println("Status: " + result.getStatus() + "\n" + result.getFinalAnswer());
+            output.println("\nTrace:");
+            for (String line : result.getTrace()) {
+                output.println(line);
+            }
+        }
+        if (result.getStatus() == ResultStatus.FAILED) {
+            return 1;
+        }
         return 0;
     }
 

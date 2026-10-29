@@ -156,4 +156,24 @@ public class ResponseParser {
         }
         return tasks;
     }
+
+    public ExecutionPlan parseExecutionPlan(String text) {
+        JSONObject data = parseObject(text);
+        JSONArray items = data.getJSONArray("steps");
+        List<PlanStep> steps = new ArrayList<>();
+        for (int i = 0; i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            JSONObject saved = item.getJSONObject("arguments");
+            Map<String, String> arguments = new HashMap<>();
+            for (String name : saved.keySet()) {
+                arguments.put(name, saved.getString(name));
+            }
+            steps.add(new PlanStep(item.getString("stepId"), item.getString("toolName"), arguments));
+        }
+        String clarification = "";
+        if (data.has("clarification")) {
+            clarification = data.getString("clarification");
+        }
+        return new ExecutionPlan(steps, clarification);
+    }
 }

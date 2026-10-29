@@ -27,7 +27,7 @@ period-1-commits.md and period-2-commits.md.
 | 2 | C11 | Adaptive difficulty | Implemented |
 | 2 | C12 | Weak-topic ranking and explanation | Implemented |
 | 2 | C13 | Validated study plans and task completion | Implemented |
-| 2 | C14 | Agent tools, planning, memory and trace | Planned |
+| 2 | C14 | Agent tools, planning, memory and trace | Implemented core |
 | 3 | C15 | Step references, validation and bounded recovery | Planned |
 | 3 | C16 | Complete progress/history and duplicate-count prevention | Planned |
 | 3 | C17 | Persistence integration tests | Planned |
@@ -41,14 +41,14 @@ reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete F12 and the rest of F11 in their periods.
+- Complete F12 recovery/references and the rest of F11 in Period 3.
 - Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD09/SD10/SD11/SD13/SD14, retaining UMLet sources and images.
 - Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
 - Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
 - Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
 - Record A (F01-F05), B (F06-F09/F11), and C (F10/F12), collectively showing GUI and CLI.
 - Video uploads, timestamp-link checks and course-system submission remain pending.
-- Complete the final GUI walkthrough and review later code changes. The confirmed review covers F01-F05 and review/history; review of the new quiz code remains pending.
+- Complete the final GUI walkthrough and review later code changes. The confirmed review covers F01-F05 and review/history; review of the Period 2 code remains pending.
 - Add development-tool and API billing records when available.
 - Complete the clean-clone rehearsal and final checks by November 9; final submission is due November 10.
 
@@ -57,9 +57,9 @@ reject files containing only an encoding marker.
 - Plain Java 17, Swing, Maven Wrapper, JSON files and JUnit 4.
 - OpenAI-compatible Chat Completions, configured model gpt-6.1-sol. Credentials remain in ignored .env.
 - AgentFacade is the GUI/CLI entry point. Five patterns: Facade, Strategy, Adapter, Factory Method and Observer.
-- Agent calls six tools, validates stepId references such as $step1.topic and scopes all operations by courseId.
-- Maximum eight steps per plan, two extra retries per step and two replans per request.
-- Preserve successful tool results during replanning, clarify missing data and report partial completion honestly.
+- Agent calls six tools and scopes operations by courseId. C15 adds validated stepId references such as $step1.topic.
+- The eight-step limit is enforced. The two-extra-retry/two-replan agent recovery is scheduled for C15.
+- Current execution clarifies missing data and keeps partial results. C15 will preserve successful results during replanning.
 - PENDING grading never contributes to graded accuracy, weak-topic ranking or difficulty.
 - Difficulty needs five graded results: Easy below 50%, Hard at 80% or above, otherwise Medium. Weak-topic reports and plans use the configured minimum, default five.
 - Plans accept 1-24 whole hours per day, validate dates and daily minutes, and allow three proposal attempts. Insufficient graded history requires a diagnostic quiz first.
@@ -77,7 +77,7 @@ reject files containing only an encoding marker.
 ## Period 2 checks so far
 
 - C08 adds mixed quizzes with the three Stage 1 question creators, bounded replacement and immutable JSON storage.
-- The current Java 17 build, `./mvnw -q clean verify`, passed 170 tests.
+- The current Java 17 build, `./mvnw -q clean verify`, passed 202 tests.
 - A real API response produced three questions, one of each type. CLI list/show loaded the same IDs and content in new processes without credentials.
 - Course isolation, missing credentials, unrelated topics and invalid counts were checked without changing the saved quiz.
 - The Quizzes tab compiles. Its interactive walkthrough and student review remain pending.
@@ -93,3 +93,6 @@ reject files containing only an encoding marker.
 - A real explanation call used three topic counts. Missing credentials and insufficient history kept the computed report available without invented advice. Study records were unchanged.
 - C13 adds validated study plans and idempotent task completion through the existing Observer.
 - A real plan reply produced six dated tasks within three daily 60-minute budgets. CLI checks restored IDs/flags, rejected invalid input and course access, and retained one completion after repeated actions. GUI interaction and student review remain pending.
+- C14 connects the six Stage 1 tools, structured planning, saved course-bound messages, actual results and trace output through GUI/CLI entry points.
+- Tests cover the eight-step limit, tool/argument checks, partial failure, no-history clarification, memory persistence and JSON output. Agent step references and retry/replan recovery remain C15 work.
+- Live CLI checks verified progress plus summary, a saved-context follow-up and no-history clarification. The earlier summary timeout was preserved as a partial-failure check; its unavailable usage is recorded separately.

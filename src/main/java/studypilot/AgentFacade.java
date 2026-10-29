@@ -13,6 +13,7 @@ public class AgentFacade {
     private final QuizService quizService;
     private final WeakTopicAnalyzer weakTopicAnalyzer;
     private final StudyPlanGenerator studyPlanGenerator;
+    private final AgentController agentController;
     private final ProgressTracker progressTracker;
     private final ProgressRepository progressRepository;
     private final HistoryRecorder historyRecorder;
@@ -46,6 +47,15 @@ public class AgentFacade {
         weakTopicAnalyzer = new WeakTopicAnalyzer(progressTracker, llmClient, templates, config.getWeakTopicMinResults());
         studyPlanGenerator = new StudyPlanGenerator(courseService, progressTracker, llmClient, templates, parser,
                 new StudyPlanRepository(config.getDataDirectory()), config.getWeakTopicMinResults());
+        ToolManager tools = new ToolManager();
+        tools.registerTool(new SummarizeTool(courseService, summaryService));
+        tools.registerTool(new AnswerTool(courseService, questionAnswerService));
+        tools.registerTool(new QuizTool(courseService, quizService));
+        tools.registerTool(new WeakTopicTool(courseService, weakTopicAnalyzer));
+        tools.registerTool(new StudyPlanTool(courseService, studyPlanGenerator));
+        tools.registerTool(new ProgressTool(courseService, progressTracker));
+        AgentPlanner planner = new AgentPlanner(llmClient, tools, templates, parser, courseService);
+        agentController = new AgentController(planner, tools, new MemoryManager(new MemoryRepository(config.getDataDirectory())));
     }
 
     public Course createCourse(String name) {
@@ -170,6 +180,11 @@ public class AgentFacade {
         studyPlanGenerator.markTaskDone(courseId, planId, taskId);
     }
 
+    public AgentResult runAgent(String courseId, String sessionId, String request) {
+        getCourse(courseId);
+        return agentController.handleRequest(courseId, sessionId, request);
+    }
+
     public ProgressSummary getProgress(String courseId) {
         getCourse(courseId);
         return progressTracker.getSummary(courseId);
@@ -191,6 +206,7 @@ public class AgentFacade {
     public String getImplementationStatus() {
         return "Available: F01-F10 (courses, materials, summaries, concepts, cited questions, flashcards, review, quizzes, difficulty suggestions, weak-topic reports and study plans)."
                 + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
-                + "\nF11 records reviews, quiz submissions, graded answers, completed tasks and history. The agent remains planned.";
+                + "\nF11 records reviews, quiz submissions, graded answers, completed tasks and history."
+                + "\nF12 provides planning, six tools, saved conversations and a trace. Step references and agent retry/replan recovery remain planned.";
     }
 }

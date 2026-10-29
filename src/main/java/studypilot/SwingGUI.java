@@ -64,6 +64,10 @@ public class SwingGUI implements ActionListener {
     private final JComboBox<StudyPlan> studyPlans = new JComboBox<>();
     private final JComboBox<StudyTask> studyTasks = new JComboBox<>();
     private final JCheckBox taskCompleted = new JCheckBox("Completed selected task");
+    private final JTextField assistantRequest = new JTextField(60);
+    private final JTextField assistantSession = new JTextField(36);
+    private final JTextArea assistantChat = new JTextArea(6, 80);
+    private String assistantCourseId = "";
     private final JTextArea results = new JTextArea();
     private final JLabel status = new JLabel("Ready");
     private final List<JButton> buttons = new ArrayList<>();
@@ -123,7 +127,7 @@ public class SwingGUI implements ActionListener {
         facade.observeProgress(dashboard);
         tabs.addTab("Progress", progressPanel());
         tabs.addTab("Study plans", studyPlanPanel());
-        tabs.addTab("Assistant", plannedPanel("Assistant"));
+        tabs.addTab("Assistant", assistantPanel());
         return tabs;
     }
 
@@ -162,6 +166,30 @@ public class SwingGUI implements ActionListener {
         panel.add(generation, BorderLayout.NORTH);
         panel.add(saved, BorderLayout.CENTER);
         panel.add(completion, BorderLayout.SOUTH);
+        return panel;
+    }
+
+    private JPanel assistantPanel() {
+        JPanel session = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        assistantSession.setName("assistantSession");
+        session.add(new JLabel("Session ID (blank for a new chat)"));
+        session.add(assistantSession);
+        session.add(button("New chat", "newChat"));
+        JPanel request = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        assistantRequest.setName("assistantRequest");
+        request.add(new JLabel("Study request"));
+        request.add(assistantRequest);
+        request.add(button("Send", "runAgent"));
+        JPanel input = new JPanel(new BorderLayout());
+        input.add(session, BorderLayout.NORTH);
+        input.add(request, BorderLayout.SOUTH);
+        assistantChat.setName("assistantChat");
+        assistantChat.setEditable(false);
+        assistantChat.setLineWrap(true);
+        assistantChat.setWrapStyleWord(true);
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.add(input, BorderLayout.NORTH);
+        panel.add(new JScrollPane(assistantChat), BorderLayout.CENTER);
         return panel;
     }
 
@@ -226,12 +254,6 @@ public class SwingGUI implements ActionListener {
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(generation, BorderLayout.NORTH);
         panel.add(review, BorderLayout.SOUTH);
-        return panel;
-    }
-
-    private JPanel plannedPanel(String name) {
-        JPanel panel = new JPanel();
-        panel.add(new JLabel(name + " - planned implementation"));
         return panel;
     }
 
@@ -406,6 +428,9 @@ public class SwingGUI implements ActionListener {
                     chooseMaterial();
                 } else if (action.equals("selfGrade")) {
                     chooseSelfGrade();
+                } else if (action.equals("newChat")) {
+                    assistantSession.setText("");
+                    assistantChat.setText("");
                 } else {
                     runTask(action, null);
                 }
@@ -481,6 +506,9 @@ public class SwingGUI implements ActionListener {
         if (action.equals("completeTask") && (studyTasks.getSelectedItem() == null || !taskCompleted.isSelected())) {
             throw new IllegalArgumentException("Select a task and tick Completed before saving. Completed tasks cannot be undone.");
         }
+        if (action.equals("runAgent") && assistantRequest.getText().isBlank()) {
+            throw new IllegalArgumentException("Enter a study request.");
+        }
     }
 
     private void runTask(String action, String filePath) {
@@ -514,6 +542,8 @@ public class SwingGUI implements ActionListener {
         studyPlans.setEnabled(enabled);
         studyTasks.setEnabled(enabled);
         taskCompleted.setEnabled(enabled);
+        assistantRequest.setEnabled(enabled);
+        assistantSession.setEnabled(enabled);
         for (JButton button : buttons) {
             button.setEnabled(enabled);
         }
@@ -592,6 +622,12 @@ public class SwingGUI implements ActionListener {
         }
         loading = false;
         refreshPlanTasks();
+        String selectedCourseId = course == null ? "" : course.getId();
+        if (!selectedCourseId.equals(assistantCourseId)) {
+            assistantCourseId = selectedCourseId;
+            assistantSession.setText("");
+            assistantChat.setText("");
+        }
     }
 
     // SwingWorker runs file and network operations without blocking the window.
@@ -624,6 +660,9 @@ public class SwingGUI implements ActionListener {
         private final StudyPlan selectedPlan;
         private final StudyTask selectedStudyTask;
         private StudyPlan loadedPlan;
+        private final String agentRequest;
+        private final String sessionId;
+        private AgentResult loadedAgent;
 
         public StudyWorker(String action, String filePath) {
             this.action = action;
@@ -649,6 +688,8 @@ public class SwingGUI implements ActionListener {
             requestedHours = dailyHours.getText();
             selectedPlan = (StudyPlan) studyPlans.getSelectedItem();
             selectedStudyTask = (StudyTask) studyTasks.getSelectedItem();
+            agentRequest = assistantRequest.getText();
+            sessionId = assistantSession.getText().trim();
         }
 
         protected String doInBackground() {
@@ -673,6 +714,13 @@ public class SwingGUI implements ActionListener {
                 return facade.getWeakTopics(course.getId()).toString();
             } else if (action.equals("createStudyPlan") || action.equals("showStudyPlan") || action.equals("completeTask")) {
                 return useStudyPlan();
+            } else if (action.equals("runAgent")) {
+                loadedAgent = facade.runAgent(course.getId(), sessionId, agentRequest);
+                StringBuilder text = new StringBuilder(loadedAgent.getFinalAnswer() + "\n\nTrace:\n");
+                for (String line : loadedAgent.getTrace()) {
+                    text.append(line + "\n");
+                }
+                return text.toString();
             } else if (action.equals("createQuiz")) {
                 return createQuiz();
             } else if (action.equals("showQuiz")) {
@@ -792,6 +840,11 @@ public class SwingGUI implements ActionListener {
                 }
                 if (loadedPlan != null) {
                     selectStudyPlan();
+                }
+                if (loadedAgent != null) {
+                    assistantSession.setText(loadedAgent.getSessionId());
+                    assistantChat.append("You: " + agentRequest + "\nAssistant: " + loadedAgent.getFinalAnswer() + "\n\n");
+                    assistantRequest.setText("");
                 }
                 status.setText("Ready");
             } catch (InterruptedException e) {
