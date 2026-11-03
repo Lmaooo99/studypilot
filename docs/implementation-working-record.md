@@ -296,6 +296,19 @@ original completion time is not stored. Missing earlier grading transitions or
 legacy review details remain unavailable. These changes belong in UC14/SD12 and
 the updated UMLet class/sequence views; those deliverables remain pending.
 
+C17 adds persistence integration checks through AgentFacade and fresh application
+instances. These exposed numeric coercion in org.json getInt and unchecked source
+identity conflicts. CourseRepository now requires integer coordinates, a page or
+line location rather than both, matching material/chunk file names and distinct
+nonempty material/chunk IDs. QuizRepository requires integer points and answer
+indices. Invalid saved input returns an error and preserves its original bytes,
+instead of silently changing a citation location or question value.
+
+These checks refine the existing F01/F04/F06 storage error paths; the feature
+scope, public signatures and five patterns are unchanged. The storage class views
+should include CourseRepository.checkMaterialIds/wholeNumber and
+QuizRepository.wholeNumber. The original Stage 1 report remains unchanged.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -324,11 +337,12 @@ C13 adds the plan workflow, constraints, saved task completion and related check
 C14 connects the planner, six tools, conversation storage, trace and GUI/CLI entry.
 C15 adds bounded recovery, result dependencies, successful-result reuse and focused tests.
 C16 adds source-backed progress/history recovery, saved review events and failure/restart tests.
+C17 adds material/quiz storage integration tests and fixes numeric/provenance validation found by those checks.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 245 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 262 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -437,6 +451,30 @@ or modification times. Damaged summary/history files were preserved byte for byt
 in backups before rebuilding counts and supported history. Directory paths were
 not renamed; missing/damaged source records kept the existing counts with warnings.
 These checks made no model call and are not student study results.
+
+C17 passed 262 tests, including 17 new persistence checks. They imported real
+text/Markdown/PDF input files, reopened the saved objects with new facades and
+checked original source IDs, page/line references and citations. A PDF with a blank
+middle page kept pages 1 and 3. Summary, concept, card-review and later material
+writes retained earlier course data. Test-only scripted replies exercised the
+three question factories, storage and an answer map using the original question
+IDs after restarting. Saved quiz bytes and submitted answers remained unchanged.
+
+Malformed-storage tests first exposed accepted fractional/string numbers,
+duplicate source IDs and inconsistent source metadata. The loaders now reject
+those cases without overwriting the input. Scripted replies use the existing
+cards/questions schemas and remain limited to test code.
+
+The 29 packaged CLI checks used no configuration file or API key. They imported
+TXT, Markdown and a private copy of the 46-page Stage 1 PDF, preserving 103 PDF
+chunks and their page numbers after removing the copied input files. A clearly
+authored three-type quiz fixture retained points, options, rubric and IDs; actual
+CLI submission used those IDs and left the quiz unchanged. This fixture is not a
+new model-generated quiz or student study result. Corrupt saved coordinates,
+duplicate chunk IDs and coerced question numbers were rejected with the files
+intact. Healthy reads changed no files. Repeated submission preserved saved bytes
+and the original submission time; its existing persistence-retry path can rewrite
+the same attempt. Native GUI interaction and student review remain pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

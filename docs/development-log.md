@@ -29,10 +29,11 @@
 - Connected the assistant planner, six tools, saved conversations and execution traces.
 - Added step-result references, bounded retries/replanning and reuse of completed agent actions.
 - Added saved review events, progress/history restoration and duplicate-count checks after interrupted writes.
+- Added material/quiz persistence integration tests and stricter checks for saved source locations and question numbers.
 
 ## Checks
 
-- All 245 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 262 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -55,6 +56,7 @@
 - Recovery tests counted tool dispatches, checked the two-retry/two-replan limits, validated dependencies and preserved successful results across replans.
 - A live check used one real generated question and five intentionally incorrect submissions in a separate verification course. The assistant read that graded topic and used its returned field to generate a quiz. A new process restored the session; no-history input asked for clarification.
 - Recovery checks restored counts and history from saved records, preserved damaged-file backups and kept healthy reads unchanged. The 26 packaged CLI checks used no API credentials or new model calls.
+- Persistence checks retained original IDs, source citations and typed quiz data across fresh application instances. Seventeen new tests and 29 offline CLI checks covered these paths and rejected malformed saved fields.
 - My review of the Period 1 implementation is complete. Review of the Period 2 and Period 3 code, the final GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps

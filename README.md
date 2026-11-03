@@ -385,9 +385,14 @@ Older course files retain review counts even without detailed review events.
 Recovery cannot reconstruct unavailable history: missing quiz entries are labelled
 as current attempt snapshots using the original submission time, and missing task
 entries use an explicitly labelled recovery time. Existing history is retained.
-Unreadable source records or missing previously counted records produce a warning
+Unreadable attempts/plans or missing previously counted records produce a warning
 and keep the existing counts; those source files need repair. Directories at the
 progress/history paths are preserved and reported as errors.
+
+Saved source locations and question numbers must be JSON integers. Course loading
+checks distinct material/chunk IDs, matching source file names and consistent page
+or line references. Opening invalid course or quiz data reports an error and leaves
+the original file intact; it never truncates decimals or changes IDs to repair it.
 
 Individual JSON saves use temporary-file replacement. Separate files are not one
 transaction. Use one writable application instance per data directory.

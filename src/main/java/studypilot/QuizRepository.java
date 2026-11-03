@@ -86,7 +86,7 @@ public class QuizRepository {
         String id = data.getString("questionId");
         String text = data.getString("text");
         String concept = data.getString("conceptName");
-        int points = data.getInt("points");
+        int points = wholeNumber(data, "points");
         String answer = data.getString("correctAnswer");
         QuestionType type = QuestionType.valueOf(data.getString("type"));
         if (type == QuestionType.MULTIPLE_CHOICE) {
@@ -96,7 +96,7 @@ public class QuizRepository {
                 options.add(saved.getString(i));
             }
             MultipleChoiceQuestion question = new MultipleChoiceQuestion(id, text, concept, points,
-                    options, data.getInt("correctIndex"));
+                    options, wholeNumber(data, "correctIndex"));
             if (!question.getCorrectAnswer().equals(answer)) {
                 throw new JSONException("Correct option mismatch");
             }
@@ -108,6 +108,13 @@ public class QuizRepository {
             return new TrueFalseQuestion(id, text, concept, points, Boolean.parseBoolean(answer));
         }
         return new ShortAnswerQuestion(id, text, concept, points, answer, data.getString("rubric"));
+    }
+
+    private int wholeNumber(JSONObject data, String name) {
+        if (!(data.get(name) instanceof Integer)) {
+            throw new JSONException("Saved question numbers must be whole numbers");
+        }
+        return data.getInt(name);
     }
 
     public List<Quiz> listQuizzes(String courseId) {

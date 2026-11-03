@@ -66,6 +66,7 @@ public class CourseRepository {
                 materials.add(materialFromJson(savedMaterials.getJSONObject(i)));
             }
             Course course = new Course(courseId, data.getString("name"), materials);
+            checkMaterialIds(course);
 
             // Earlier course files may not have concepts or flashcards yet.
             if (data.has("concepts")) {
@@ -88,6 +89,23 @@ public class CourseRepository {
             return course;
         } catch (JSONException | IllegalArgumentException | DateTimeException e) {
             throw new IllegalStateException("Saved course fields are invalid. The original file was not changed.");
+        }
+    }
+
+    private void checkMaterialIds(Course course) {
+        List<String> materialIds = new ArrayList<>();
+        List<String> chunkIds = new ArrayList<>();
+        for (Material material : course.getMaterials()) {
+            if (material.getId().isBlank() || materialIds.contains(material.getId())) {
+                throw new JSONException("Repeated or empty material ID");
+            }
+            materialIds.add(material.getId());
+            for (Chunk chunk : material.getChunks()) {
+                if (chunk.getId().isBlank() || chunkIds.contains(chunk.getId())) {
+                    throw new JSONException("Repeated or empty chunk ID");
+                }
+                chunkIds.add(chunk.getId());
+            }
         }
     }
 
@@ -138,12 +156,16 @@ public class CourseRepository {
 
     private Material materialFromJson(JSONObject data) {
         List<Chunk> chunks = new ArrayList<>();
+        String fileName = data.getString("fileName");
         JSONArray savedChunks = data.getJSONArray("chunks");
         for (int i = 0; i < savedChunks.length(); i++) {
-            chunks.add(chunkFromJson(savedChunks.getJSONObject(i)));
+            Chunk chunk = chunkFromJson(savedChunks.getJSONObject(i));
+            if (!chunk.getSourceFile().equals(fileName)) {
+                throw new JSONException("Chunk source file does not match its material");
+            }
+            chunks.add(chunk);
         }
         String id = data.getString("materialId");
-        String fileName = data.getString("fileName");
         String hash = data.getString("contentHash");
         String summary = data.getString("summary");
         return new Material(id, fileName, hash, summary, chunks);
@@ -164,10 +186,21 @@ public class CourseRepository {
         String id = data.getString("chunkId");
         String text = data.getString("text");
         String fileName = data.getString("sourceFile");
-        int page = data.getInt("page");
-        int lineStart = data.getInt("lineStart");
-        int lineEnd = data.getInt("lineEnd");
+        int page = wholeNumber(data, "page");
+        int lineStart = wholeNumber(data, "lineStart");
+        int lineEnd = wholeNumber(data, "lineEnd");
+        if (page < 0 || lineStart < 0 || lineEnd < lineStart
+                || (page == 0 && lineStart == 0) || (page > 0 && (lineStart != 0 || lineEnd != 0))) {
+            throw new JSONException("Invalid saved page or line range");
+        }
         return new Chunk(id, text, fileName, page, lineStart, lineEnd);
+    }
+
+    private int wholeNumber(JSONObject data, String name) {
+        if (!(data.get(name) instanceof Integer)) {
+            throw new JSONException("Saved counts and locations must be whole numbers");
+        }
+        return data.getInt(name);
     }
 
     private JSONObject conceptToJson(Concept concept) {
@@ -207,11 +240,8 @@ public class CourseRepository {
         String front = data.getString("front");
         String back = data.getString("back");
         String conceptName = data.getString("conceptName");
-        if (!(data.get("reviewCount") instanceof Integer) || !(data.get("rememberedCount") instanceof Integer)) {
-            throw new JSONException("Review counts must be whole numbers");
-        }
-        int reviewCount = data.getInt("reviewCount");
-        int rememberedCount = data.getInt("rememberedCount");
+        int reviewCount = wholeNumber(data, "reviewCount");
+        int rememberedCount = wholeNumber(data, "rememberedCount");
         return new Flashcard(id, front, back, conceptName, reviewCount, rememberedCount);
     }
 
