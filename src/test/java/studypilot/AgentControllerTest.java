@@ -79,7 +79,7 @@ public class AgentControllerTest {
         assertEquals(ResultStatus.FAILED, result.getStatus());
         assertTrue(result.getResults().isEmpty());
         assertTrue(result.getFinalAnswer().contains("Unknown tool"));
-        assertEquals(1, llm.getPrompts().size());
+        assertEquals(3, llm.getPrompts().size());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class AgentControllerTest {
         AgentResult result = facade.runAgent(course.getId(), null, "Summarize notes.");
         assertTrue(result.getFinalAnswer().contains("Missing argument"));
         assertTrue(result.getResults().isEmpty());
-        assertEquals(1, llm.getPrompts().size());
+        assertEquals(3, llm.getPrompts().size());
     }
 
     @Test
@@ -123,17 +123,17 @@ public class AgentControllerTest {
     }
 
     @Test
-    public void rejectsStepReferencesUntilReferenceResolutionIsImplemented() {
+    public void rejectsReferencesToAnUnknownStep() {
         llm.reply(plan(step("step1", "quiz", new JSONObject().put("topic", "$earlier.topic"))));
         AgentResult result = facade.runAgent(course.getId(), null, "Create a quiz.");
         assertEquals(ResultStatus.FAILED, result.getStatus());
-        assertTrue(result.getFinalAnswer().contains("literal arguments"));
+        assertTrue(result.getFinalAnswer().contains("earlier step"));
         assertTrue(result.getResults().isEmpty());
         assertTrue(facade.listQuizzes(course.getId()).isEmpty());
     }
 
     @Test
-    public void stopsOnFailureAndRetainsTheEarlierActualResult() {
+    public void retainsTheEarlierResultWhenToolRetriesAndReplanningFail() {
         llm.reply(plan(step("step1", "progress", new JSONObject()),
                 step("step2", "summarize", new JSONObject().put("materialId", material.getId())),
                 step("step3", "progress", new JSONObject())));
@@ -144,8 +144,8 @@ public class AgentControllerTest {
         assertEquals(2, result.getResults().size());
         assertEquals(ResultStatus.OK, result.getResults().get("step1").getStatus());
         assertFalse(result.getResults().containsKey("step3"));
-        assertTrue(result.getFinalAnswer().contains("Processed 2 of 3"));
-        assertEquals(3, llm.getPrompts().size());
+        assertTrue(result.getFinalAnswer().contains("Replans used: 1"));
+        assertEquals(9, llm.getPrompts().size());
     }
 
     @Test
@@ -204,5 +204,40 @@ public class AgentControllerTest {
         assertEquals(1, result.getResults().size());
         assertTrue(result.getFinalAnswer().contains("Reviews completed: 0"));
         assertTrue(result.getFinalAnswer().contains("Conversation could not be saved"));
+    }
+
+    @Test
+    public void rejectsInvalidQuizValuesBeforeExecutingEarlierSteps() {
+        llm.reply(plan(step("first", "progress", new JSONObject()),
+                step("second", "quiz", new JSONObject().put("topic", "Observer").put("count", "0"))));
+        llm.reply("{\"steps\":[],\"clarification\":\"How many questions would you like?\"}");
+        AgentResult result = facade.runAgent(course.getId(), null, "Create a quiz.");
+        assertEquals(ResultStatus.INSUFFICIENT_DATA, result.getStatus());
+        assertTrue(result.getResults().isEmpty());
+        assertTrue(facade.listQuizzes(course.getId()).isEmpty());
+        assertEquals(2, llm.getPrompts().size());
+    }
+
+    @Test
+    public void checksLiteralValuesEvenWhenAnotherArgumentIsAReference() {
+        llm.reply(plan(step("first", "progress", new JSONObject()),
+                step("second", "quiz", new JSONObject().put("topic", "$first.topic")
+                        .put("count", "1").put("types", "true-false").put("difficulty", "impossible"))));
+        llm.reply("{\"steps\":[],\"clarification\":\"Which difficulty would you like?\"}");
+        AgentResult result = facade.runAgent(course.getId(), null, "Create a quiz.");
+        assertEquals(ResultStatus.INSUFFICIENT_DATA, result.getStatus());
+        assertTrue(result.getResults().isEmpty());
+        assertTrue(result.getTrace().toString().contains("Invalid argument values"));
+    }
+
+    @Test
+    public void rejectsInvalidPlanDatesBeforeCallingTheGenerator() {
+        llm.reply(plan(step("first", "progress", new JSONObject()),
+                step("second", "studyPlan", new JSONObject().put("examDate", "not-a-date").put("hoursPerDay", "2"))));
+        llm.reply("{\"steps\":[],\"clarification\":\"When is the exam?\"}");
+        AgentResult result = facade.runAgent(course.getId(), null, "Create a study plan.");
+        assertEquals(ResultStatus.INSUFFICIENT_DATA, result.getStatus());
+        assertTrue(result.getResults().isEmpty());
+        assertTrue(facade.listStudyPlans(course.getId()).isEmpty());
     }
 }

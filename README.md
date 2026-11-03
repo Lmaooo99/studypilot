@@ -11,8 +11,8 @@ records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficu
 suggestions, F08 saved attempts with objective and model-based grading, F09
 weak-topic reports and F10 dated study plans. Failed grades can be retried or
 self-assessed against the saved answer and rubric. The assistant now plans and
-runs six tools with saved conversation context. Agent recovery and step-result
-references remain on the task board.
+runs six tools with saved conversation context, step-result references and bounded
+retry/replan recovery. Final integration and GUI verification remain on the task board.
 
 ## Requirements and build
 
@@ -334,16 +334,34 @@ change the selected course through tool arguments.
 The result includes the session ID, status, final answer, plan, actual tool results
 and trace. The final answer uses the tool outputs. A tool with insufficient data
 asks for clarification; for example, no graded history cannot establish a weakest
-topic. A failed step stops the request and keeps earlier results. JSON output is
+topic. A failed step is retried or replanned within the limits below, keeping earlier results. JSON output is
 one object on stdout; failures return exit code 1 and invalid command input returns
 2. A clarification is a normal response with exit code 0.
 
-This version executes literal arguments in one plan. Resolving step-result
-references and retrying/replanning failed agent steps are still pending. Existing
-services keep their own bounded generation retries. An unusable planner reply is
-retried once. Conversation files preserve both the request and reply. If saving
-conversation memory fails, the result reports that failure while retaining any
-completed tool results.
+A whole argument can reference a named data field from an earlier successful step,
+for example `"topic":"$step1.topic"`. Forward, self and cyclic dependencies are
+rejected. References belong to the current request; a later conversation request
+uses saved context and literal IDs instead. Missing result fields cause replanning
+before the dependent tool runs. Literal counts, types, dates, hours and styles are
+validated; resolved values are checked again before dispatch.
+
+Each failed tool action receives at most two extra agent retries. Input errors
+replan without a tool retry, and insufficient data asks for clarification. Each
+request permits at most two replans, with at most eight steps in each plan.
+Successful IDs cannot change their tool or resolved arguments. During replanning,
+an action with the same tool name and resolved string arguments reuses its earlier
+result, including under another ID. An exhausted identical failure keeps its spent
+retry budget. Explicit repeated steps within the original plan still run separately.
+A new request starts fresh budgets, even when it uses the same saved session.
+
+The trace records reference resolution, calls, retries, replans, reuse and stopping.
+JSON plan/results list encountered step IDs across plans; the combined list can be
+longer than eight. A repaired failed ID shows its latest result; earlier errors
+remain in the trace. Plan entries include retriesUsed; result retryable describes
+the failure type, while the controller still enforces the request's limits.
+Existing services keep their own bounded generation retries. An unusable planner
+reply is retried once. Conversation files preserve both the original request and
+final reply. A memory-save failure retains completed tool results and is reported.
 
 ## Storage and verification
 
@@ -364,8 +382,8 @@ excluded from the application JAR. Live checks of summaries, concepts, cited
 answers, cards, quizzes, grading, weak-topic explanations and plans are recorded
 separately in the development log.
 
-Full Stage 3 deterministic testing and KUMA evaluation, the final seven-section
-report, updated UML and feature recordings remain in progress. The Period 2 GUI
+Full deterministic testing and KUMA evaluation are later Stage 3 requirements.
+The final seven-section report, updated UML and feature recordings remain pending. The Period 2 GUI
 controls have compiled; their interactive walkthrough is still pending.
 
 ## Stage 2 tracking
@@ -373,6 +391,7 @@ controls have compiled; their interactive walkthrough is still pending.
 - [Task board](docs/stage2-tasks.md)
 - [Period 1 code commits](docs/period-1-commits.md)
 - [Period 2 code commits](docs/period-2-commits.md)
+- [Period 3 code commits](docs/period-3-commits.md)
 - [Implementation working record](docs/implementation-working-record.md)
 - [Usage checkpoint](docs/usage-checkpoint.json)
 

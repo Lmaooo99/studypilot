@@ -10,7 +10,8 @@ Period: October 27-November 2, 2026. Times use America/Toronto.
 | C11 | suggest quiz difficulty from graded performance | [9658d77](https://github.com/Lmaooo99/studypilot/commit/9658d770360feaaccce130ddac6963d86a707584) | 2026-10-28 15:44:52 | 2026-10-28 15:44:55 | 130 tests passed; threshold, isolation, pending-exclusion and override checks; read-only CLI restart checks |
 | C12 | identify weak topics and explain study priorities | [4848e82](https://github.com/Lmaooo99/studypilot/commit/4848e82611b5cf76c28e5af04a83679dee5b0399) | 2026-10-28 17:15:42 | 2026-10-28 17:15:50 | 147 tests passed; real explanation, missing-key fallback, minimum, scope and unchanged-study-record checks |
 | C13 | generate and complete validated study plans | [46da209](https://github.com/Lmaooo99/studypilot/commit/46da209027e12d1e65111da42e73281b766ee08a) | 2026-10-28 19:06:40 | 2026-10-28 19:06:48 | 170 tests passed; real dated plan, budget validation, CLI restart, scope and repeated-completion checks |
-| C14 | execute study agent plans with tools and memory | [Agent feature history](https://github.com/Lmaooo99/studypilot/commits/main/src/main/java/studypilot/AgentController.java) | See Git history | See Git history | 202 tests passed; real multi-step run, saved-context follow-up, no-history clarification, partial timeout result and CLI JSON |
+| C14 | execute study agent plans with tools and memory | [91097fa](https://github.com/Lmaooo99/studypilot/commit/91097fad8d5df038b0151896c249b5631d817fd8) | 2026-10-28 20:34:17 | 2026-10-28 20:34:24 | 202 tests passed; real multi-step run, saved-context follow-up, no-history clarification, partial timeout result and CLI JSON |
 
-Agent recovery and references remain planned for Period 3. Objective grading, self-assessment and task completion require no API calls.
+At the end of Period 2, agent recovery and references were planned for Period 3.
+They were implemented in C15. Objective grading, self-assessment and task completion require no API calls.
 The Period 2 GUI controls have compiled; their interactive walkthrough remains pending.

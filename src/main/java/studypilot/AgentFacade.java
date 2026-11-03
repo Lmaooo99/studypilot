@@ -207,6 +207,7 @@ public class AgentFacade {
         return "Available: F01-F10 (courses, materials, summaries, concepts, cited questions, flashcards, review, quizzes, difficulty suggestions, weak-topic reports and study plans)."
                 + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
                 + "\nF11 records reviews, quiz submissions, graded answers, completed tasks and history."
-                + "\nF12 provides planning, six tools, saved conversations and a trace. Step references and agent retry/replan recovery remain planned.";
+                + "\nF12 provides planning, six tools, saved conversations, result references, bounded retry/replan recovery and a trace."
+                + "\nFull integration, native GUI verification and final delivery assets remain pending.";
     }
 }

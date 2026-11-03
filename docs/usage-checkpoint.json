@@ -100,11 +100,11 @@
     "tokens_note": "Additional real API checks after the earlier recorded windows. Token counts came from service responses."
   },
   "application_totals_for_recorded_checks": {
-    "call_count": 24,
+    "call_count": 30,
     "tokens": {
-      "prompt_tokens": 127110,
-      "completion_tokens": 4148,
-      "total_tokens": 131258
+      "prompt_tokens": 239749,
+      "completion_tokens": 4483,
+      "total_tokens": 244232
     },
     "money_cost": null,
     "note": "Totals combine recorded application-check windows. Requests with unavailable usage, including the earlier timeout and two unsuccessful C14 summary attempts, are excluded."
@@ -225,5 +225,76 @@
         "reason": "The first live agent run exhausted two summary attempts and reported a timeout. Those attempts supplied no usage records."
       }
     ]
+  },
+  "period_3_verification": {
+    "recorded_at": "2026-11-03T10:43:00.288043+00:00",
+    "application_usage_record_count": 6,
+    "application_tokens_reported_by_completed_calls": {
+      "prompt_tokens": 112639,
+      "completion_tokens": 335,
+      "total_tokens": 112974
+    },
+    "application_calls": [
+      {
+        "completion_tokens": 51,
+        "prompt_tokens": 18664,
+        "total_tokens": 18715,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:39:46.962581Z",
+        "batch": "C15",
+        "feature": "F06"
+      },
+      {
+        "completion_tokens": 60,
+        "prompt_tokens": 18944,
+        "total_tokens": 19004,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:39:59.184778Z",
+        "batch": "C15",
+        "feature": "F12"
+      },
+      {
+        "completion_tokens": 32,
+        "prompt_tokens": 18408,
+        "total_tokens": 18440,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:40:07.257576Z",
+        "batch": "C15",
+        "feature": "F12"
+      },
+      {
+        "completion_tokens": 51,
+        "prompt_tokens": 18666,
+        "total_tokens": 18717,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:40:11.024854Z",
+        "batch": "C15",
+        "feature": "F12"
+      },
+      {
+        "completion_tokens": 29,
+        "prompt_tokens": 19094,
+        "total_tokens": 19123,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:40:16.897449Z",
+        "batch": "C15",
+        "feature": "F12"
+      },
+      {
+        "completion_tokens": 112,
+        "prompt_tokens": 18863,
+        "total_tokens": 18975,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T10:40:23.997173Z",
+        "batch": "C15",
+        "feature": "F12"
+      }
+    ],
+    "application_money_cost": null,
+    "application_money_note": "Provider billing records are not available.",
+    "development_tokens": null,
+    "development_money_cost": null,
+    "development_usage_note": "Additional development-session usage has not yet been recorded in this checkpoint.",
+    "tokens_note": "Actual response usage from the isolated C15 verification. Five intentionally incorrect submissions created test history; these were not student study results. Provider billing and a separate request counter are unavailable."
   }
 }

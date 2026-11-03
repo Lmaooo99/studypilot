@@ -131,6 +131,6 @@ public class AgentToolsTest {
         AgentResult result = facade.runAgent(course.getId(), null, "Summarize notes.");
         assertEquals(ResultStatus.FAILED, result.getStatus());
         assertFalse(result.getFinalAnswer().contains("Other course information"));
-        assertEquals(1, llm.getPrompts().size());
+        assertEquals(3, llm.getPrompts().size());
     }
 }

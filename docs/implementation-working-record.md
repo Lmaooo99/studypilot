@@ -9,8 +9,8 @@ with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
 quiz submissions, graded-answer counts, completed tasks and history. The other original features
 remain explicit later-period tasks.
-F12 now supports one-plan tool execution, conversation memory and trace output;
-step references and agent retry/replan recovery remain incomplete.
+F12 now supports tool execution, conversation memory, step-result references and
+bounded retry/replan recovery. Full integration and native GUI verification remain pending.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
 
@@ -29,7 +29,7 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
 | F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C, pending |
 | F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews, quiz submissions and completed tasks; ProgressSummary/ConceptStats prevent duplicate counts; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, recordTaskDone, getSummary, update, getHistory | Facade, Observer | B, pending |
-| F12 Natural-language agent | AI | Partial | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, executionPlanPrompt, parseExecutionPlan, validatePlan, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C, pending |
+| F12 Natural-language agent | AI | Partial | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, replan, executionPlanPrompt, parseExecutionPlan, validatePlan, resolveStep, executeWithRetries, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C, pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
 Course with Material and Chunk objects. F02/F03/F05 send material chunks through
@@ -96,9 +96,11 @@ The manager injects the trusted course ID and dispatches each step to its Tool.
 SummarizeTool calls SummaryService; AnswerTool uses QuestionAnswerService retrieval
 and citation checks; QuizTool calls QuizService; WeakTopicTool calls WeakTopicAnalyzer;
 StudyPlanTool calls StudyPlanGenerator; ProgressTool reads ProgressTracker. The
-controller continues on OK, clarifies insufficient data and stops on failure.
-AgentResult retains the actual outputs and decisions. MemoryManager.addMessage
-saves both user and assistant messages through MemoryRepository.
+controller continues on OK, clarifies insufficient data, retries eligible failures
+and replans invalid or exhausted steps within its limits. Whole-value dependencies
+resolve only from actual successful result data. AgentResult retains actual outputs
+and decisions. MemoryManager.addMessage saves the original user request and final
+assistant message through MemoryRepository.
 
 ## 3 Implemented design patterns
 
@@ -127,7 +129,7 @@ CitedAnswer -> optional clarification flag -> represent an ambiguous question wi
 StudyEvent -> eventId -> avoid duplicate observer-history entries -> F05/F11.
 DashboardView -> reads through AgentFacade -> retain the common UI entry point while observing progress -> F11.
 Startup/configuration -> AppConfig and JsonFiles helpers -> keep credentials local and JSON saves simple -> infrastructure.
-The planned courseId/stepId agent signature changes still require implementation and diagram updates.
+The courseId/stepId agent signature changes were implemented in C14; their diagram updates remain pending.
 No pattern was replaced and no additional product feature was added in Period 1.
 
 CourseRepository uses short private methods for each object's JSON mapping.
@@ -223,11 +225,32 @@ agent/tool/memory class views.
 MemoryRepository stores course-bound UUID sessions and preserves unreadable files
 with an error. All messages are saved; only the last ten enter planning context.
 The GUI session field reuses saved context after restart, while its transcript
-shows the messages exchanged in the current window. Agent-level step retries,
-replanning with successful results and step references remain C15 work. Current
-decide returns CONTINUE, CLARIFY or ABORT; the RETRY/REPLAN enum values retain the
-Stage 1 names for that later implementation. Underlying services keep their own
-retry limits. No additional design pattern was introduced.
+shows the messages exchanged in the current window. C15 implements all five
+Stage 1 decisions, with two extra retries per failed action and two replans per
+request. Underlying services keep their own retry limits. No additional design
+pattern was introduced.
+
+C15 changes the C14 abort-only path to bounded recovery, matching the original F12
+need. AgentPlanner.replan now takes courseId, request, history and resultsSoFar.
+The controller supplies actual result data and error context; it does not ask the
+model to reconstruct unseen outputs. ToolManager adds dependency/value validation
+and resolveStep. PlanStep restores retriesUsed and restricts IDs to a letter
+followed by letters, digits or underscores. ToolResult adds canRetry so input errors
+replan without repeating the invalid call; result JSON includes retryable.
+
+The controller keeps resolved steps/results and spent retry budgets across plans.
+Completed IDs cannot change their tool or arguments. An action with the same tool
+name and resolved string arguments can reuse its result under a new ID during
+replanning. Exhausted identical actions cannot gain another retry budget through
+renaming. Explicit repeated actions inside an original plan still run separately.
+A new request clears this execution state while retaining its saved conversation.
+These changes affect UC15, SD13/SD14 and the agent/tool class views.
+
+The JSON plan/results contain encountered IDs across plans; only each individual
+proposal has the eight-step bound. A repaired failed ID contains its latest result,
+while the trace retains earlier calls, errors, reference resolution and decisions.
+Output excerpts in replan context are limited to 2000 characters per result; named
+data fields remain intact. Full agent integration and GUI verification are pending.
 
 ## 5 AI tools and collaboration
 
@@ -237,7 +260,7 @@ billing records are not yet available.
 
 My work covered the project scope and design choices, API/model selection and
 connection setup. I read and reviewed the implementation, integrated the parts,
-and validated the Period 1 results. Review of the Period 2 implementation is pending.
+and validated the Period 1 results. Review of the Period 2 and Period 3 implementation is pending.
 
 Representative interaction:
 
@@ -255,11 +278,12 @@ C11 adds the deterministic difficulty logic, GUI/CLI selection and boundary test
 C12 adds the weak-topic analyzer/report, ranking rules, fallback and related tests.
 C13 adds the plan workflow, constraints, saved task completion and related checks.
 C14 connects the planner, six tools, conversation storage, trace and GUI/CLI entry.
+C15 adds bounded recovery, result dependencies, successful-result reuse and focused tests.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 202 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 224 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -335,7 +359,23 @@ JSON result. Earlier study records were preserved, apart from the requested summ
 updates. Six completed API responses were recorded across the four live invocations.
 The two unsuccessful summary attempts have unavailable token usage and billing.
 The Assistant panel compiles; its native walkthrough and student review remain
-pending. Agent-level recovery/references still require C15.
+pending. Agent recovery/references were added later in C15.
+
+C15 passed 224 tests. Controlled test doubles verified exact retry and replan
+budgets, successful-result reuse, completed-ID protection, missing/forward/self
+references, literal value checks, clarification and request isolation. Input errors
+are not retried as service outages. The actual dispatch count stays bounded when a
+replanner renames an already exhausted action.
+
+A separate CLI verification course imported the safe sample and generated one real
+true/false question. Five intentionally incorrect submissions created graded test
+history. The live agent called weakTopics, then used its returned topic field to
+create a saved quiz; the trace showed reference resolution. A new process restored
+the session and its five submitted attempts. Earlier study records were unchanged.
+No-history input asked for clarification. Missing credentials returned failed JSON;
+cross-course sessions and duplicate flags were rejected before a model call.
+Six completed API responses were recorded; money costs remain unavailable. Native
+GUI interaction and student review remain pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
@@ -347,10 +387,12 @@ on retrieved IDs. This check does not prove that every answer sentence is suppor
 The application uses one writer per data directory; separate JSON files are not
 updated as a single transaction. A task's done flag can be saved before a later
 progress/history failure; repeating completion repairs that recording. Complete
-storage recovery, agent recovery/references, updated UML and Stage 3 evaluation remain on the task
+storage recovery, agent integration/GUI verification, updated UML and Stage 3 evaluation remain on the task
 board. Plan context is limited to eight material chunks; validation checks schedule
 constraints, not complete syllabus coverage. A valid model grade does not prove
-that its semantic judgment is correct.
+that its semantic judgment is correct. Completing a validated tool plan also does
+not prove that it satisfies every part of the student's request; semantic agent
+evaluation remains part of Stage 3.
 
 ## 7 Demonstration index
 

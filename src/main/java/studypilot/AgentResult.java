@@ -65,6 +65,7 @@ public class AgentResult {
             item.put("stepId", step.getStepId());
             item.put("toolName", step.getToolName());
             item.put("arguments", new JSONObject(step.getArguments()));
+            item.put("retriesUsed", step.getRetriesUsed());
             steps.put(item);
             ToolResult result = results.get(step.getStepId());
             if (result != null) {
@@ -74,6 +75,7 @@ public class AgentResult {
                 outcome.put("status", result.getStatus().name());
                 outcome.put("output", result.getOutput());
                 outcome.put("errorMessage", result.getErrorMessage());
+                outcome.put("retryable", result.canRetry());
                 outcome.put("data", new JSONObject(result.getData()));
                 outcomes.put(outcome);
             }
