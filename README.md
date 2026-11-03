@@ -251,6 +251,11 @@ Cancel. Newly resolved results update progress once; the original answers and
 submission time stay unchanged. Model grading can still make semantic mistakes;
 its quality will be evaluated in Stage 3.
 
+Partial points contribute to the quiz score. Topic accuracy counts fully correct
+GRADED answers, so partial credit does not count as a fully correct answer for
+difficulty or weak-topic statistics. Resolving a pending answer changes later
+suggestions and plan context; an earlier saved study plan retains its content.
+
 ## Weak-topic reports
 
 ```sh
@@ -389,7 +394,8 @@ Unreadable attempts/plans or missing previously counted records produce a warnin
 and keep the existing counts; those source files need repair. Directories at the
 progress/history paths are preserved and reported as errors.
 
-Saved source locations and question numbers must be JSON integers. Course loading
+Saved source locations, question points and grading scores must be JSON integers.
+Saved grading flags must be JSON booleans. Course loading
 checks distinct material/chunk IDs, matching source file names and consistent page
 or line references. Opening invalid course or quiz data reports an error and leaves
 the original file intact; it never truncates decimals or changes IDs to repair it.

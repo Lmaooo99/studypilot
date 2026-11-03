@@ -309,6 +309,15 @@ scope, public signatures and five patterns are unchanged. The storage class view
 should include CourseRepository.checkMaterialIds/wholeNumber and
 QuizRepository.wholeNumber. The original Stage 1 report remains unchanged.
 
+C18 checks the shared F07/F08/F09/F10/F11 flow across fresh facades. Its stored-grade
+tests exposed numeric and boolean coercion in QuizRepository.loadResults. Saved
+pointsEarned/maxPoints now use the existing integer helper, and savedFlag checks
+that correct/counted are actual JSON booleans. Invalid grades keep their original
+file and report an error; they are not converted into accepted measurements.
+These are private validation changes in the existing repository. Feature scope,
+public methods and patterns are unchanged; the storage class view should include
+savedFlag. F08 retains the original Strategy-based grading and PENDING behavior.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -338,11 +347,12 @@ C14 connects the planner, six tools, conversation storage, trace and GUI/CLI ent
 C15 adds bounded recovery, result dependencies, successful-result reuse and focused tests.
 C16 adds source-backed progress/history recovery, saved review events and failure/restart tests.
 C17 adds material/quiz storage integration tests and fixes numeric/provenance validation found by those checks.
+C18 adds pending/feedback/plan integration and strict saved-grade validation.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 262 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 276 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -475,6 +485,32 @@ duplicate chunk IDs and coerced question numbers were rejected with the files
 intact. Healthy reads changed no files. Repeated submission preserved saved bytes
 and the original submission time; its existing persistence-retry path can rewrite
 the same attempt. Native GUI interaction and student review remain pending.
+
+C18 passed 276 tests, including 14 new integration checks. Four graded answers
+kept Medium while another answer was pending; resolving it as incorrect produced
+4/5 correct and Hard at exactly 80%. Another attempt moved from 2/5 (Easy) to 3/6
+(Medium) as two pending answers were resolved across restarts. Answers, the first
+submission time and the attempt count were preserved. Invalid rubric replies
+stayed pending until a valid retry. Partial points affected the score but did not
+count as fully correct answers in accuracy statistics.
+
+Plan checks used restored graded statistics, kept earlier saved schedules when
+new evidence changed future plan context, and required diagnostics when only
+reviews, completed tasks or pending answers were available. Three proposal rounds
+corrected an exceeded daily budget and a date after the exam. Exhausting invalid
+proposals preserved an earlier plan, progress and history. Completion after
+restarting counted one task; other-course grades and invalid input did not enter
+the selected course's plan context. Scripted model replies were test-only inputs.
+
+The 46 packaged CLI checks used explicitly authored quiz/plan fixtures. With no
+local API configuration, actual short-answer submission and regrading returned
+PENDING before a provider request could be sent. CLI self-assessment then produced
+40% and 50% feedback, while another course independently reached 80%. Weak-topic
+statistics remained visible when an explanation was unavailable. Invalid plan
+inputs and missing configuration saved no fallback plan. A saved task completed
+once, and invalid dates/budgets or coerced saved grading values left their input
+files intact. No new model-generated quiz or plan is claimed for this batch.
+Native GUI interaction and student review remain pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

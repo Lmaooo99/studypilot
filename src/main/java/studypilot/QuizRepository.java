@@ -112,7 +112,7 @@ public class QuizRepository {
 
     private int wholeNumber(JSONObject data, String name) {
         if (!(data.get(name) instanceof Integer)) {
-            throw new JSONException("Saved question numbers must be whole numbers");
+            throw new JSONException("Saved quiz numbers must be whole numbers");
         }
         return data.getInt(name);
     }
@@ -230,14 +230,21 @@ public class QuizRepository {
             }
             ids.add(question.getId());
             QuestionResult result = new QuestionResult(question, GradingStatus.valueOf(data.getString("gradingStatus")),
-                    data.getInt("pointsEarned"), data.getString("explanation"), data.getBoolean("counted"));
-            if (result.isCorrect() != data.getBoolean("correct") || result.getMaxPoints() != data.getInt("maxPoints")
+                    wholeNumber(data, "pointsEarned"), data.getString("explanation"), savedFlag(data, "counted"));
+            if (result.isCorrect() != savedFlag(data, "correct") || result.getMaxPoints() != wholeNumber(data, "maxPoints")
                     || !result.getConceptName().equals(data.getString("conceptName"))) {
                 throw new JSONException("Question result mismatch");
             }
             results.add(result);
         }
         return results;
+    }
+
+    private boolean savedFlag(JSONObject data, String name) {
+        if (!(data.get(name) instanceof Boolean)) {
+            throw new JSONException("Saved grading flags must be booleans");
+        }
+        return data.getBoolean(name);
     }
 
     public List<QuizAttempt> listAttempts(String courseId) {

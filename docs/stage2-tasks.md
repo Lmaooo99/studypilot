@@ -31,7 +31,7 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 3 | C15 | Step references, validation and bounded recovery | Implemented |
 | 3 | C16 | Complete progress/history and duplicate-count prevention | Implemented |
 | 3 | C17 | Persistence integration tests | Implemented |
-| 3 | C18 | Grading/difficulty/plan integration tests | Planned |
+| 3 | C18 | Grading/difficulty/plan integration tests | Implemented |
 | 3 | C19 | Agent recovery and session-isolation tests | Planned |
 | 3 | C20 | CLI and structured-result acceptance tests | Planned |
 | 3 | C21 | Complete workflows across restarts | Planned |
@@ -113,3 +113,8 @@ reject files containing only an encoding marker.
 - Fresh facades retained source IDs, line/page citations, summaries, concepts, reviewed cards and all three question types. Deleted original input files did not prevent reopening saved work.
 - Storage checks now reject coerced numeric fields, duplicate material/chunk IDs and conflicting source locations without changing the damaged files.
 - CLI checks imported TXT, Markdown and a 46-page PDF, retained 103 PDF chunks, and submitted answers using the authored verification quiz's original question IDs. No new model call was made.
+
+- C18 passed 276 JUnit tests, including 14 new grading/difficulty/plan integration checks, and 46 offline packaged CLI checks.
+- Pending resolutions changed only graded counts and later feedback: the checks reached 40%, exactly 50% and exactly 80% with the expected difficulty levels. Partial credit and fully correct-answer accuracy remained distinct.
+- Plans used restored graded-topic data, retained earlier schedules, required diagnostics without enough graded evidence, enforced date/budget corrections and counted repeated completion once.
+- Saved grading scores and flags now reject coerced JSON values without changing the input. CLI missing-configuration checks exercised PENDING and plan failure before any provider request; authored fixtures are labelled as verification inputs.
