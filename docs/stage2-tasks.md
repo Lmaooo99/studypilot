@@ -32,7 +32,7 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 3 | C16 | Complete progress/history and duplicate-count prevention | Implemented |
 | 3 | C17 | Persistence integration tests | Implemented |
 | 3 | C18 | Grading/difficulty/plan integration tests | Implemented |
-| 3 | C19 | Agent recovery and session-isolation tests | Planned |
+| 3 | C19 | Agent recovery and session-isolation tests | Implemented |
 | 3 | C20 | CLI and structured-result acceptance tests | Planned |
 | 3 | C21 | Complete workflows across restarts | Planned |
 
@@ -118,3 +118,8 @@ reject files containing only an encoding marker.
 - Pending resolutions changed only graded counts and later feedback: the checks reached 40%, exactly 50% and exactly 80% with the expected difficulty levels. Partial credit and fully correct-answer accuracy remained distinct.
 - Plans used restored graded-topic data, retained earlier schedules, required diagnostics without enough graded evidence, enforced date/budget corrections and counted repeated completion once.
 - Saved grading scores and flags now reject coerced JSON values without changing the input. CLI missing-configuration checks exercised PENDING and plan failure before any provider request; authored fixtures are labelled as verification inputs.
+
+- C19 passed 291 JUnit tests, including 15 new service-backed agent and conversation integration checks, and 28 offline packaged CLI checks.
+- Real service/repository paths retained saved summaries through bounded recovery and later failures, corrected quiz input before saving, and kept request-specific result references separate.
+- Course/session switches retained their own messages and counts. Planning used the last ten messages while storage retained all turns; invalid or damaged conversations stopped before planning without losing source data.
+- CLI checks used authored earlier context and actual missing-configuration failures. Failed turns survived restart, cross-course access was rejected, and blocked storage was preserved. No new provider request or production-code change was required.

@@ -367,6 +367,10 @@ the failure type, while the controller still enforces the request's limits.
 Existing services keep their own bounded generation retries. An unusable planner
 reply is retried once. Conversation files preserve both the original request and
 final reply. A memory-save failure retains completed tool results and is reported.
+Failed planning turns are saved as failures when conversation storage is writable.
+Invalid saved message fields or unreadable conversation JSON stop the request
+before planning and leave the original file unchanged. The ten-message planning
+window does not remove earlier turns from the saved conversation.
 
 ## Storage and verification
 

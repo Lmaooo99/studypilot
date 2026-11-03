@@ -348,11 +348,12 @@ C15 adds bounded recovery, result dependencies, successful-result reuse and focu
 C16 adds source-backed progress/history recovery, saved review events and failure/restart tests.
 C17 adds material/quiz storage integration tests and fixes numeric/provenance validation found by those checks.
 C18 adds pending/feedback/plan integration and strict saved-grade validation.
+C19 adds service-backed agent recovery and conversation-isolation integration tests.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 276 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 291 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -511,6 +512,33 @@ inputs and missing configuration saved no fallback plan. A saved task completed
 once, and invalid dates/budgets or coerced saved grading values left their input
 files intact. No new model-generated quiz or plan is claimed for this batch.
 Native GUI interaction and student review remain pending.
+
+C19 passed 291 tests, including 15 new agent integration checks. The real facade,
+tools, services and repositories ran with scripted LLM replies confined to tests.
+A foreign material ID failed without reading its course's content; replanning
+reused the earlier saved summary and resolved its materialId for the corrected
+step. SummaryService's own retry loop remained inside the controller's three
+allowed calls. Replanned aliases did not restart an exhausted action or replace
+the earlier saved summary. Invalid quiz arguments were corrected before saving
+one typed quiz. A completed summary survived a later planning failure and restart.
+
+Conversation checks switched courses and sessions, retained distinct review
+counts, rejected foreign or invalid session IDs before planning, and preserved
+damaged messages/JSON. Only the last ten messages entered a planning prompt while
+all saved turns remained available. A new request could not resolve references
+from the previous request's tool results. An actual blocked conversation path
+reported the write failure while retaining the summary already saved by its tool.
+The new cases passed without production changes; public APIs and patterns are
+unchanged.
+
+The 28 packaged CLI checks used explicitly authored earlier conversation context.
+Actual planning failed on missing local configuration before HTTP, saved the
+failure turns once and loaded their history in new processes. Cross-course access,
+invalid session paths and corrupt conversation fields were rejected without
+changing those files. Healthy queries changed no files; directory/file blockers
+were retained and memory-save failure was reported. These offline checks do not
+claim model-generated plans or actual CLI tool execution. Native GUI interaction,
+student review and the remaining C20/C21 workflows are still pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
