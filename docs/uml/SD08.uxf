@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD08 Resolve pending short answers
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=QuizService~s
+obj=QuizGrader / LLMRubricGrading~g
+obj=QuizRepository~r
+obj=ProgressTracker~t
+
+u-&gt;f : retryPendingGrading(courseId, attemptId)
+f-&gt;s : retryPendingGrading(courseId, attemptId)
+s-&gt;g : regradePending(quiz, attempt)
+g.&gt;s : valid integer grade or PENDING
+s-&gt;r : saveAttempt(attempt)
+s-&gt;t : recordQuizAttempt(attempt)
+u-&gt;f : getPendingQuestion(courseId, attemptId, questionId)
+f-&gt;s : getPendingQuestion(courseId, attemptId, questionId)
+s.&gt;u : saved model answer and rubric
+u-&gt;f : selfGrade(courseId, attemptId, questionId, correct)
+f-&gt;s : selfGrade(courseId, attemptId, questionId, correct)
+s:Allow only a pending short answer, full or zero points with a self-assessment label
+s-&gt;r : saveAttempt(attempt)
+s-&gt;t : recordQuizAttempt(attempt)
+t.&gt;u : newly graded answers counted once
+s:Original submitted answers and timestamp stay fixed</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

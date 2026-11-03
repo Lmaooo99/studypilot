@@ -1,0 +1,624 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=18
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLGeneric</id>
+    <coordinates>
+      <x>300</x>
+      <y>20</y>
+      <w>500</w>
+      <h>1590</h>
+    </coordinates>
+    <panel_attributes>StudyPilot
+halign=left
+valign=top
+layer=-1</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>100</y>
+      <w>163</w>
+      <h>760</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;740.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>200</y>
+      <w>163</w>
+      <h>660</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;640.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>300</y>
+      <w>163</w>
+      <h>560</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;540.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>400</y>
+      <w>163</w>
+      <h>460</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;440.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>500</y>
+      <w>163</w>
+      <h>360</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;340.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>600</y>
+      <w>163</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;240.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>700</y>
+      <w>163</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;140.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>800</y>
+      <w>163</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;40.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;100.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;200.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>320</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;300.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;400.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>520</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;500.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>620</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;600.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>820</y>
+      <w>163</w>
+      <h>720</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;700.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>188</x>
+      <y>1500</y>
+      <w>163</w>
+      <h>40</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;147.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>200</y>
+      <w>173</w>
+      <h>660</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;157.00;640.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>300</y>
+      <w>173</w>
+      <h>560</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;157.00;540.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>400</y>
+      <w>173</w>
+      <h>460</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;157.00;440.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>500</y>
+      <w>173</w>
+      <h>360</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;157.00;340.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>700</y>
+      <w>173</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;20.00;157.00;140.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>820</y>
+      <w>173</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;100.00;157.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>820</y>
+      <w>173</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;200.00;157.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>820</y>
+      <w>173</w>
+      <h>320</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;300.00;157.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>820</y>
+      <w>173</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;400.00;157.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>753</x>
+      <y>820</y>
+      <w>173</w>
+      <h>720</h>
+    </coordinates>
+    <panel_attributes>lt=-</panel_attributes>
+    <additional_attributes>12.00;700.00;157.00;20.00</additional_attributes>
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>80</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC01
+Create Course and Import Material
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>180</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC02
+Summarize Material
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>280</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC03
+Extract Concepts
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>380</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC04
+Ask Question with Citations
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>480</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC05
+Generate Flashcards
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>580</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC06
+Review Flashcards
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>680</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC07
+Create Quiz
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>780</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC08
+View Suggested Difficulty
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>880</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC09
+Take Quiz and Get Grading
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>980</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC10
+Resolve Pending Answers
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>1080</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC11
+View Weak Topics
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>1180</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC12
+Create Study Plan
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>1280</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC13
+Mark Study Task Done
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>1380</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC14
+View Progress and History
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLUseCase</id>
+    <coordinates>
+      <x>335</x>
+      <y>1480</y>
+      <w>430</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>UC15
+Use Study Assistant
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLActor</id>
+    <coordinates>
+      <x>160</x>
+      <y>795</y>
+      <w>80</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>fontsize=16
+bg=white
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLActor</id>
+    <coordinates>
+      <x>160</x>
+      <y>1475</y>
+      <w>80</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>fontsize=16
+bg=white
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLActor</id>
+    <coordinates>
+      <x>870</x>
+      <y>795</y>
+      <w>80</w>
+      <h>100</h>
+    </coordinates>
+    <panel_attributes>fontsize=16
+bg=white
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>35</x>
+      <y>819</y>
+      <w>115</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>Student
+fontsize=16
+halign=right
+valign=top
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>955</x>
+      <y>812</y>
+      <w>140</w>
+      <h>65</h>
+    </coordinates>
+    <panel_attributes>LLM Service
+(OpenAI)
+fontsize=16
+halign=left
+valign=top
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>15</x>
+      <y>1560</y>
+      <w>245</w>
+      <h>55</h>
+    </coordinates>
+    <panel_attributes>Test Harness
+(automated test client)
+fontsize=16
+halign=center
+valign=top
+layer=3</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>1645</y>
+      <w>1100</w>
+      <h>270</h>
+    </coordinates>
+    <panel_attributes>Stage 2 implementation
+GUI and CLI enter through AgentFacade. All operations are course-scoped.
+UC07 uses three Factory Method creators and bounded regeneration.
+UC09 and UC10 retain PENDING until a valid grade or explicit self-assessment.
+UC08 and UC11 use graded-only statistics and minimum sample sizes.
+UC12 validates dates and budgets and requires diagnostics when evidence is insufficient.
+UC14 restores progress and available history from saved study records.
+UC15 supports six tools, saved sessions, result references and bounded recovery.
+The model connection uses OpenAI-compatible Chat Completions.
+style=wordwrap
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

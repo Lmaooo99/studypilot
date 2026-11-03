@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD14 Execute tools with bounded recovery
+fontsize=14
+obj=AgentController~c
+obj=AgentPlanner~p
+obj=ToolManager~t
+obj=Six service-backed tools~s
+obj=MemoryManager~m
+
+c:At most eight steps in each accepted plan, clear request-specific results
+c-&gt;t : resolveStep(step, successful results)
+t.&gt;c : whole-value references resolved to actual data
+c: reuse an identical successful action, retain exhausted action budgets
+combinedFragment=loop~action c s; c:[Initial action and at most two extra retries]
+c-&gt;t : execute(courseId, resolved step)
+t-&gt;s : execute(courseId, arguments)
+s.&gt;t : ToolResult with real status and data
+t.&gt;c : result
+--
+c:Input errors require correction, insufficient data asks a question
+combinedFragment=loop~replan c p; c:[At most two replans for this request]
+c-&gt;p : replan(courseId, request, history, resultsSoFar)
+p.&gt;c : corrected plan or clarification
+c:Keep successful IDs and arguments fixed, aliases do not reset retry budgets
+--
+c-&gt;m : save request and actual response
+c:Return earlier outputs and recorded failures if later work fails</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

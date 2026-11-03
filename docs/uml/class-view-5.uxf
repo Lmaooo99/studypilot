@@ -1,0 +1,374 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Progress recovery and observers*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;abstract&gt;&gt;
+Subject
+--
+-observers: List&lt;Observer&gt;
+--
++attach(observer): void
++detach(observer): void
++notifyObservers(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+Observer
+--
+
+--
++update(subject): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>StudyEvent
+--
+-eventId: String
+-time: LocalDateTime
+-courseId: String
+-conceptName: String
+-description: String
+--
++getId(): String
++getTime(): LocalDateTime
++getCourseId(): String
++getConceptName(): String
++getDescription(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>480</y>
+      <w>500</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>ProgressTracker
+--
+-summaries: Map&lt;String, ProgressSummary&gt;
+-repository: ProgressRepository
+-lastEvent: StudyEvent
+--
++recordReview(course, event): void
++restoreSummary(summary): boolean
++recordEvent(event): void
++recordQuizAttempt(attempt): void
++recordTaskDone(courseId, task): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>480</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>ConceptStats
+--
+-conceptName: String
+-gradedCount: int
+-correctCount: int
+--
++addResult(correct): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>480</y>
+      <w>500</w>
+      <h>300</h>
+    </coordinates>
+    <panel_attributes>ProgressSummary
+--
+-courseId: String
+-reviewsDone: int
+-attemptIds: List&lt;String&gt;
+-countedResultIds: List&lt;String&gt;
+-completedTaskIds: List&lt;String&gt;
+-stats: Map&lt;String, ConceptStats&gt;
+--
++setReviewsDone(count): void
++copy(): ProgressSummary
++hasSameCounts(other): boolean
++addTask(taskId): void
++recordQuizAttempt(attempt): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>880</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>ProgressRestorer
+--
+-tracker: ProgressTracker
+-history: HistoryRecorder
+-progress: ProgressRepository
+-quizzes: QuizRepository
+-plans: StudyPlanRepository
+--
++restore(course): void
+-rebuildSummary(course, attempts, savedPlans): ProgressSummary
+-restoreHistory(course, attempts, savedPlans): void
+-restoreAttempt(attempt): void
+-restoreTask(courseId, task): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>880</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>WeakTopicAnalyzer
+--
+-tracker: ProgressTracker
+-llmClient: LLMClient
+-templates: PromptTemplates
+-minResults: int
+--
++analyze(courseId): WeakTopicReport
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>880</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>WeakTopicReport
+--
+-rankedTopics: List&lt;ConceptStats&gt;
+-insufficientConcepts: List&lt;String&gt;
+-explanation: String
+--
++getRankedTopics(): List&lt;ConceptStats&gt;
++getInsufficientConcepts(): List&lt;String&gt;
++getExplanation(): String
++toString(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1260</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>DashboardView
+--
+-facade: AgentFacade
+-counts: JLabel
+-history: JTextArea
+-courseId: String
+--
++setCourseId(courseId): void
++refresh(): void
++update(subject): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1260</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>HistoryRecorder
+--
+-tracker: ProgressTracker
+-history: List&lt;StudyEvent&gt;
+-repository: ProgressRepository
+--
++update(subject): void
++contains(eventId): boolean
++saveIfMissing(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>270</y>
+      <w>20</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;130.0;10.0;130.0;10.0;210.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-55</x>
+      <y>240</y>
+      <w>925</w>
+      <h>1030</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>915.0;10.0;915.0;170.0;10.0;170.0;10.0;950.0;325.0;950.0;325.0;1020.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-70</x>
+      <y>240</y>
+      <w>940</w>
+      <h>1030</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>930.0;10.0;930.0;180.0;10.0;180.0;10.0;960.0;930.0;960.0;930.0;1020.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>710</y>
+      <w>20</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;170.0;10.0;120.0;10.0;120.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1150</y>
+      <w>610</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;70.0;600.0;70.0;600.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>555</y>
+      <w>110</w>
+      <h>85</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>100.0;75.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>370</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;110.0;10.0;90.0;1190.0;90.0;1190.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>1580</y>
+      <w>1080</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>Observer
+ProgressTracker extends Subject. HistoryRecorder and DashboardView implement Observer and receive update notifications after saved progress changes.
+style=wordwrap
+bg=white
+fontsize=16
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

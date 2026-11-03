@@ -1,0 +1,197 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>320</x>
+      <y>90</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>SwingGUI
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>820</x>
+      <y>90</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>CLI
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>570</x>
+      <y>260</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>AgentFacade
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>470</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>AgentController
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>360</x>
+      <y>470</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>CourseService
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>700</x>
+      <y>470</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>QuizService
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1040</x>
+      <y>470</y>
+      <w>280</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>StudyPlanGenerator
+--
+bg=white
+fontsize=24
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1300</w>
+      <h>65</h>
+    </coordinates>
+    <panel_attributes>*StudyPilot entry points and selected services*
+The complete class views and selected members appear in class-view-1 through class-view-7.
+fontsize=20
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>450</x>
+      <y>160</y>
+      <w>270</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;25.0;260.0;25.0;260.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>700</x>
+      <y>160</y>
+      <w>270</w>
+      <h>110</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>260.0;10.0;260.0;35.0;10.0;35.0;10.0;100.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>150</x>
+      <y>330</y>
+      <w>570</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>560.0;10.0;560.0;65.0;10.0;65.0;10.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>490</x>
+      <y>330</y>
+      <w>230</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>220.0;10.0;220.0;75.0;10.0;75.0;10.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>700</x>
+      <y>330</y>
+      <w>150</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;85.0;140.0;85.0;140.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>700</x>
+      <y>330</y>
+      <w>490</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;95.0;480.0;95.0;480.0;140.0</additional_attributes>
+  </element>
+</diagram>

@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD02 Generate a material summary
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=SummaryService~s
+obj=PromptTemplates~p
+obj=LLMClient / OpenAIAdapter~l
+obj=OpenAIApiClient~a
+obj=CourseRepository~r
+
+u-&gt;f : summarize(courseId, materialId, style)
+f-&gt;s : summarize(course, material, style)
+s-&gt;p : summaryPrompt(style, chunks)
+combinedFragment=loop~generation s a; s:[Each batch, at most two generation attempts]
+s-&gt;l : generate(prompt)
+l-&gt;a : sendRequest(jsonBody)
+a.&gt;l : Chat Completions response or error
+l.&gt;s : LLMResponse
+--
+s-&gt;p : mergeSummaryPrompt when several batches are needed
+s-&gt;l : generate(merge prompt) when needed
+l.&gt;s : merged summary or error
+s:Require nonempty usable replies before replacing the summary
+s-&gt;r : saveCourse(course)
+r.&gt;u : saved summary or explicit failure
+s:A failed request keeps the earlier saved summary</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

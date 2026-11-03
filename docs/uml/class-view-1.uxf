@@ -1,0 +1,733 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Agent and entry points*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>SwingGUI
+--
+-facade: AgentFacade
+-courses: JComboBox&lt;Course&gt;
+-materials: JComboBox&lt;Material&gt;
+-cards: JComboBox&lt;Flashcard&gt;
+-styles: JComboBox&lt;String&gt;
+-courseName: JTextField
+--
++showMainWindow(): void
++actionPerformed(event): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>CLI
+--
+-facade: AgentFacade
+-output: PrintStream
+-errors: PrintStream
+--
++main(args): void
++runCommand(args): int
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>370</h>
+    </coordinates>
+    <panel_attributes>AgentFacade
+--
+-courseService: CourseService
+-summaryService: SummaryService
+-conceptService: ConceptService
+-questionAnswerService: QuestionAnswerService
+-flashcardService: FlashcardService
+-quizService: QuizService
+--
++createCourse(name): Course
++listCourses(): List&lt;Course&gt;
++importMaterial(courseId, filePath): Material
++summarize(courseId, materialId, style): String
++extractConcepts(courseId, materialId): List&lt;Concept&gt;
++askQuestion(courseId, question): Answer
++generateFlashcards(courseId, materialId, count): List&lt;Flashcard&gt;
++reviewCard(courseId, cardId, remembered): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>570</y>
+      <w>500</w>
+      <h>340</h>
+    </coordinates>
+    <panel_attributes>AgentController
+--
+-MAX_STEPS: int
+-MAX_RETRIES_PER_STEP: int
+-MAX_REPLANS: int
+-planner: AgentPlanner
+-toolManager: ToolManager
+-memoryManager: MemoryManager
+--
++handleRequest(courseId, sessionId, request): AgentResult
+-executePlan(courseId, plan): Decision
+-validatePlan(plan): String
+-executeWithRetries(courseId, step): ToolResult
+-decide(result, retriesUsed, replansUsed): Decision
+-matchingAction(step): PlanStep
+-finish(request, status): AgentResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>570</y>
+      <w>500</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>AgentPlanner
+--
+-llmClient: LLMClient
+-toolManager: ToolManager
+-templates: PromptTemplates
+-parser: ResponseParser
+-courses: CourseService
+--
++createPlan(courseId, request, history): ExecutionPlan
++replan(courseId, request, history, resultsSoFar): ExecutionPlan
+-courseContext(courseId, request): String
+-requestPlan(context, history): ExecutionPlan
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>570</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>ExecutionPlan
+--
+-steps: List&lt;PlanStep&gt;
+-clarification: String
+--
++size(): int
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1010</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>PlanStep
+--
+-stepId: String
+-toolName: String
+-arguments: Map&lt;String, String&gt;
+-retriesUsed: int
+--
++recordRetry(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1010</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>ToolManager
+--
+-tools: Map&lt;String, Tool&gt;
+--
++registerTool(tool): void
++hasTool(name): boolean
++validatePlan(plan): String
++validatePlan(plan, results): String
++resolveStep(step, results): PlanStep
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1010</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+Tool
+--
+
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1310</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>SummarizeTool
+--
+-courses: CourseService
+-summaries: SummaryService
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1310</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>AnswerTool
+--
+-courses: CourseService
+-answers: QuestionAnswerService
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1310</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>QuizTool
+--
+-courses: CourseService
+-quizzes: QuizService
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1560</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>WeakTopicTool
+--
+-courses: CourseService
+-analyzer: WeakTopicAnalyzer
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1560</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>StudyPlanTool
+--
+-courses: CourseService
+-generator: StudyPlanGenerator
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1560</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>ProgressTool
+--
+-courses: CourseService
+-tracker: ProgressTracker
+--
++execute(arguments): ToolResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1810</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>ToolResult
+--
+-status: ResultStatus
+-output: String
+-errorMessage: String
+-data: Map&lt;String, String&gt;
+-retryable: boolean
+--
++canRetry(): boolean
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1810</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+ResultStatus
+--
+OK
+FAILED
+INSUFFICIENT_DATA
+--
+
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1810</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+Decision
+--
+CONTINUE
+RETRY
+REPLAN
+CLARIFY
+ABORT
+--
+
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>2130</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>MemoryManager
+--
+-sessionId: String
+-courseId: String
+-messages: List&lt;Message&gt;
+-repository: MemoryRepository
+--
++loadSession(courseId, sessionId): void
++addMessage(message): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>2130</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>Message
+--
+-role: String
+-text: String
+--
++getRole(): String
++getText(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>2130</y>
+      <w>500</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>AgentResult
+--
+-finalAnswer: String
+-needsClarification: boolean
+-trace: List&lt;String&gt;
+-sessionId: String
+-status: ResultStatus
+-plan: List&lt;PlanStep&gt;
+--
++needsClarification(): boolean
++toJson(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>2470</y>
+      <w>500</w>
+      <h>360</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;private inner class&gt;&gt;
+SwingGUI.StudyWorker
+--
+-action: String
+-filePath: String
+-course: Course
+-material: Material
+-loadedAttempt: QuizAttempt
+-loadedAgent: AgentResult
+--
++StudyWorker(action, filePath)
+#doInBackground(): String
+#done(): void
+-createQuiz(): String
+-useAttempt(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1150</y>
+      <w>1200</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;80.0;10.0;80.0;10.0;160.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>850</x>
+      <y>1150</y>
+      <w>610</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>600.0;10.0;600.0;90.0;10.0;90.0;10.0;160.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1440</x>
+      <y>1150</y>
+      <w>20</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;100.0;10.0;100.0;10.0;160.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-85</x>
+      <y>1150</y>
+      <w>1545</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>1535.0;10.0;1535.0;110.0;10.0;110.0;10.0;360.0;355.0;360.0;355.0;410.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-100</x>
+      <y>1150</y>
+      <w>1560</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>1550.0;10.0;1550.0;120.0;10.0;120.0;10.0;370.0;960.0;370.0;960.0;410.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-115</x>
+      <y>1150</y>
+      <w>1575</w>
+      <h>420</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>1565.0;10.0;1565.0;130.0;10.0;130.0;10.0;380.0;1565.0;380.0;1565.0;410.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>330</y>
+      <w>1200</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;170.0;1190.0;170.0;1190.0;140.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>180</y>
+      <w>110</w>
+      <h>115</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;105.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>460</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;30.0;10.0;30.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>690</y>
+      <w>110</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;50.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>900</y>
+      <w>610</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0;600.0;50.0;600.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-205</x>
+      <y>900</y>
+      <w>485</w>
+      <h>1240</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>475.0;10.0;475.0;60.0;10.0;60.0;10.0;1180.0;475.0;1180.0;475.0;1230.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>1075</y>
+      <w>110</w>
+      <h>45</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;35.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>2000</y>
+      <w>1200</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;130.0;1190.0;100.0;10.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>710</y>
+      <w>1200</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;280.0;10.0;280.0;10.0;300.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>2205</y>
+      <w>110</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;25.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-280</x>
+      <y>330</y>
+      <w>560</w>
+      <h>2150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>550.0;10.0;550.0;160.0;10.0;160.0;10.0;2060.0;550.0;2060.0;550.0;2140.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>2930</y>
+      <w>1080</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>Facade
+SwingGUI and CLI call AgentFacade. The facade delegates study operations to the existing services.
+style=wordwrap
+bg=white
+fontsize=16
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD10 Generate and validate a study plan
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=StudyPlanGenerator~g
+obj=ProgressTracker~t
+obj=LLMClient~l
+obj=ResponseParser~p
+obj=StudyPlanRepository~r
+
+u-&gt;f : createStudyPlan(courseId, examDate, hoursPerDay)
+f-&gt;g : generate(courseId, examDate, hoursPerDay)
+g:Validate real dates and whole hours from 1 to 24
+g-&gt;t : getRankedStats(courseId, minResults)
+t.&gt;g : graded-only topic context
+g:Without enough graded evidence require a diagnostic quiz first
+combinedFragment=loop~proposal g p; g:[At most three proposals]
+g-&gt;l : generate(studyPlanPrompt)
+l.&gt;g : proposed JSON tasks
+g-&gt;p : parseStudyTasks(text)
+p.&gt;g : dated tasks
+g: validatePlan(plan)
+--
+g:Check dates, positive minutes, daily budgets and diagnostic order
+g-&gt;r : savePlan(valid plan)
+r.&gt;u : actual saved schedule or explicit error
+g:An exhausted invalid proposal does not overwrite an earlier plan</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

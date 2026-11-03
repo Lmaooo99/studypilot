@@ -100,14 +100,14 @@
     "tokens_note": "Additional real API checks after the earlier recorded windows. Token counts came from service responses."
   },
   "application_totals_for_recorded_checks": {
-    "call_count": 30,
+    "call_count": 43,
     "tokens": {
-      "prompt_tokens": 239749,
-      "completion_tokens": 4483,
-      "total_tokens": 244232
+      "prompt_tokens": 301472,
+      "completion_tokens": 6310,
+      "total_tokens": 307782
     },
     "money_cost": null,
-    "note": "Totals combine recorded application-check windows. Requests with unavailable usage, including the earlier timeout and two unsuccessful C14 summary attempts, are excluded."
+    "note": "Totals combine recorded application-check windows, including the successful direct connection probe. Requests with unavailable usage, including the earlier timeout and two unsuccessful C14 summary attempts, are excluded."
   },
   "period_2_verification": {
     "recorded_at": "2026-10-28T23:50:05.986296+00:00",
@@ -296,5 +296,113 @@
     "development_money_cost": null,
     "development_usage_note": "Additional development-session usage has not yet been recorded in this checkpoint.",
     "tokens_note": "Actual response usage from the isolated C15 verification. Five intentionally incorrect submissions created test history; these were not student study results. Provider billing and a separate request counter are unavailable."
+  },
+  "period_3_workflow_verification": {
+    "recorded_at": "2026-11-03T19:01:50.991849+00:00",
+    "application_usage_record_count": 13,
+    "application_tokens_reported_by_completed_calls": {
+      "prompt_tokens": 61723,
+      "completion_tokens": 1827,
+      "total_tokens": 63550
+    },
+    "application_calls": [
+      {
+        "completion_tokens": 77,
+        "prompt_tokens": 4678,
+        "total_tokens": 4755,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:52:24.078315Z"
+      },
+      {
+        "completion_tokens": 427,
+        "prompt_tokens": 4721,
+        "total_tokens": 5148,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:52:30.337826Z"
+      },
+      {
+        "completion_tokens": 78,
+        "prompt_tokens": 4737,
+        "total_tokens": 4815,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:52:33.481027Z"
+      },
+      {
+        "completion_tokens": 99,
+        "prompt_tokens": 4697,
+        "total_tokens": 4796,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:52:37.048989Z"
+      },
+      {
+        "completion_tokens": 549,
+        "prompt_tokens": 4757,
+        "total_tokens": 5306,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:52:45.999454Z"
+      },
+      {
+        "completion_tokens": 52,
+        "prompt_tokens": 4630,
+        "total_tokens": 4682,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:53:49.543901Z"
+      },
+      {
+        "completion_tokens": 40,
+        "prompt_tokens": 4610,
+        "total_tokens": 4650,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:53:51.374157Z"
+      },
+      {
+        "completion_tokens": 40,
+        "prompt_tokens": 4511,
+        "total_tokens": 4551,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:00.870835Z"
+      },
+      {
+        "completion_tokens": 153,
+        "prompt_tokens": 4831,
+        "total_tokens": 4984,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:10.947434Z"
+      },
+      {
+        "completion_tokens": 69,
+        "prompt_tokens": 5000,
+        "total_tokens": 5069,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:16.606220Z"
+      },
+      {
+        "completion_tokens": 42,
+        "prompt_tokens": 4511,
+        "total_tokens": 4553,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:21.017916Z"
+      },
+      {
+        "completion_tokens": 172,
+        "prompt_tokens": 4756,
+        "total_tokens": 4928,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:24.158339Z"
+      },
+      {
+        "completion_tokens": 29,
+        "prompt_tokens": 5284,
+        "total_tokens": 5313,
+        "model": "gpt-6.1-sol",
+        "time": "2026-11-03T18:54:27.298771Z"
+      }
+    ],
+    "application_money_cost": null,
+    "application_money_note": "Provider billing records are not available.",
+    "development_tokens": null,
+    "development_money_cost": null,
+    "development_usage_note": "Additional development-session counters and billing are unavailable for this window.",
+    "tokens_note": "Actual response usage from C21 production CLI workflow checks. Verification answers and four empty submissions create demonstration data, not student study results."
   }
 }

@@ -34,19 +34,18 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 3 | C18 | Grading/difficulty/plan integration tests | Implemented |
 | 3 | C19 | Agent recovery and session-isolation tests | Implemented |
 | 3 | C20 | CLI and structured-result acceptance tests | Implemented |
-| 3 | C21 | Complete workflows across restarts | Planned |
+| 3 | C21 | Complete workflows across restarts | Implemented |
 
 Material imports preserve complete Unicode characters at chunk boundaries and
 reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete the remaining cross-feature/F12 integration checks in Period 3.
-- Update implemented UML classes and affected use cases/SD01/SD05/SD06/SD07/SD08/SD09/SD10/SD11/SD12/SD13/SD14, retaining UMLet sources and images.
-- Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
-- Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
+- Complete the native GUI walkthrough and real GUI recording.
+- Verify the final published source and assets from a fresh GitHub clone.
+- Add uploaded, accessible timestamp links for every Stage 1 feature.
 - Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
-- Record A (F01-F05), B (F06-F09/F11), and C (F10/F12), collectively showing GUI and CLI.
+- CLI replay A covers F01-F05, B covers F06-F09/F11, and C covers F10/F12. A native GUI recording is still required.
 - Video uploads, timestamp-link checks and course-system submission remain pending.
 - Complete the final GUI walkthrough and review later code changes. The confirmed review covers F01-F05 and review/history; review of the Period 2 and Period 3 code remains pending.
 - Add development-tool and API billing records when available.
@@ -102,7 +101,7 @@ reject files containing only an encoding marker.
 - C15 passed 224 JUnit tests with Java 17. Controlled test tools counted retries/replans, checked dependency ordering and prevented repeated completed actions.
 - A real dependency-chain check used weakTopics then quiz with the actual returned topic field. The separate verification course had five intentionally incorrect CLI attempts on one real generated question.
 - A saved-session follow-up restored five submitted attempts in a new process. No-history input clarified, and offline CLI checks rejected cross-course sessions, duplicate flags and missing credentials.
-- The C14 commit row and stale courseId/stepId note were corrected. F12 still needs full integration and native GUI verification; final diagrams, report and recordings remain pending.
+- C15 corrected the C14 commit row and stale courseId/stepId note. C21 adds the complete integration workflows and final diagrams/report; native GUI verification and recording remain pending.
 
 - C16 passed 245 JUnit tests and 26 packaged CLI checks without API credentials or new model calls.
 - Progress/history writes no longer expose unsaved in-memory counts/events. Saved course review events permit recovery after a later write fails.
@@ -128,3 +127,10 @@ reject files containing only an encoding marker.
 - Structured results retained actual partial and recovered outcomes, references, retry metadata and escaped text. Clarification returned zero; failures returned one; warnings stayed on stderr.
 - A new test exposed known agent options being accepted in place of a request. CLI.agentCommand now rejects those inputs with code two before planning or saving a turn, while option names within ordinary request text remain valid.
 - Packaged CLI checks verified the guard, option ordering, invalid integer/date inputs, one-object failure JSON, saved request text and damaged-progress backups without a provider request. Native GUI and student review remain pending.
+
+- C21 passed 307 JUnit tests, including three complete workflows across fresh application instances.
+- A complete study flow retained source IDs, summaries, concepts, review mastery, mixed questions, submitted answers, grading, task completion and a course-bound agent conversation after restart.
+- Removing only derived progress/history files in a test directory rebuilt supported counts and labelled snapshots without inventing lost grading events. Later generation failures preserved earlier saved work.
+- The production CLI workflow used 13 actual API responses. A real agent resolved the weakTopics result into a new quiz and reopened the same conversation in another JVM.
+- Demonstration data reached one review, five submitted attempts, 30 graded answers, six correct answers and one completed task. Four empty submissions deliberately created weak-topic history; these are not student study results.
+- Updated UMLet sources and PNG exports are in docs/uml. The report accounts for all twelve features, five patterns, design changes, collaboration, usage and the three reporting periods. Native GUI text entry was not reliable during the automated check; the full GUI walkthrough and recording remain pending.

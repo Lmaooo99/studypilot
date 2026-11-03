@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD04 Answer with retrieved citations
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=QuestionAnswerService~s
+obj=RetrievalStrategy~r
+obj=LLMClient~l
+obj=ResponseParser~p
+obj=CitationValidator~v
+
+u-&gt;f : askQuestion(courseId, question)
+f-&gt;s : answer(course, question)
+s:Clarify a vague request before retrieval
+s-&gt;r : retrieve(question, chunks, k)
+r.&gt;s : relevant chunks
+s:With no relevant chunks return a notice without a model call
+s-&gt;l : generate(qaPrompt with retrieved IDs)
+l.&gt;s : LLMResponse
+s-&gt;p : parseCitedAnswer(text)
+p.&gt;s : answer text and cited IDs
+s-&gt;v : validate(ids, retrieved)
+v.&gt;s : allowed IDs only
+s.&gt;u : Answer with file and page or line locations
+s:Citation membership does not prove semantic support for every sentence</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

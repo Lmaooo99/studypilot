@@ -1,0 +1,214 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*JSON repositories*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>CourseRepository
+--
+-directory: Path
+--
++saveCourse(course): void
++loadCourse(courseId): Course
+-checkMaterialIds(course): void
+-wholeNumber(data, name): int
++listCourses(): List&lt;Course&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>QuizRepository
+--
+-directory: Path
+-attemptDirectory: Path
+--
++saveQuiz(quiz): void
++loadQuiz(quizId): Quiz
++saveAttempt(attempt): void
++loadAttempt(attemptId): QuizAttempt
+-loadResults(saved, quiz): List&lt;QuestionResult&gt;
+-wholeNumber(data, name): int
+-savedFlag(data, name): boolean
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>ProgressRepository
+--
+-directory: Path
+-recoveryWarning: String
+--
++addWarning(warning): void
++hasHistoryFile(): boolean
++hasProgressFile(): boolean
++saveSummaries(summaries): void
++loadSummaries(): Map&lt;String, ProgressSummary&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>460</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>StudyPlanRepository
+--
+-directory: Path
+--
++savePlan(plan): void
++loadPlan(planId): StudyPlan
++listPlans(courseId): List&lt;StudyPlan&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>460</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>MemoryRepository
+--
+-directory: Path
+--
++saveConversation(courseId, sessionId, messages): void
++loadConversation(courseId, sessionId): List&lt;Message&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>460</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>JsonFiles
+--
+
+--
+~namedFile(directory, id): Path
+~read(file): JSONObject
+~write(file, data): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>290</y>
+      <w>1200</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;90.0;1190.0;90.0;1190.0;170.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>850</x>
+      <y>350</y>
+      <w>610</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0;600.0;40.0;600.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1440</x>
+      <y>310</y>
+      <w>20</w>
+      <h>160</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;90.0;10.0;90.0;10.0;150.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>620</y>
+      <w>1200</w>
+      <h>50</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0;1190.0;40.0;1190.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>525</y>
+      <w>110</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;20.0</additional_attributes>
+  </element>
+</diagram>

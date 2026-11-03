@@ -33,10 +33,12 @@
 - Added grading, difficulty and study-plan integration checks and validation of saved grading fields.
 - Added service-backed agent recovery and saved-conversation isolation tests.
 - Added CLI input/structured-result checks and rejected agent options used in place of a request.
+- Added complete study/agent restart workflows and checked recovery without invented history.
+- Updated the UMLet sources/images and prepared the seven-section Word/PDF report and captured CLI replays.
 
 ## Checks
 
-- All 304 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 307 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -63,12 +65,15 @@
 - Fourteen new integration checks and 46 offline CLI checks covered pending resolutions, difficulty thresholds, graded evidence for plans, budget/date constraints and task completion. No provider request was made for these checks.
 - Fifteen new agent integration tests covered service retry limits, retained results and separate course/session histories. The 28 offline CLI checks preserved failed turns and damaged conversation files without a provider request.
 - Thirteen new CLI tests checked JSON fields, partial/recovered results, clarification, retries, warnings and input errors. The 33 packaged CLI checks verified actual exit codes, preserved requests and JSON/stderr separation without a provider request.
+- Three complete restart tests checked saved study content, grading, feedback, task completion and dependent agent practice through real services and repositories with the existing test-only LLM client.
+- A separate production CLI workflow used 13 actual API responses, including a real weak-topic-to-quiz reference and a saved-conversation follow-up. Its repeated empty submissions are labelled demonstration inputs, not student study results.
 - My review of the Period 1 implementation is complete. Review of the Period 2 and Period 3 code, the final GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish integration verification, then complete the
-GUI walkthrough, UML, report and demonstration videos.
+Complete the native GUI walkthrough and recording, review the later implementation,
+and verify the final published assets from a fresh clone. Upload the videos and add
+accessible timestamp links before the student submits the repository URL.
 
 ## AI support
 

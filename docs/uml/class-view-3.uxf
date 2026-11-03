@@ -1,0 +1,515 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Course material and retrieval*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>Course
+--
+-courseId: String
+-name: String
+-materials: List&lt;Material&gt;
+-concepts: List&lt;Concept&gt;
+-flashcards: List&lt;Flashcard&gt;
+-reviewEvents: List&lt;StudyEvent&gt;
+--
++addMaterial(material): void
++setConcepts(values): void
++setFlashcards(values): void
++addReviewEvent(event): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>Material
+--
+-materialId: String
+-fileName: String
+-contentHash: String
+-summary: String
+-chunks: List&lt;Chunk&gt;
+--
++setSummary(summary): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>300</h>
+    </coordinates>
+    <panel_attributes>Chunk
+--
+-chunkId: String
+-text: String
+-sourceFile: String
+-page: int
+-lineStart: int
+-lineEnd: int
+--
++getId(): String
++getText(): String
++getSourceFile(): String
++getPage(): int
++getLineStart(): int
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>500</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>Concept
+--
+-name: String
+-definition: String
+-parentName: String
+-sourceChunkIds: List&lt;String&gt;
+--
++setParentName(name): void
++addSource(id): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>500</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>Flashcard
+--
+-cardId: String
+-front: String
+-back: String
+-conceptName: String
+-reviewCount: int
+-rememberedCount: int
+--
++recordReview(remembered): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>500</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>CourseService
+--
+-repository: CourseRepository
+-CHUNK_SIZE: int
+-OVERLAP: int
+-MAX_FILE_BYTES: long
+--
++createCourse(name): Course
++getCourse(courseId): Course
++importMaterial(courseId, filePath): Material
+-checkMaterialFile(file): void
+-extractPdf(file, fileName): List&lt;Chunk&gt;
+-splitIntoChunks(text, fileName, page): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>880</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>SummaryService
+--
+-llmClient: LLMClient
+-templates: PromptTemplates
+-repository: CourseRepository
+--
++summarize(course, material, style): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>880</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>ConceptService
+--
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+-repository: CourseRepository
+--
++extractConcepts(course, material): List&lt;Concept&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>880</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>FlashcardService
+--
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+-repository: CourseRepository
+-tracker: ProgressTracker
+--
++generateCards(course, material, count): List&lt;Flashcard&gt;
++review(course, card, remembered): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1200</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>QuestionAnswerService
+--
+-strategy: RetrievalStrategy
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+-validator: CitationValidator
+--
++answer(course, question): Answer
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1200</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+RetrievalStrategy
+--
+
+--
++retrieve(query, chunks, k): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1200</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>KeywordRetrieval
+--
+
+--
++retrieve(query, chunks, k): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1500</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>TfIdfRetrieval
+--
+
+--
++retrieve(query, chunks, k): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1500</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>RetrievalWords
+--
+
+--
+~countWords(text): Map&lt;String, Integer&gt;
+~selectTopChunks(chunks, scores, k): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1500</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>CitationValidator
+--
+
+--
++validate(citedIds, retrieved): List&lt;String&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1750</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>Answer
+--
+-text: String
+-citations: List&lt;Citation&gt;
+--
++hasValidCitation(): boolean
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1750</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>Citation
+--
+-chunkId: String
+-sourceFile: String
+-page: int
+-lineStart: int
+-lineEnd: int
+--
++getChunkId(): String
++getSourceFile(): String
++getPage(): int
++getLineStart(): int
++getLineEnd(): int
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>1255</y>
+      <w>110</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>10.0;20.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1340</y>
+      <w>610</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>600.0;10.0;600.0;90.0;10.0;90.0;10.0;160.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>190</y>
+      <w>110</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;50.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>190</y>
+      <w>110</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;60.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>370</y>
+      <w>20</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;90.0;10.0;90.0;10.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>370</y>
+      <w>610</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;100.0;600.0;100.0;600.0;130.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>1265</y>
+      <w>110</w>
+      <h>45</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;35.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1390</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;95.0;1190.0;95.0;1190.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>1815</y>
+      <w>110</w>
+      <h>85</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;75.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>2130</y>
+      <w>1080</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>Strategy
+QuestionAnswerService uses RetrievalStrategy. KeywordRetrieval and TfIdfRetrieval provide interchangeable retrieval algorithms.
+style=wordwrap
+bg=white
+fontsize=16
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

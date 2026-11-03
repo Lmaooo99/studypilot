@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD05 Review a flashcard and notify observers
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=FlashcardService~s
+obj=CourseRepository~c
+obj=ProgressTracker~t
+obj=HistoryRecorder / DashboardView~o
+
+u-&gt;f : getCardsToReview(courseId)
+f-&gt;s : getCardsToReview(course)
+s.&gt;u : unreviewed then lower-mastery cards
+u-&gt;f : reviewCard(courseId, cardId, remembered)
+f-&gt;s : review(course, card, remembered)
+s: recordReview and create stable StudyEvent ID
+s-&gt;c : saveCourse(course with card and review event)
+c.&gt;s : saved
+s-&gt;t : recordReview(course, event)
+t: save copied counts before exposing them
+t-&gt;o : update(subject)
+o.&gt;u : history and refreshed dashboard
+t:A later failed derived write can be repaired from the saved course event</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

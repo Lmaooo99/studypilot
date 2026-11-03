@@ -1,0 +1,36 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD03 Extract concepts or generate flashcards
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=ConceptService / FlashcardService~s
+obj=LLMClient~l
+obj=ResponseParser~p
+obj=CourseRepository~r
+
+u-&gt;f : extractConcepts or generateFlashcards(courseId, materialId, count)
+f-&gt;s : extractConcepts or generateCards(course, material, count)
+s-&gt;l : generate(prompt with actual material chunks)
+l.&gt;s : LLMResponse
+s-&gt;p : parseConcepts or parseFlashcards(text)
+p.&gt;s : proposed objects
+s:Validate source IDs and parent links for concepts, remove duplicates and cycles
+s:Keep distinct nonempty flashcards, validate count before generation
+s-&gt;r : saveCourse(course)
+r.&gt;u : actual validated list or explicit failure
+s:Generation retries are bounded, failed work does not replace saved results</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

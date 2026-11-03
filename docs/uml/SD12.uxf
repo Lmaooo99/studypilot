@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD12 Restore course progress and history
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=CourseService~c
+obj=ProgressRestorer~x
+obj=Saved course / quiz / plan repositories~s
+obj=ProgressTracker~t
+obj=HistoryRecorder~h
+
+u-&gt;f : getProgress(courseId) or getHistory(courseId)
+f-&gt;c : getCourse(courseId)
+c.&gt;f : saved Course
+f-&gt;x : restore(course)
+x-&gt;s : listAttempts and listPlans for the selected course
+s.&gt;x : saved submitted results and tasks
+x: rebuildSummary using GRADED results, review events and done task IDs
+x-&gt;t : restoreSummary(rebuilt summary)
+x-&gt;h : restore missing events or labelled snapshots
+t.&gt;u : restored selected-course counts
+h.&gt;u : available history and storage notices
+x:Back up damaged derived files, preserve unreadable source records and existing counts
+x:Recovered snapshots cannot reconstruct lost grading transitions or unavailable timestamps</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

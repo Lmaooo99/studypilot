@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD11 Complete a saved study task
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=StudyPlanGenerator~g
+obj=StudyPlanRepository~r
+obj=ProgressTracker~t
+obj=HistoryRecorder / DashboardView~o
+
+u-&gt;f : completeTask(courseId, planId, taskId)
+f-&gt;g : markTaskDone(courseId, planId, taskId)
+g-&gt;r : loadPlan(planId)
+r.&gt;g : plan
+g:Check course ownership and saved task ID
+g-&gt;r : savePlan(plan with done flag)
+g-&gt;t : recordTaskDone(courseId, taskId)
+t:Count the stable task ID once
+t-&gt;o : update(subject)
+o.&gt;u : saved completion, progress and history
+u-&gt;f : repeat completion after restart
+f-&gt;g : markTaskDone(courseId, planId, taskId)
+g-&gt;t : recordTaskDone(courseId, taskId)
+t.&gt;u : unchanged completed count</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

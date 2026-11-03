@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD09 Rank and explain weak topics
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=WeakTopicAnalyzer~a
+obj=ProgressTracker~t
+obj=LLMClient~l
+
+u-&gt;f : getWeakTopics(courseId)
+f-&gt;a : analyze(courseId)
+a-&gt;t : getRankedStats(courseId, minResults)
+t.&gt;a : graded-only counts sorted by accuracy
+a:List smaller samples as insufficient data, reviews are excluded
+a-&gt;l : generate(weakTopicPrompt with actual statistics)
+l.&gt;a : brief explanation or failure
+a.&gt;u : ranking, counts and explanation
+a:On generation failure retain the computed report and explain that advice is unavailable</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

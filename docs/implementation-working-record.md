@@ -10,7 +10,7 @@ objective and rubric grading, pending retries and self-assessment. F11 covers re
 quiz submissions, graded-answer counts, completed tasks and history, including
 restoration from saved study records after an interrupted write.
 F12 now supports tool execution, conversation memory, step-result references and
-bounded retry/replan recovery. Full integration and native GUI verification remain pending.
+bounded retry/replan recovery. C21 complete study/agent restart workflows passed; native GUI verification remains pending.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
 
@@ -18,18 +18,18 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 
 | Feature | Type | Status | Main files and responsibilities | Key methods | Patterns | Video |
 |---|---|---|---|---|---|---|
-| F01 Course/material import | Deterministic | Implemented | CourseService validates/extracts/chunks; CourseRepository saves source locations | createCourse, importMaterial, extractPdf | Facade | A, pending |
-| F02 Summaries | AI | Implemented | SummaryService batches/merges/saves; OpenAIAdapter translates model calls | summarize, summaryPrompt, mergeSummaryPrompt, generate | Facade, Adapter | A, pending |
-| F03 Concepts | Hybrid | Implemented | ConceptService merges and checks relationships; ResponseParser validates structured fields | extractConcepts, parseConcepts | Facade, Adapter | A, pending |
-| F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | A, pending |
-| F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A, pending |
-| F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B, pending |
-| F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B, pending |
-| F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
-| F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
-| F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C, pending |
-| F11 Progress/history | Deterministic | Implemented | ProgressTracker saves copied counts; Course retains review events; ProgressRestorer rebuilds selected-course counts/history; ProgressRepository backs up damaged files; HistoryRecorder/DashboardView observe updates | recordReview, recordQuizAttempt, recordTaskDone, restore, restoreSummary, recordEvent, getSummary, update, getHistory | Facade, Observer | B, pending |
-| F12 Natural-language agent | AI | Partial | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, replan, executionPlanPrompt, parseExecutionPlan, validatePlan, resolveStep, executeWithRetries, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C, pending |
+| F01 Course/material import | Deterministic | Implemented | CourseService validates/extracts/chunks; CourseRepository saves source locations | createCourse, importMaterial, extractPdf | Facade | A 00:00; upload pending |
+| F02 Summaries | AI | Implemented | SummaryService batches/merges/saves; OpenAIAdapter translates model calls | summarize, summaryPrompt, mergeSummaryPrompt, generate | Facade, Adapter | A 00:21; upload pending |
+| F03 Concepts | Hybrid | Implemented | ConceptService merges and checks relationships; ResponseParser validates structured fields | extractConcepts, parseConcepts | Facade, Adapter | A 00:28; upload pending |
+| F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | A 00:38; upload pending |
+| F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A 00:52; upload pending |
+| F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B 00:00; upload pending |
+| F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B 06:20; upload pending |
+| F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B 00:46; upload pending |
+| F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B 06:27; upload pending |
+| F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C 00:00; upload pending |
+| F11 Progress/history | Deterministic | Implemented | ProgressTracker saves copied counts; Course retains review events; ProgressRestorer rebuilds selected-course counts/history; ProgressRepository backs up damaged files; HistoryRecorder/DashboardView observe updates | recordReview, recordQuizAttempt, recordTaskDone, restore, restoreSummary, recordEvent, getSummary, update, getHistory | Facade, Observer | B 06:34; upload pending |
+| F12 Natural-language agent | AI | Implemented core | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, replan, executionPlanPrompt, parseExecutionPlan, validatePlan, resolveStep, executeWithRetries, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C 00:48; upload pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
 Course with Material and Chunk objects. F02/F03/F05 send material chunks through
@@ -128,7 +128,7 @@ actual study events. Factory Method uses the abstract QuestionCreator. Its commo
 buildQuestion operation calls createQuestion, which the three concrete creators
 override to construct MultipleChoiceQuestion, TrueFalseQuestion or ShortAnswerQuestion.
 QuizService holds the type-to-creator map and does not construct the products itself.
-The updated implementation UML remains a later delivery task.
+The updated implementation UML is in docs/uml, with editable UMLet sources and matching PNG exports.
 
 QuizGrader is also a Strategy context and holds GradingStrategy objects.
 ExactMatchGrading handles multiple choice and true/false; LLMRubricGrading handles
@@ -144,15 +144,14 @@ CitedAnswer -> optional clarification flag -> represent an ambiguous question wi
 StudyEvent -> eventId -> avoid duplicate observer-history entries -> F05/F11.
 DashboardView -> reads through AgentFacade -> retain the common UI entry point while observing progress -> F11.
 Startup/configuration -> AppConfig and JsonFiles helpers -> keep credentials local and JSON saves simple -> infrastructure.
-The courseId/stepId agent signature changes were implemented in C14; their diagram updates remain pending.
+The courseId/stepId agent signature changes were implemented in C14 and are represented in the updated agent class and sequence views.
 No pattern was replaced and no additional product feature was added in Period 1.
 
 CourseRepository uses short private methods for each object's JSON mapping.
 Answer.hasValidCitation reads its citation list directly instead of keeping a
 duplicate boolean field. Flashcard review ordering uses a plain insertion loop.
 CLI has one method per command group. SwingGUI uses ActionListener and one private
-StudyWorker. These private implementation details must be reflected in the later
-updated class diagram.
+StudyWorker. The updated class views show selected members, the private worker and these responsibilities.
 
 For F06, QuizService reuses the configured RetrievalStrategy to select relevant
 chunks. This adds a retrieval association to the Stage 1 QuizService design and
@@ -161,7 +160,7 @@ at most two replacement requests. Invalid or repeated drafts are not saved. A qu
 may contain fewer questions than requested; the UI and CLI show both counts.
 QuizRepository and plain restore constructors preserve question IDs and types;
 saved quizzes cannot be overwritten. listQuizzes/getQuiz/describe support reopening
-them. These methods and the retrieval association belong in the updated UML.
+them. The updated UML includes these methods and the retrieval association.
 F07 now supplies the default difficulty. A valid explicit level overrides it.
 
 F08 adds explicit course scope to startAttempt/submitAttempt and provides
@@ -180,7 +179,7 @@ history timestamps are backed up instead of escaping as an unhandled date error.
 The Stage 1 statsByConcept map in ProgressTracker is stored inside each course's
 ProgressSummary instead. This keeps the topic counts and their saved result keys
 together and avoids repeating courseId in every ConceptStats object. quizzesTaken
-is derived from saved attempt IDs. The updated progress class view must show this
+is derived from saved attempt IDs. The updated progress class view shows this
 ownership and the new ID lists.
 
 F08 pending resolution adds ResponseParser.parseGrading, QuizAttempt.getResult and
@@ -189,7 +188,7 @@ for answer/rubric comparison. PromptTemplates keeps the Stage 1 three-string
 gradingPrompt signature; its question argument now includes the saved model answer
 and maximum points. The GUI adds a status column and a selected-answer comparison
 dialog, while CLI adds regrade/model-answer/selfgrade commands. UC10, SD08 and the
-grading/UI class views must show these operations. History events use the time of
+grading/UI class views show these operations. History events use the time of
 the grading update; QuizAttempt retains the first submission time.
 
 F07 restores the Stage 1 DifficultySuggestion, suggestDifficulty/chooseDifficulty
@@ -207,7 +206,7 @@ name order, and returned ConceptStats are copies so later grading cannot change 
 report's snapshot. AppConfig adds the positive WEAK_TOPIC_MIN_RESULTS setting,
 default 5, to implement the configurable Stage 1 minimum. No storage schema changed.
 WeakTopicReport getters and formatting, the CLI command and the Progress tab button
-belong in the updated class views and UC11/SD09. No new pattern was added.
+appear in the updated class views and UC11/SD09. No new pattern was added.
 
 F10 retains the Stage 1 plan, task, generator and repository classes and the four
 TaskType values. New inputs accept integer hours from 1 to 24, with today through
@@ -265,7 +264,7 @@ The JSON plan/results contain encountered IDs across plans; only each individual
 proposal has the eight-step bound. A repaired failed ID contains its latest result,
 while the trace retains earlier calls, errors, reference resolution and decisions.
 Output excerpts in replan context are limited to 2000 characters per result; named
-data fields remain intact. Full agent integration and GUI verification are pending.
+data fields remain intact. C21 adds complete agent/study restart workflows; native GUI verification remains pending.
 
 C16 changes recovery after a failed write. Previously a card's count could be
 saved before its summary/history update, and the tracker could expose an unsaved
@@ -293,8 +292,7 @@ Only original review events retain their original event times. A recovered quiz
 snapshot uses the attempt's submission time and explicitly disclaims a later
 grading time. A recovered completed task uses the recovery time because its
 original completion time is not stored. Missing earlier grading transitions or
-legacy review details remain unavailable. These changes belong in UC14/SD12 and
-the updated UMLet class/sequence views; those deliverables remain pending.
+legacy review details remain unavailable. UC14/SD12 and the updated UMLet class views represent these changes.
 
 C17 adds persistence integration checks through AgentFacade and fresh application
 instances. These exposed numeric coercion in org.json getInt and unchecked source
@@ -305,9 +303,7 @@ indices. Invalid saved input returns an error and preserves its original bytes,
 instead of silently changing a citation location or question value.
 
 These checks refine the existing F01/F04/F06 storage error paths; the feature
-scope, public signatures and five patterns are unchanged. The storage class views
-should include CourseRepository.checkMaterialIds/wholeNumber and
-QuizRepository.wholeNumber. The original Stage 1 report remains unchanged.
+scope, public signatures and five patterns are unchanged. The storage class views include CourseRepository.checkMaterialIds/wholeNumber and QuizRepository.wholeNumber. The original Stage 1 report remains unchanged.
 
 C18 checks the shared F07/F08/F09/F10/F11 flow across fresh facades. Its stored-grade
 tests exposed numeric and boolean coercion in QuizRepository.loadResults. Saved
@@ -315,8 +311,7 @@ pointsEarned/maxPoints now use the existing integer helper, and savedFlag checks
 that correct/counted are actual JSON booleans. Invalid grades keep their original
 file and report an error; they are not converted into accepted measurements.
 These are private validation changes in the existing repository. Feature scope,
-public methods and patterns are unchanged; the storage class view should include
-savedFlag. F08 retains the original Strategy-based grading and PENDING behavior.
+public methods and patterns are unchanged; the storage class view includes savedFlag. F08 retains the original Strategy-based grading and PENDING behavior.
 
 C20 corrects input validation in CLI.agentCommand. A known agent option in the
 request position was being sent to the planner as study text. The command now
@@ -361,14 +356,14 @@ My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 304 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 307 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
 Real API checks produced a summary, 8 concepts, a cited answer and 3
 flashcards. Review counts and history were restored after restarting. GUI checks
 covered startup, a real summary, busy/ready controls and an empty course name.
-The final GUI walkthrough and demonstration recordings remain to be completed.
+The complete native GUI walkthrough and recording remain to be completed.
 
 The Period 1 review check recorded two reviews, mastery 0.5 and two history events,
 then loaded the same values in new processes. Course isolation, rejected review
@@ -564,8 +559,30 @@ known agent options with code two before any planning or conversation write. The
 integer/date inputs, saved request text, text/JSON failure formats and warning
 separation. Their actual planning failures were caused by missing local settings
 before HTTP; no new provider response is claimed. The damaged progress bytes were
-preserved in a backup. Native GUI interaction, student review and C21 workflows
-remain pending.
+preserved in a backup. Native GUI interaction and student review remain pending.
+
+C21 passed 307 tests. Three new complete workflows retain source IDs, summaries,
+concepts, reviewed cards, typed quiz IDs, original submitted answers, pending
+resolutions, task completion and course-bound agent memory across fresh facades.
+Derived-file removal in the test directory restored supported counts and labelled
+snapshots without inventing lost grading transitions. Later generation failures
+preserved earlier saved study files.
+
+The production CLI demonstration used 13 actual model responses. It generated
+study content, submitted and regraded the same saved mixed attempt, ranked actual
+graded statistics, saved/completed a plan and executed progress, weakTopics and quiz
+with a real result reference. A new process loaded the same conversation. The
+final state was one review, five attempts, 30 graded answers, six correct answers
+and one completed task. Four explicit empty submissions created sufficient
+verification history; they are not student study results. The first authored
+answers file had the wrong JSON wrapper and was rejected before submission; the
+corrected input then passed. No application defect is attributed to that input.
+
+The updated UML accounts for all 88 production source files and the private Swing
+worker. The seven-section Word/PDF report and captured CLI replays retain the
+remaining GUI, student-review and video-upload work explicitly. The native window
+and empty-course error were observed, but automated text entry was unreliable.
+A complete native walkthrough or GUI recording is not claimed.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
@@ -579,8 +596,7 @@ updated as a single transaction. A source record may be saved before a later
 progress/history failure; a selected-course read repairs the derived data where
 sources are available. Unreadable or missing sources require repair and keep the
 existing counts. Recovery snapshots cannot reconstruct every earlier event or
-missing timestamp. Cross-feature/agent integration, native GUI verification,
-updated UML and Stage 3 evaluation remain on the task board. Plan context is limited to eight material chunks; validation checks schedule
+missing timestamp. Native GUI verification, final student review, accessible video links and Stage 3 evaluation remain on the task board. Plan context is limited to eight material chunks; validation checks schedule
 constraints, not complete syllabus coverage. A valid model grade does not prove
 that its semantic judgment is correct. Completing a validated tool plan also does
 not prove that it satisfies every part of the student's request; semantic agent
@@ -592,5 +608,6 @@ evaluation remains part of Stage 3.
 - Recording B: F06-F09 and F11.
 - Recording C: F10 and F12.
 
-The recordings will show inputs, running output and AI involvement through the GUI
-and CLI. Video links and timestamps will be added after recording and upload.
+The three CLI replays retain captured commands, actual output and the role of the
+model. Their local file and timestamp index is in demo/README.md. The native GUI
+walkthrough/recording and accessible uploaded timestamp links remain pending.

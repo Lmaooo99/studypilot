@@ -1,0 +1,237 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Study plans*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>340</h>
+    </coordinates>
+    <panel_attributes>StudyPlanGenerator
+--
+-courseService: CourseService
+-tracker: ProgressTracker
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+-repository: StudyPlanRepository
+--
++generate(courseId, examDate, hoursPerDay): StudyPlan
+-checkInput(examDate, hoursPerDay, today): void
+-validatePlan(plan, today): List&lt;String&gt;
+-context(course, ranked, today): String
++getPlan(courseId, planId): StudyPlan
++listPlans(courseId): List&lt;StudyPlan&gt;
++markTaskDone(courseId, planId, taskId): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>StudyPlan
+--
+-planId: String
+-courseId: String
+-examDate: LocalDate
+-hoursPerDay: int
+-tasks: List&lt;StudyTask&gt;
+-notice: String
+--
++describe(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>StudyTask
+--
+-taskId: String
+-date: LocalDate
+-type: TaskType
+-conceptName: String
+-description: String
+-minutes: int
+--
++markDone(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>540</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+TaskType
+--
+READ
+REVIEW_CARDS
+TAKE_QUIZ
+DIAGNOSTIC_QUIZ
+--
+
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>540</y>
+      <w>500</w>
+      <h>240</h>
+    </coordinates>
+    <panel_attributes>ProgressTracker
+--
+-summaries: Map&lt;String, ProgressSummary&gt;
+-repository: ProgressRepository
+-lastEvent: StudyEvent
+--
++recordReview(course, event): void
++restoreSummary(summary): boolean
++recordEvent(event): void
++recordQuizAttempt(attempt): void
++recordTaskDone(courseId, task): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>540</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>CourseService
+--
+-repository: CourseRepository
+-CHUNK_SIZE: int
+-OVERLAP: int
+-MAX_FILE_BYTES: long
+--
++createCourse(name): Course
++getCourse(courseId): Course
++importMaterial(courseId, filePath): Material
+-checkMaterialFile(file): void
+-extractPdf(file, fileName): List&lt;Chunk&gt;
+-splitIntoChunks(text, fileName, page): List&lt;Chunk&gt;
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>920</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+LLMClient
+--
+
+--
++generate(prompt): LLMResponse
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>430</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;30.0;1190.0;30.0;1190.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>430</y>
+      <w>610</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;40.0;600.0;40.0;600.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-70</x>
+      <y>430</y>
+      <w>350</w>
+      <h>500</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>340.0;10.0;340.0;50.0;10.0;50.0;10.0;430.0;340.0;430.0;340.0;490.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>200</y>
+      <w>110</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;10.0</additional_attributes>
+  </element>
+</diagram>

@@ -1,0 +1,276 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Configuration and LLM adapter*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>AppConfig
+--
+-values: Properties
+-directory: Path
+--
++validateLlmSettings(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+LLMClient
+--
+
+--
++generate(prompt): LLMResponse
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>OpenAIAdapter
+--
+-modelName: String
+-apiClient: OpenAIApiClient
+-reasoningEffort: String
+--
++generate(prompt): LLMResponse
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>370</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>OpenAIApiClient
+--
+-config: AppConfig
+-client: HttpClient
+--
++sendRequest(jsonBody): String
++recordUsage(response): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>370</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>LLMResponse
+--
+-text: String
+-success: boolean
+-errorMessage: String
+--
++getText(): String
++isSuccess(): boolean
++getErrorMessage(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>370</y>
+      <w>500</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>PromptTemplates
+--
+
+--
++summaryPrompt(style, chunks): String
++mergeSummaryPrompt(style, summaries): String
++conceptPrompt(chunks): String
++qaPrompt(question, chunks): String
++flashcardPrompt(chunks, count): String
++quizPrompt(topic, count, difficulty, types, chunks): String
++gradingPrompt(question, rubric, answer): String
++weakTopicPrompt(topics): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>730</y>
+      <w>500</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>ResponseParser
+--
+
+--
++parseConcepts(text): List&lt;Concept&gt;
++parseCitedAnswer(text): CitedAnswer
++parseFlashcards(text): List&lt;Flashcard&gt;
++parseRawQuestions(text): List&lt;RawQuestion&gt;
++parseAnswers(text): Map&lt;String, String&gt;
++parseGrading(text, question): QuestionResult
++parseStudyTasks(text): List&lt;StudyTask&gt;
++parseExecutionPlan(text): ExecutionPlan
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>730</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>CitedAnswer
+--
+-answer: String
+-citedChunkIds: List&lt;String&gt;
+-needsClarification: boolean
+--
++needsClarification(): boolean
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>730</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;test only&gt;&gt;
+MockLLMClient
+--
+-scriptedReplies: List&lt;LLMResponse&gt;
+-prompts: List&lt;String&gt;
+--
++reply(text): void
++failNext(): void
++generate(prompt): LLMResponse
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1100</x>
+      <y>165</y>
+      <w>110</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;100.0;20.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-55</x>
+      <y>240</y>
+      <w>1515</w>
+      <h>500</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>915.0;10.0;915.0;60.0;10.0;60.0;10.0;420.0;1505.0;420.0;1505.0;490.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>260</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;50.0;10.0;50.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>240</y>
+      <w>20</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>10.0;130.0;10.0;80.0;10.0;80.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>1090</y>
+      <w>1080</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>Adapter
+OpenAIAdapter implements LLMClient and translates Chat Completions requests and responses through OpenAIApiClient.
+style=wordwrap
+bg=white
+fontsize=16
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

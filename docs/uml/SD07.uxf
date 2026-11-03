@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD07 Start and submit a quiz attempt
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=QuizService~s
+obj=QuizGrader~g
+obj=QuizRepository~r
+obj=ProgressTracker~t
+
+u-&gt;f : startAttempt(courseId, quizId)
+f-&gt;s : startAttempt(courseId, quizId)
+s-&gt;r : saveAttempt(new attempt)
+r.&gt;u : attempt ID
+u-&gt;f : submitAttempt(courseId, attemptId, answers)
+f-&gt;s : submitAttempt(courseId, attemptId, answers)
+s:Check saved course and question IDs, preserve first submitted answers
+s-&gt;g : grade(quiz, attempt)
+g: ExactMatchGrading for objective answers
+g: LLMRubricGrading for nonempty short answers
+g.&gt;s : GRADED or PENDING results
+s-&gt;r : saveAttempt(submitted attempt)
+s-&gt;t : recordQuizAttempt(attempt)
+t.&gt;u : score, pending state, progress and history
+s:Repeated submission reuses saved answers and grades, pending answers do not enter accuracy</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

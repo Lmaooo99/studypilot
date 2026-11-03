@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD06 Suggest difficulty and create a mixed quiz
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=QuizService~s
+obj=ProgressTracker~t
+obj=LLMClient~l
+obj=QuestionCreator~c
+obj=QuizRepository~r
+
+u-&gt;f : suggestDifficulty(courseId, topic)
+f-&gt;s : suggestDifficulty(courseId, topic)
+s-&gt;t : getAccuracy and getGradedCount
+t.&gt;s : graded-only topic statistics
+s.&gt;u : level, count, accuracy and reason
+u-&gt;f : createQuiz(courseId, topic, count, difficulty, types)
+f-&gt;s : createQuiz(course, topic, count, difficulty, types)
+s:Validate inputs and retrieve relevant source chunks
+s-&gt;l : generate(quizPrompt)
+l.&gt;s : actual question drafts
+s-&gt;c : buildQuestion(raw)
+c: createQuestion(raw) in the selected subclass
+c.&gt;s : typed Question
+s:Bounded replacement of invalid or duplicate drafts
+s-&gt;r : saveQuiz(quiz)
+r.&gt;u : immutable saved quiz and actual count
+s:Below five graded results use Medium, otherwise below 50 percent Easy, at least 80 percent Hard</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

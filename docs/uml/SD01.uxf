@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD01 Create a course and import material
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=CourseService~s
+obj=CourseRepository~r
+
+u-&gt;f : createCourse(name)
+f-&gt;s : createCourse(name)
+s-&gt;r : saveCourse(course)
+r.&gt;s : saved
+s.&gt;u : course ID
+u-&gt;f : importMaterial(courseId, filePath)
+f-&gt;s : importMaterial(courseId, filePath)
+s: checkMaterialFile(file)
+s: contentHash(bytes), reject duplicates
+s: readTextFile or extractPdf, splitIntoChunks
+s-&gt;r : saveCourse(course)
+r.&gt;u : material ID and source locations, or error
+u-&gt;f : reopen the selected course
+f-&gt;s : getCourse(courseId)
+s-&gt;r : loadCourse(courseId)
+r.&gt;u : stored IDs, pages or line ranges
+s:Unsupported, corrupt, blank or duplicate inputs add no material</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

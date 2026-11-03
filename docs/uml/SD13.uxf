@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>UMLSequenceAllInOne</id>
+    <coordinates>
+      <x>20</x>
+      <y>20</y>
+      <w>1700</w>
+      <h>1200</h>
+    </coordinates>
+    <panel_attributes>title=SD13 Plan a course-bound assistant request
+fontsize=14
+obj=GUI or CLI~u
+obj=AgentFacade~f
+obj=AgentController~c
+obj=MemoryManager~m
+obj=AgentPlanner~p
+obj=LLMClient~l
+obj=ToolManager~t
+
+u-&gt;f : runAgent(courseId, sessionId, request)
+f-&gt;c : handleRequest(courseId, sessionId, request)
+c-&gt;m : loadSession(courseId, sessionId)
+m.&gt;c : saved course-bound messages
+c-&gt;p : createPlan(courseId, request, last ten messages)
+p-&gt;l : generate(executionPlanPrompt with actual course context)
+l.&gt;p : structured ExecutionPlan
+p.&gt;c : plan or clarification
+c-&gt;t : validatePlan(plan, results)
+t.&gt;c : validation result
+c: executePlan(courseId, plan)
+c-&gt;m : addMessage(user), addMessage(assistant)
+c.&gt;u : AgentResult with session, status, actual outputs and trace
+m:Reject foreign or damaged sessions before planning, retain all saved messages</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

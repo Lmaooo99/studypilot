@@ -1,0 +1,634 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1700</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>*Quiz factories and grading*
+Selected members from the Stage 2 implementation
+Parameter names are shown; full types and remaining members are in the Java source.
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+QuestionType
+--
+MULTIPLE_CHOICE
+TRUE_FALSE
+SHORT_ANSWER
+--
++parse(text): QuestionType
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>100</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+Difficulty
+--
+EASY
+MEDIUM
+HARD
+--
++parse(text): Difficulty
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>100</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>Quiz
+--
+-quizId: String
+-courseId: String
+-topic: String
+-difficulty: Difficulty
+-questions: List&lt;Question&gt;
+--
++describe(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>400</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;abstract&gt;&gt;
+Question
+--
+-questionId: String
+-text: String
+-conceptName: String
+-points: int
+--
++getId(): String
++getText(): String
++getConceptName(): String
++getPoints(): int
++getType(): QuestionType
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>400</y>
+      <w>500</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>MultipleChoiceQuestion
+--
+-options: List&lt;String&gt;
+-correctIndex: int
+--
++getOptions(): List&lt;String&gt;
++getCorrectIndex(): int
++getType(): QuestionType
++getCorrectAnswer(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>400</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>TrueFalseQuestion
+--
+-correctAnswer: boolean
+--
++getType(): QuestionType
++getCorrectAnswer(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>780</y>
+      <w>500</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>ShortAnswerQuestion
+--
+-modelAnswer: String
+-rubric: String
+--
++getRubric(): String
++getType(): QuestionType
++getCorrectAnswer(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>780</y>
+      <w>500</w>
+      <h>300</h>
+    </coordinates>
+    <panel_attributes>RawQuestion
+--
+-type: QuestionType
+-text: String
+-options: List&lt;String&gt;
+-correctAnswer: String
+-rubric: String
+-conceptName: String
+--
++getType(): QuestionType
++getText(): String
++getOptions(): List&lt;String&gt;
++getCorrectAnswer(): String
++getRubric(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>780</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;abstract&gt;&gt;
+QuestionCreator
+--
+
+--
++buildQuestion(raw): Question
+#createQuestion(raw): Question
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1180</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>MCQQuestionCreator
+--
+
+--
+#createQuestion(raw): Question
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1180</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>TrueFalseQuestionCreator
+--
+
+--
+#createQuestion(raw): Question
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1180</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>ShortAnswerQuestionCreator
+--
+
+--
+#createQuestion(raw): Question
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1410</y>
+      <w>500</w>
+      <h>360</h>
+    </coordinates>
+    <panel_attributes>QuizService
+--
+-creators: Map&lt;QuestionType, QuestionCreator&gt;
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+-repository: QuizRepository
+-retrieval: RetrievalStrategy
+--
++createQuiz(course, topic, count, difficulty, types): Quiz
++suggestDifficulty(courseId, topic): DifficultySuggestion
+-chooseDifficulty(accuracy, gradedCount): Difficulty
++startAttempt(courseId, quizId): QuizAttempt
++submitAttempt(courseId, attemptId, answers): QuizAttempt
++retryPendingGrading(courseId, attemptId): QuizAttempt
++selfGrade(courseId, attemptId, questionId, correct): QuizAttempt
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1410</y>
+      <w>500</w>
+      <h>260</h>
+    </coordinates>
+    <panel_attributes>DifficultySuggestion
+--
+-level: Difficulty
+-accuracy: double
+-gradedCount: int
+-reason: String
+--
++getLevel(): Difficulty
++getAccuracy(): double
++getGradedCount(): int
++getReason(): String
++toString(): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1410</y>
+      <w>500</w>
+      <h>280</h>
+    </coordinates>
+    <panel_attributes>QuizAttempt
+--
+-attemptId: String
+-quizId: String
+-courseId: String
+-answers: Map&lt;String, String&gt;
+-results: List&lt;QuestionResult&gt;
+-submittedAt: LocalDateTime
+--
++submit(answers): void
++addResult(result): void
++replacePendingResult(result): void
++describe(quiz): String
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>1870</y>
+      <w>500</w>
+      <h>220</h>
+    </coordinates>
+    <panel_attributes>QuestionResult
+--
+-questionId: String
+-conceptName: String
+-gradingStatus: GradingStatus
+-correct: boolean
+-pointsEarned: int
+-maxPoints: int
+--
++markCounted(): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>1870</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;enumeration&gt;&gt;
+GradingStatus
+--
+GRADED
+PENDING
+--
+
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>1870</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>QuizGrader
+--
+-strategies: Map&lt;QuestionType, GradingStrategy&gt;
+--
++grade(quiz, attempt): void
++regradePending(quiz, attempt): void
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>2190</y>
+      <w>500</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>&lt;&lt;interface&gt;&gt;
+GradingStrategy
+--
+
+--
++grade(question, answer): QuestionResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>610</x>
+      <y>2190</y>
+      <w>500</w>
+      <h>130</h>
+    </coordinates>
+    <panel_attributes>ExactMatchGrading
+--
+
+--
++grade(question, answer): QuestionResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>1200</x>
+      <y>2190</y>
+      <w>500</w>
+      <h>170</h>
+    </coordinates>
+    <panel_attributes>LLMRubricGrading
+--
+-llmClient: LLMClient
+-templates: PromptTemplates
+-parser: ResponseParser
+--
++grade(question, answer): QuestionResult
+bg=white
+fontsize=14
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>490</y>
+      <w>110</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>10.0;50.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>540</y>
+      <w>1200</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>10.0;140.0;10.0;170.0;1190.0;170.0;1190.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>670</y>
+      <w>20</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;50.0;10.0;50.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>940</y>
+      <w>1200</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;190.0;10.0;190.0;10.0;240.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>850</x>
+      <y>940</y>
+      <w>610</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>600.0;10.0;600.0;200.0;10.0;200.0;10.0;240.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>1440</x>
+      <y>940</y>
+      <w>20</w>
+      <h>250</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;210.0;10.0;210.0;10.0;240.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>2245</y>
+      <w>110</w>
+      <h>30</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>10.0;20.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>2330</y>
+      <w>1200</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;.
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;10.0;60.0;1190.0;60.0;1190.0;30.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>290</y>
+      <w>1200</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;30.0;10.0;30.0;10.0;110.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-175</x>
+      <y>940</y>
+      <w>1635</w>
+      <h>480</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>445.0;470.0;445.0;400.0;10.0;400.0;10.0;170.0;1625.0;170.0;1625.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>2010</y>
+      <w>1200</w>
+      <h>190</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;120.0;10.0;120.0;10.0;180.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1680</y>
+      <w>1200</w>
+      <h>200</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;140.0;10.0;140.0;10.0;190.0</additional_attributes>
+  </element>
+  <element>
+    <id>UMLNote</id>
+    <coordinates>
+      <x>20</x>
+      <y>2460</y>
+      <w>1080</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>Factory Method and Strategy
+QuestionCreator.buildQuestion calls the protected createQuestion factory method. Three creator subclasses construct the three Question products. QuizGrader also selects a GradingStrategy.
+style=wordwrap
+bg=white
+fontsize=16
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+</diagram>

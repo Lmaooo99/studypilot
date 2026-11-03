@@ -12,7 +12,13 @@ suggestions, F08 saved attempts with objective and model-based grading, F09
 weak-topic reports and F10 dated study plans. Failed grades can be retried or
 self-assessed against the saved answer and rubric. The assistant now plans and
 runs six tools with saved conversation context, step-result references and bounded
-retry/replan recovery. Final integration and GUI verification remain on the task board.
+retry/replan recovery. Complete study/agent restart workflows passed the current
+307-test build. The native GUI walkthrough and final student review remain pending.
+
+The seven-section implementation report is in [stage2-report.docx](stage2-report.docx)
+and [stage2-report.pdf](stage2-report.pdf). Updated editable diagrams and PNG exports
+are in [docs/uml](docs/uml). The [demonstration index](demo/README.md) describes the
+captured CLI replays and the still-required GUI recording and uploaded video links.
 
 ## Requirements and build
 
@@ -421,8 +427,8 @@ answers, cards, quizzes, grading, weak-topic explanations and plans are recorded
 separately in the development log.
 
 Full deterministic testing and KUMA evaluation are later Stage 3 requirements.
-The final seven-section report, updated UML and feature recordings remain pending. The Period 2 GUI
-controls have compiled; their interactive walkthrough is still pending.
+The seven-section report, updated UML and captured CLI replays are linked below.
+The complete native GUI walkthrough and recording remain pending.
 
 ## Stage 2 tracking
 
@@ -433,4 +439,5 @@ controls have compiled; their interactive walkthrough is still pending.
 - [Implementation working record](docs/implementation-working-record.md)
 - [Usage checkpoint](docs/usage-checkpoint.json)
 
-The report notes will be used to prepare stage2-report.docx and stage2-report.pdf.
+The working record supplies the feature, design-change and collaboration details
+used in stage2-report.docx and stage2-report.pdf.
