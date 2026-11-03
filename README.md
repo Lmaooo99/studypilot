@@ -322,6 +322,9 @@ java -jar target/studypilot.jar agent "Show progress, then summarize notes.md br
 java -jar target/studypilot.jar agent "Summarize the same material in bullet style" --course COURSE_ID --session SESSION_ID --json
 ```
 
+Enter the request before the options. `--json`, `--course` and `--session` cannot
+replace the request; those inputs are rejected before planning.
+
 Use an imported file name in the first request. A new request without --session
 creates a UUID session. Reuse the returned sessionId for a follow-up, including
 after restarting. A saved session belongs to one course and cannot be reused for

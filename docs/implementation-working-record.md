@@ -318,6 +318,13 @@ These are private validation changes in the existing repository. Feature scope,
 public methods and patterns are unchanged; the storage class view should include
 savedFlag. F08 retains the original Strategy-based grading and PENDING behavior.
 
+C20 corrects input validation in CLI.agentCommand. A known agent option in the
+request position was being sent to the planner as study text. The command now
+rejects --json, --course and --session in that position before calling the facade.
+This prevents an omitted request from starting planning or saving a failure turn.
+Ordinary request text containing those words remains valid. Public signatures,
+feature scope and design patterns are unchanged.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -349,11 +356,12 @@ C16 adds source-backed progress/history recovery, saved review events and failur
 C17 adds material/quiz storage integration tests and fixes numeric/provenance validation found by those checks.
 C18 adds pending/feedback/plan integration and strict saved-grade validation.
 C19 adds service-backed agent recovery and conversation-isolation integration tests.
+C20 adds CLI/JSON acceptance tests and fixes missing-request validation.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 291 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 304 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -537,8 +545,27 @@ failure turns once and loaded their history in new processes. Cross-course acces
 invalid session paths and corrupt conversation fields were rejected without
 changing those files. Healthy queries changed no files; directory/file blockers
 were retained and memory-save failure was reported. These offline checks do not
-claim model-generated plans or actual CLI tool execution. Native GUI interaction,
-student review and the remaining C20/C21 workflows are still pending.
+claim model-generated plans or actual CLI tool execution. Native GUI interaction
+and student review remain pending.
+
+C20 passed 304 tests, including 13 new CLI checks. Structured responses retained
+step IDs, tool names, resolved arguments, retry counts and actual result/error/data
+fields. Success and clarification returned zero, while a later planning failure
+returned one with earlier results intact. Recovered results kept earlier failures
+in the trace/output. Quoted text, newlines, backslashes and Unicode survived JSON
+serialization and conversation saves. Recovery warnings stayed on stderr, and a
+memory-save failure still returned the completed tool output in JSON. These tool
+outcomes used the existing services with scripted LLM replies limited to tests.
+
+One new test initially failed: an option used instead of a request reached the
+planner and returned failure code one. The short input guard now rejects the three
+known agent options with code two before any planning or conversation write. The
+33 packaged CLI checks verified that fix, option ordering, invalid commands,
+integer/date inputs, saved request text, text/JSON failure formats and warning
+separation. Their actual planning failures were caused by missing local settings
+before HTTP; no new provider response is claimed. The damaged progress bytes were
+preserved in a backup. Native GUI interaction, student review and C21 workflows
+remain pending.
 
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,

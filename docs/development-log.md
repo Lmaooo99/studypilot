@@ -32,10 +32,11 @@
 - Added material/quiz persistence integration tests and stricter checks for saved source locations and question numbers.
 - Added grading, difficulty and study-plan integration checks and validation of saved grading fields.
 - Added service-backed agent recovery and saved-conversation isolation tests.
+- Added CLI input/structured-result checks and rejected agent options used in place of a request.
 
 ## Checks
 
-- All 291 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 304 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -61,6 +62,7 @@
 - Persistence checks retained original IDs, source citations and typed quiz data across fresh application instances. Seventeen new tests and 29 offline CLI checks covered these paths and rejected malformed saved fields.
 - Fourteen new integration checks and 46 offline CLI checks covered pending resolutions, difficulty thresholds, graded evidence for plans, budget/date constraints and task completion. No provider request was made for these checks.
 - Fifteen new agent integration tests covered service retry limits, retained results and separate course/session histories. The 28 offline CLI checks preserved failed turns and damaged conversation files without a provider request.
+- Thirteen new CLI tests checked JSON fields, partial/recovered results, clarification, retries, warnings and input errors. The 33 packaged CLI checks verified actual exit codes, preserved requests and JSON/stderr separation without a provider request.
 - My review of the Period 1 implementation is complete. Review of the Period 2 and Period 3 code, the final GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps

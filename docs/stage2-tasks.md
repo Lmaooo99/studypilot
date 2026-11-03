@@ -33,7 +33,7 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 3 | C17 | Persistence integration tests | Implemented |
 | 3 | C18 | Grading/difficulty/plan integration tests | Implemented |
 | 3 | C19 | Agent recovery and session-isolation tests | Implemented |
-| 3 | C20 | CLI and structured-result acceptance tests | Planned |
+| 3 | C20 | CLI and structured-result acceptance tests | Implemented |
 | 3 | C21 | Complete workflows across restarts | Planned |
 
 Material imports preserve complete Unicode characters at chunk boundaries and
@@ -123,3 +123,8 @@ reject files containing only an encoding marker.
 - Real service/repository paths retained saved summaries through bounded recovery and later failures, corrected quiz input before saving, and kept request-specific result references separate.
 - Course/session switches retained their own messages and counts. Planning used the last ten messages while storage retained all turns; invalid or damaged conversations stopped before planning without losing source data.
 - CLI checks used authored earlier context and actual missing-configuration failures. Failed turns survived restart, cross-course access was rejected, and blocked storage was preserved. No new provider request or production-code change was required.
+
+- C20 passed 304 JUnit tests, including 13 new CLI/input/JSON tests, and 33 offline packaged CLI checks.
+- Structured results retained actual partial and recovered outcomes, references, retry metadata and escaped text. Clarification returned zero; failures returned one; warnings stayed on stderr.
+- A new test exposed known agent options being accepted in place of a request. CLI.agentCommand now rejects those inputs with code two before planning or saving a turn, while option names within ordinary request text remain valid.
+- Packaged CLI checks verified the guard, option ordering, invalid integer/date inputs, one-object failure JSON, saved request text and damaged-progress backups without a provider request. Native GUI and student review remain pending.

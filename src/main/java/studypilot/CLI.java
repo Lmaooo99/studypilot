@@ -185,6 +185,9 @@ public class CLI {
         if (args.length < 2) {
             return unknownCommand();
         }
+        if (args[1].equals("--json") || args[1].equals("--course") || args[1].equals("--session")) {
+            throw new IllegalArgumentException("Enter a study request before the agent options.");
+        }
         boolean json = false;
         List<String> options = new ArrayList<>();
         for (int i = 2; i < args.length; i++) {
