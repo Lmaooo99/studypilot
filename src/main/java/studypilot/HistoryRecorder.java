@@ -19,15 +19,29 @@ public class HistoryRecorder implements Observer {
         if (event == null) {
             return;
         }
-        for (StudyEvent previous : history) {
-            if (previous.getId().equals(event.getId())) {
-                // Retry saving if an earlier notification could not reach the disk.
-                repository.saveHistory(history);
-                return;
+        if (contains(event.getId())) {
+            saveIfMissing();
+            return;
+        }
+        List<StudyEvent> changed = new ArrayList<>(history);
+        changed.add(event);
+        repository.saveHistory(changed);
+        history.add(event);
+    }
+
+    public boolean contains(String eventId) {
+        for (StudyEvent event : history) {
+            if (event.getId().equals(eventId)) {
+                return true;
             }
         }
-        history.add(event);
-        repository.saveHistory(history);
+        return false;
+    }
+
+    public void saveIfMissing() {
+        if (!history.isEmpty() && !repository.hasHistoryFile()) {
+            repository.saveHistory(history);
+        }
     }
 
     public List<StudyEvent> getHistory(String courseId) {

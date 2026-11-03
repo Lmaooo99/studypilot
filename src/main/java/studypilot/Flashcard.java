@@ -50,6 +50,9 @@ public class Flashcard {
     }
 
     public void recordReview(boolean remembered) {
+        if (reviewCount == Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("The flashcard review count is too large.");
+        }
         reviewCount++;
         if (remembered) {
             rememberedCount++;

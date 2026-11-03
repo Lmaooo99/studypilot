@@ -10,6 +10,7 @@ public class Course {
     private final List<Material> materials;
     private final List<Concept> concepts = new ArrayList<>();
     private final List<Flashcard> flashcards = new ArrayList<>();
+    private final List<StudyEvent> reviewEvents = new ArrayList<>();
 
     public Course(String name) {
         this(UUID.randomUUID().toString(), name, new ArrayList<Material>());
@@ -53,6 +54,33 @@ public class Course {
     public void setFlashcards(List<Flashcard> values) {
         flashcards.clear();
         flashcards.addAll(values);
+    }
+
+    public int getTotalReviews() {
+        int total = 0;
+        for (Flashcard card : flashcards) {
+            if (card.getReviewCount() > Integer.MAX_VALUE - total) {
+                throw new IllegalArgumentException("The saved review count is too large.");
+            }
+            total += card.getReviewCount();
+        }
+        return total;
+    }
+
+    public List<StudyEvent> getReviewEvents() {
+        return new ArrayList<>(reviewEvents);
+    }
+
+    public void addReviewEvent(StudyEvent event) {
+        if (!event.getCourseId().equals(courseId)) {
+            throw new IllegalArgumentException("A review event must belong to this course.");
+        }
+        for (StudyEvent previous : reviewEvents) {
+            if (previous.getId().equals(event.getId())) {
+                throw new IllegalArgumentException("Review event IDs must be distinct.");
+            }
+        }
+        reviewEvents.add(event);
     }
 
     public Flashcard getFlashcard(String cardId) {

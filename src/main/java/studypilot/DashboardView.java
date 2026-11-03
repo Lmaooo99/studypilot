@@ -42,6 +42,10 @@ public class DashboardView extends JPanel implements Observer {
         if (text.length() == 0) {
             text.append("No study history yet.");
         }
+        String warnings = facade.getStorageWarnings();
+        if (!warnings.isBlank()) {
+            text.append("\nStorage notice:\n" + warnings);
+        }
         history.setText(text.toString());
     }
 

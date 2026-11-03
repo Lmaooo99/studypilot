@@ -28,10 +28,11 @@
 - Added dated study plans, time-budget checks and saved task completion.
 - Connected the assistant planner, six tools, saved conversations and execution traces.
 - Added step-result references, bounded retries/replanning and reuse of completed agent actions.
+- Added saved review events, progress/history restoration and duplicate-count checks after interrupted writes.
 
 ## Checks
 
-- All 224 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- All 245 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -53,11 +54,12 @@
 - A real run kept progress when summary generation timed out. A later CLI invocation completed progress and summary; a follow-up restored the same material from saved context. A no-history request asked for clarification instead of claiming a weakest topic.
 - Recovery tests counted tool dispatches, checked the two-retry/two-replan limits, validated dependencies and preserved successful results across replans.
 - A live check used one real generated question and five intentionally incorrect submissions in a separate verification course. The assistant read that graded topic and used its returned field to generate a quiz. A new process restored the session; no-history input asked for clarification.
+- Recovery checks restored counts and history from saved records, preserved damaged-file backups and kept healthy reads unchanged. The 26 packaged CLI checks used no API credentials or new model calls.
 - My review of the Period 1 implementation is complete. Review of the Period 2 and Period 3 code, the final GUI walkthrough and demonstration recordings remain to be done.
 
 ## Next steps
 
-Finish progress/history recovery and integration verification, then complete the
+Finish integration verification, then complete the
 GUI walkthrough, UML, report and demonstration videos.
 
 ## AI support

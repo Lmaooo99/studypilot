@@ -60,6 +60,11 @@ public class CLI {
         } catch (IllegalStateException e) {
             errors.println(e.getMessage());
             return 1;
+        } finally {
+            String updated = facade.getStorageWarnings();
+            if (updated.length() > warnings.length()) {
+                errors.print(updated.substring(warnings.length()));
+            }
         }
     }
 

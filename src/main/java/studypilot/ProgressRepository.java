@@ -25,6 +25,20 @@ public class ProgressRepository {
         return recoveryWarning;
     }
 
+    public void addWarning(String warning) {
+        if (!recoveryWarning.contains(warning + "\n")) {
+            recoveryWarning += warning + "\n";
+        }
+    }
+
+    public boolean hasHistoryFile() {
+        return Files.exists(directory.resolve("history.json"));
+    }
+
+    public boolean hasProgressFile() {
+        return Files.exists(directory.resolve("progress.json"));
+    }
+
     public void saveSummaries(Map<String, ProgressSummary> summaries) {
         JSONArray items = new JSONArray();
         for (ProgressSummary summary : summaries.values()) {
@@ -61,14 +75,17 @@ public class ProgressRepository {
             for (int i = 0; i < items.length(); i++) {
                 JSONObject item = items.getJSONObject(i);
                 String courseId = item.getString("courseId");
-                int reviewsDone = item.getInt("reviewsDone");
+                if (summaries.containsKey(courseId)) {
+                    throw new JSONException("Repeated progress course ID");
+                }
+                int reviewsDone = wholeNumber(item, "reviewsDone");
                 List<ConceptStats> stats = new ArrayList<>();
                 if (item.has("stats")) {
                     JSONArray savedStats = item.getJSONArray("stats");
                     for (int j = 0; j < savedStats.length(); j++) {
                         JSONObject topic = savedStats.getJSONObject(j);
                         stats.add(new ConceptStats(topic.getString("conceptName"),
-                                topic.getInt("gradedCount"), topic.getInt("correctCount")));
+                                wholeNumber(topic, "gradedCount"), wholeNumber(topic, "correctCount")));
                     }
                 }
                 ProgressSummary summary = new ProgressSummary(courseId, reviewsDone,
@@ -81,6 +98,13 @@ public class ProgressRepository {
             summaries.clear();
         }
         return summaries;
+    }
+
+    private int wholeNumber(JSONObject data, String name) {
+        if (!(data.get(name) instanceof Integer)) {
+            throw new JSONException("Progress counts must be whole numbers");
+        }
+        return data.getInt(name);
     }
 
     private List<String> loadIds(JSONObject data, String name) {
@@ -119,9 +143,14 @@ public class ProgressRepository {
         }
         try {
             JSONArray items = JsonFiles.read(file).getJSONArray("events");
+            List<String> ids = new ArrayList<>();
             for (int i = 0; i < items.length(); i++) {
                 JSONObject item = items.getJSONObject(i);
                 String id = item.getString("eventId");
+                if (ids.contains(id)) {
+                    throw new JSONException("Repeated history event ID");
+                }
+                ids.add(id);
                 LocalDateTime time = LocalDateTime.parse(item.getString("time"));
                 String courseId = item.getString("courseId");
                 String conceptName = item.getString("conceptName");
@@ -136,12 +165,15 @@ public class ProgressRepository {
     }
 
     private void recover(Path file, String kind) {
+        if (!Files.isRegularFile(file)) {
+            throw new IllegalStateException("Unreadable " + kind + " is not a regular file. The original path was not changed.");
+        }
         Path backup = file.resolveSibling(file.getFileName() + ".bak-" + UUID.randomUUID());
         try {
             Files.move(file, backup);
         } catch (IOException e) {
             throw new IllegalStateException("Unreadable data could not be backed up. The original file was not changed.");
         }
-        recoveryWarning += "Unreadable " + kind + " was backed up; starting with empty " + kind + ".\n";
+        addWarning("Unreadable " + kind + " was backed up; starting with empty " + kind + ".");
     }
 }

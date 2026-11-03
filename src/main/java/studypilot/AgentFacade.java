@@ -17,6 +17,7 @@ public class AgentFacade {
     private final ProgressTracker progressTracker;
     private final ProgressRepository progressRepository;
     private final HistoryRecorder historyRecorder;
+    private final ProgressRestorer progressRestorer;
 
     public AgentFacade(AppConfig config) {
         this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
@@ -41,12 +42,16 @@ public class AgentFacade {
         progressTracker = new ProgressTracker(progressRepository);
         historyRecorder = new HistoryRecorder(progressTracker, progressRepository);
         progressTracker.attach(historyRecorder);
+        QuizRepository quizRepository = new QuizRepository(config.getDataDirectory());
+        StudyPlanRepository planRepository = new StudyPlanRepository(config.getDataDirectory());
+        progressRestorer = new ProgressRestorer(progressTracker, historyRecorder, progressRepository,
+                quizRepository, planRepository);
         flashcardService = new FlashcardService(llmClient, templates, parser, repository, progressTracker);
         quizService = new QuizService(llmClient, templates, parser,
-                new QuizRepository(config.getDataDirectory()), retrieval, progressTracker);
+                quizRepository, retrieval, progressTracker);
         weakTopicAnalyzer = new WeakTopicAnalyzer(progressTracker, llmClient, templates, config.getWeakTopicMinResults());
         studyPlanGenerator = new StudyPlanGenerator(courseService, progressTracker, llmClient, templates, parser,
-                new StudyPlanRepository(config.getDataDirectory()), config.getWeakTopicMinResults());
+                planRepository, config.getWeakTopicMinResults());
         ToolManager tools = new ToolManager();
         tools.registerTool(new SummarizeTool(courseService, summaryService));
         tools.registerTool(new AnswerTool(courseService, questionAnswerService));
@@ -67,7 +72,9 @@ public class AgentFacade {
     }
 
     public Course getCourse(String courseId) {
-        return courseService.getCourse(courseId);
+        Course course = courseService.getCourse(courseId);
+        progressRestorer.restore(course);
+        return course;
     }
 
     public Material importMaterial(String courseId, String filePath) {
@@ -162,6 +169,7 @@ public class AgentFacade {
     }
 
     public StudyPlan createStudyPlan(String courseId, LocalDate examDate, int hoursPerDay) {
+        getCourse(courseId);
         return studyPlanGenerator.generate(courseId, examDate, hoursPerDay);
     }
 
@@ -206,7 +214,7 @@ public class AgentFacade {
     public String getImplementationStatus() {
         return "Available: F01-F10 (courses, materials, summaries, concepts, cited questions, flashcards, review, quizzes, difficulty suggestions, weak-topic reports and study plans)."
                 + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
-                + "\nF11 records reviews, quiz submissions, graded answers, completed tasks and history."
+                + "\nF11 restores saved review, quiz and task progress, backs up damaged summary/history files and repairs missing history."
                 + "\nF12 provides planning, six tools, saved conversations, result references, bounded retry/replan recovery and a trace."
                 + "\nFull integration, native GUI verification and final delivery assets remain pending.";
     }

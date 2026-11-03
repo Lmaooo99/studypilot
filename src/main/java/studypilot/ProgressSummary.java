@@ -26,8 +26,8 @@ public class ProgressSummary {
     public ProgressSummary(String courseId, int reviewsDone, List<String> attemptIds,
                            List<String> countedResultIds, List<ConceptStats> savedStats,
                            List<String> completedTaskIds) {
-        if (reviewsDone < 0) {
-            throw new IllegalArgumentException("Invalid saved review count.");
+        if (courseId == null || courseId.isBlank() || reviewsDone < 0) {
+            throw new IllegalArgumentException("Invalid saved course or review count.");
         }
         this.courseId = courseId;
         this.reviewsDone = reviewsDone;
@@ -49,7 +49,7 @@ public class ProgressSummary {
     private List<String> copyIds(List<String> ids) {
         List<String> copy = new ArrayList<>();
         for (String id : ids) {
-            if (id.isBlank() || copy.contains(id)) {
+            if (id == null || id.isBlank() || copy.contains(id)) {
                 throw new IllegalArgumentException("Invalid saved progress IDs.");
             }
             copy.add(id);
@@ -65,8 +65,36 @@ public class ProgressSummary {
         return reviewsDone;
     }
 
-    public void addReview() {
-        reviewsDone++;
+    public void setReviewsDone(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("The review count cannot be negative.");
+        }
+        reviewsDone = count;
+    }
+
+    public ProgressSummary copy() {
+        return new ProgressSummary(courseId, reviewsDone, attemptIds, countedResultIds, getStats(), completedTaskIds);
+    }
+
+    public boolean hasSameCounts(ProgressSummary other) {
+        if (!courseId.equals(other.courseId) || reviewsDone != other.reviewsDone
+                || !sameIds(attemptIds, other.attemptIds) || !sameIds(countedResultIds, other.countedResultIds)
+                || !sameIds(completedTaskIds, other.completedTaskIds) || stats.size() != other.stats.size()) {
+            return false;
+        }
+        for (String key : stats.keySet()) {
+            ConceptStats first = stats.get(key);
+            ConceptStats second = other.stats.get(key);
+            if (second == null || first.getGradedCount() != second.getGradedCount()
+                    || first.getCorrectCount() != second.getCorrectCount()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean sameIds(List<String> first, List<String> second) {
+        return first.size() == second.size() && first.containsAll(second);
     }
 
     public int getQuizzesTaken() {
@@ -96,12 +124,19 @@ public class ProgressSummary {
     }
 
     public List<ConceptStats> getStats() {
-        return new ArrayList<>(stats.values());
+        List<ConceptStats> values = new ArrayList<>();
+        for (ConceptStats value : stats.values()) {
+            values.add(new ConceptStats(value.getConceptName(), value.getGradedCount(), value.getCorrectCount()));
+        }
+        return values;
     }
 
     public int getGradedCount() {
         int count = 0;
         for (ConceptStats value : stats.values()) {
+            if (value.getGradedCount() > Integer.MAX_VALUE - count) {
+                throw new IllegalArgumentException("The saved graded count is too large.");
+            }
             count += value.getGradedCount();
         }
         return count;

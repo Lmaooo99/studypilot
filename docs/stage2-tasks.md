@@ -29,7 +29,7 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 2 | C13 | Validated study plans and task completion | Implemented |
 | 2 | C14 | Agent tools, planning, memory and trace | Implemented core |
 | 3 | C15 | Step references, validation and bounded recovery | Implemented |
-| 3 | C16 | Complete progress/history and duplicate-count prevention | Planned |
+| 3 | C16 | Complete progress/history and duplicate-count prevention | Implemented |
 | 3 | C17 | Persistence integration tests | Planned |
 | 3 | C18 | Grading/difficulty/plan integration tests | Planned |
 | 3 | C19 | Agent recovery and session-isolation tests | Planned |
@@ -41,8 +41,8 @@ reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete the rest of F11 and the cross-feature/F12 integration checks in Period 3.
-- Update implemented UML classes and affected use cases/SD01/SD06/SD07/SD08/SD09/SD10/SD11/SD13/SD14, retaining UMLet sources and images.
+- Complete the remaining cross-feature/F12 integration checks in Period 3.
+- Update implemented UML classes and affected use cases/SD01/SD05/SD06/SD07/SD08/SD09/SD10/SD11/SD12/SD13/SD14, retaining UMLet sources and images.
 - Produce stage2-report.docx and stage2-report.pdf with all seven required sections.
 - Map every Stage 1 feature to actual files, responsibilities, methods, patterns and video timestamps.
 - Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
@@ -103,3 +103,8 @@ reject files containing only an encoding marker.
 - A real dependency-chain check used weakTopics then quiz with the actual returned topic field. The separate verification course had five intentionally incorrect CLI attempts on one real generated question.
 - A saved-session follow-up restored five submitted attempts in a new process. No-history input clarified, and offline CLI checks rejected cross-course sessions, duplicate flags and missing credentials.
 - The C14 commit row and stale courseId/stepId note were corrected. F12 still needs full integration and native GUI verification; final diagrams, report and recordings remain pending.
+
+- C16 passed 245 JUnit tests and 26 packaged CLI checks without API credentials or new model calls.
+- Progress/history writes no longer expose unsaved in-memory counts/events. Saved course review events permit recovery after a later write fails.
+- New-process checks restored two reviews, five submitted attempts, five graded answers, one completed task and eight history entries. Healthy reads and repeated completion changed no files.
+- Damaged progress/history bytes were retained in two backups before rebuilding. Missing or damaged source records kept existing counts and produced warnings. Unavailable history times remain explicitly labelled snapshots.

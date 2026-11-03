@@ -6,8 +6,8 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 ## Current status
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
-questions with checked citation IDs, and flashcard generation/review. F11 currently
-records reviews and quiz history. Period 2 adds F06 quiz generation, F07 difficulty
+questions with checked citation IDs, and flashcard generation/review. F11 restores
+review, quiz and task counts and repairs missing history from saved records. Period 2 adds F06 quiz generation, F07 difficulty
 suggestions, F08 saved attempts with objective and model-based grading, F09
 weak-topic reports and F10 dated study plans. Failed grades can be retried or
 self-assessed against the saved answer and rubric. The assistant now plans and
@@ -368,9 +368,29 @@ final reply. A memory-save failure retains completed tool results and is reporte
 Runtime files are under DATA_DIR, which defaults to the ignored `data` folder.
 Courses use `courses/COURSE_ID.json`; plans use `plans/PLAN_ID.json`; assistant
 messages use `conversations/SESSION_ID.json`. Progress and
-history use `progress.json` and `history.json`. Unreadable progress/history is moved to a unique `.bak-*` file,
-then starts empty with a warning. Individual JSON saves use temporary-file
-replacement. Use one writable application instance per data directory.
+history use `progress.json` and `history.json`. Unreadable regular progress/history
+files are moved to unique `.bak-*` files before starting empty, with a warning.
+When a course is opened, ProgressRestorer checks its saved cards, submitted attempts
+and completed tasks and rebuilds missing or inconsistent derived counts. Only
+GRADED answers enter accuracy, difficulty or weak-topic statistics. Healthy reads
+and repeated task completion leave the saved files unchanged.
+
+A flashcard's count and its review event are saved together in the course file.
+This allows a later course read to repair progress/history after an interrupted
+write without recording another review. Progress and history enter memory only
+after their own save succeeds. Stable event and attempt/question IDs prevent
+repeated notifications or recovery from counting the same work twice.
+
+Older course files retain review counts even without detailed review events.
+Recovery cannot reconstruct unavailable history: missing quiz entries are labelled
+as current attempt snapshots using the original submission time, and missing task
+entries use an explicitly labelled recovery time. Existing history is retained.
+Unreadable source records or missing previously counted records produce a warning
+and keep the existing counts; those source files need repair. Directories at the
+progress/history paths are preserved and reported as errors.
+
+Individual JSON saves use temporary-file replacement. Separate files are not one
+transaction. Use one writable application instance per data directory.
 
 ```sh
 ./mvnw clean verify

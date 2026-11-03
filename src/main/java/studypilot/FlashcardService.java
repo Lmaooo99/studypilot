@@ -1,5 +1,6 @@
 package studypilot;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONException;
@@ -94,9 +95,20 @@ public class FlashcardService {
     }
 
     public void review(Course course, Flashcard card, boolean remembered) {
+        if (course.getTotalReviews() == Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("The course review count is too large.");
+        }
         Flashcard savedCard = course.getFlashcard(card.getId());
         savedCard.recordReview(remembered);
+        String description = "Reviewed flashcard " + savedCard.getId() + ": not yet";
+        if (remembered) {
+            description = "Reviewed flashcard " + savedCard.getId() + ": remembered";
+        }
+        StudyEvent event = new StudyEvent("review-" + savedCard.getId() + "-" + savedCard.getReviewCount(),
+                LocalDateTime.now(), course.getId(), savedCard.getConceptName(), description);
+        course.addReviewEvent(event);
+        // Save the card count and its event together before updating derived progress.
         repository.saveCourse(course);
-        tracker.recordReview(course.getId(), savedCard, remembered);
+        tracker.recordReview(course, event);
     }
 }

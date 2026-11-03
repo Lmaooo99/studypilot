@@ -15,6 +15,10 @@ public class StudyEvent {
     }
 
     public StudyEvent(String eventId, LocalDateTime time, String courseId, String conceptName, String description) {
+        if (eventId == null || eventId.isBlank() || time == null || courseId == null || courseId.isBlank()
+                || conceptName == null || description == null || description.isBlank()) {
+            throw new IllegalArgumentException("A study event needs an ID, time, course and description.");
+        }
         this.eventId = eventId;
         this.time = time;
         this.courseId = courseId;

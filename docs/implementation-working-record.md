@@ -7,8 +7,8 @@ Notes for the Stage 2 implementation report, covering the current implementation
 StudyPilot helps students study their own course materials. F01-F10 are implemented
 with basic automated and live API verification. F08 supports saved attempts,
 objective and rubric grading, pending retries and self-assessment. F11 covers reviews,
-quiz submissions, graded-answer counts, completed tasks and history. The other original features
-remain explicit later-period tasks.
+quiz submissions, graded-answer counts, completed tasks and history, including
+restoration from saved study records after an interrupted write.
 F12 now supports tool execution, conversation memory, step-result references and
 bounded retry/replan recovery. Full integration and native GUI verification remain pending.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
@@ -28,14 +28,15 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 | F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B, pending |
 | F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B, pending |
 | F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C, pending |
-| F11 Progress/history | Deterministic | Partial | ProgressTracker records reviews, quiz submissions and completed tasks; ProgressSummary/ConceptStats prevent duplicate counts; HistoryRecorder saves events; DashboardView observes updates | recordReview, recordQuizAttempt, recordTaskDone, getSummary, update, getHistory | Facade, Observer | B, pending |
+| F11 Progress/history | Deterministic | Implemented | ProgressTracker saves copied counts; Course retains review events; ProgressRestorer rebuilds selected-course counts/history; ProgressRepository backs up damaged files; HistoryRecorder/DashboardView observe updates | recordReview, recordQuizAttempt, recordTaskDone, restore, restoreSummary, recordEvent, getSummary, update, getHistory | Facade, Observer | B, pending |
 | F12 Natural-language agent | AI | Partial | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, replan, executionPlanPrompt, parseExecutionPlan, validatePlan, resolveStep, executeWithRetries, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C, pending |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
 Course with Material and Chunk objects. F02/F03/F05 send material chunks through
 PromptTemplates and LLMClient, validate the actual response, then save the result.
 F04 retrieves first and checks returned IDs before constructing citations. A review
-saves card counts, updates ProgressTracker and notifies HistoryRecorder/DashboardView.
+saves card counts and its StudyEvent in the course file, updates ProgressTracker
+and notifies HistoryRecorder/DashboardView.
 All rows refer to the same feature IDs in the original Stage 1 report; no new feature
 has been substituted for an original feature.
 
@@ -101,6 +102,20 @@ and replans invalid or exhausted steps within its limits. Whole-value dependenci
 resolve only from actual successful result data. AgentResult retains actual outputs
 and decisions. MemoryManager.addMessage saves the original user request and final
 assistant message through MemoryRepository.
+
+F11 uses the saved course, attempts and plans as the sources for derived progress.
+AgentFacade.getCourse calls ProgressRestorer before returning the selected course.
+The restorer counts card reviews, distinct submitted attempts, GRADED question
+results and distinct completed tasks. It preserves existing counts if a source is
+unreadable or a previously counted record is missing. Healthy reads neither save
+nor notify; successful repairs notify the existing observers.
+
+ProgressTracker saves a copied summary before replacing its in-memory value.
+HistoryRecorder likewise saves a copied event list before adding a new event to
+memory. Corrupt progress/history is backed up first. Missing history is rebuilt
+only where the saved sources support it; actual review events retain their IDs,
+times and descriptions. Restored quiz/task snapshots clearly identify the limits
+of their timestamps. No LLM call is involved.
 
 ## 3 Implemented design patterns
 
@@ -252,6 +267,35 @@ while the trace retains earlier calls, errors, reference resolution and decision
 Output excerpts in replan context are limited to 2000 characters per result; named
 data fields remain intact. Full agent integration and GUI verification are pending.
 
+C16 changes recovery after a failed write. Previously a card's count could be
+saved before its summary/history update, and the tracker could expose an unsaved
+in-memory count. Course now retains actual review StudyEvents in an optional
+reviewEvents JSON array, saved together with the card count. Older course files
+still load; their missing detailed review events are not invented.
+ProgressTracker.recordReview now receives Course and StudyEvent so it can use the
+saved aggregate and stable event. Course adds getTotalReviews/getReviewEvents and
+addReviewEvent; CourseRepository explicitly maps the new array. These changes
+affect F05/F11, UC06/UC14, SD05/SD12 and the course/progress class views.
+
+ProgressRestorer is a small helper composed by AgentFacade. It reconstructs counts
+from saved sources, retaining attempt/question and completed-task deduplication.
+The source files stay unchanged during recovery. ProgressSummary copies its
+statistics and compares counts/IDs before saving; normal reads do not rewrite
+files. Repairs notify the same Subject/Observer classes. This adds a recovery
+association, rather than another design pattern, and also affects the recovery
+paths in SD07/SD08/SD11.
+
+Stage 1 recovery started empty after backing up damaged progress/history. C16
+keeps that initial backup/reset behavior, then restores whatever the selected
+course's saved records support. UC14's unchanged-data postcondition still applies
+to healthy reads; a recovery read may repair derived files and warn the user.
+Only original review events retain their original event times. A recovered quiz
+snapshot uses the attempt's submission time and explicitly disclaims a later
+grading time. A recovered completed task uses the recovery time because its
+original completion time is not stored. Missing earlier grading transitions or
+legacy review details remain unavailable. These changes belong in UC14/SD12 and
+the updated UMLet class/sequence views; those deliverables remain pending.
+
 ## 5 AI tools and collaboration
 
 Tool: Codex, using gpt-6.1-sol. AI support covered code generation, test preparation,
@@ -279,11 +323,12 @@ C12 adds the weak-topic analyzer/report, ranking rules, fallback and related tes
 C13 adds the plan workflow, constraints, saved task completion and related checks.
 C14 connects the planner, six tools, conversation storage, trace and GUI/CLI entry.
 C15 adds bounded recovery, result dependencies, successful-result reuse and focused tests.
+C16 adds source-backed progress/history recovery, saved review events and failure/restart tests.
 My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 224 JUnit tests with Java 17. The packaged CLI
+The current implementation passed 245 JUnit tests with Java 17. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -377,6 +422,22 @@ cross-course sessions and duplicate flags were rejected before a model call.
 Six completed API responses were recorded; money costs remain unavailable. Native
 GUI interaction and student review remain pending.
 
+C16 passed 245 tests, including failed summary/history saves, source-backed
+restoration, GRADED-only counts, missing sources, strict saved counts/event IDs,
+legacy review files and Observer deduplication. A new CLI warning check confirmed
+that notices discovered during a command are sent to stderr. The dashboard also
+shows storage notices; native interaction remains pending.
+
+The 26 packaged CLI checks ran without a configuration file or API key. They used
+a copy of the C15 real quiz/attempt fixture plus an explicitly authored verification
+flashcard and study task. Across separate processes, two reviews and one completed
+task joined five earlier verification attempts: five graded answers and eight
+history entries. Repeating completion or reading healthy state changed no bytes
+or modification times. Damaged summary/history files were preserved byte for byte
+in backups before rebuilding counts and supported history. Directory paths were
+not renamed; missing/damaged source records kept the existing counts with warnings.
+These checks made no model call and are not student study results.
+
 Important fixes included preserving complete Unicode characters in chunks,
 rejecting files containing only an encoding marker, checking citation IDs,
 preserving saved summaries after a failed request and avoiding duplicate history
@@ -385,10 +446,12 @@ entries. Test doubles are limited to the test directory.
 Current limits include no OCR, keyword/TF-IDF retrieval, and citation checking based
 on retrieved IDs. This check does not prove that every answer sentence is supported.
 The application uses one writer per data directory; separate JSON files are not
-updated as a single transaction. A task's done flag can be saved before a later
-progress/history failure; repeating completion repairs that recording. Complete
-storage recovery, agent integration/GUI verification, updated UML and Stage 3 evaluation remain on the task
-board. Plan context is limited to eight material chunks; validation checks schedule
+updated as a single transaction. A source record may be saved before a later
+progress/history failure; a selected-course read repairs the derived data where
+sources are available. Unreadable or missing sources require repair and keep the
+existing counts. Recovery snapshots cannot reconstruct every earlier event or
+missing timestamp. Cross-feature/agent integration, native GUI verification,
+updated UML and Stage 3 evaluation remain on the task board. Plan context is limited to eight material chunks; validation checks schedule
 constraints, not complete syllabus coverage. A valid model grade does not prove
 that its semantic judgment is correct. Completing a validated tool plan also does
 not prove that it satisfies every part of the student's request; semantic agent

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DateTimeException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -40,6 +42,8 @@ public class CourseRepository {
             cards.put(flashcardToJson(card));
         }
         data.put("flashcards", cards);
+
+        data.put("reviewEvents", reviewEventsToJson(course.getReviewEvents()));
 
         Path file = JsonFiles.namedFile(directory, course.getId());
         JsonFiles.write(file, data);
@@ -80,9 +84,40 @@ public class CourseRepository {
                 }
                 course.setFlashcards(cards);
             }
+            loadReviewEvents(data, course);
             return course;
-        } catch (JSONException e) {
+        } catch (JSONException | IllegalArgumentException | DateTimeException e) {
             throw new IllegalStateException("Saved course fields are invalid. The original file was not changed.");
+        }
+    }
+
+    private JSONArray reviewEventsToJson(List<StudyEvent> events) {
+        JSONArray reviews = new JSONArray();
+        for (StudyEvent event : events) {
+            JSONObject item = new JSONObject();
+            item.put("eventId", event.getId());
+            item.put("time", event.getTime().toString());
+            item.put("conceptName", event.getConceptName());
+            item.put("description", event.getDescription());
+            reviews.put(item);
+        }
+        return reviews;
+    }
+
+    private void loadReviewEvents(JSONObject data, Course course) {
+        // Older files retain their card counts but have no detailed review events.
+        if (!data.has("reviewEvents")) {
+            return;
+        }
+        JSONArray reviews = data.getJSONArray("reviewEvents");
+        for (int i = 0; i < reviews.length(); i++) {
+            JSONObject item = reviews.getJSONObject(i);
+            course.addReviewEvent(new StudyEvent(item.getString("eventId"),
+                    LocalDateTime.parse(item.getString("time")), course.getId(),
+                    item.getString("conceptName"), item.getString("description")));
+        }
+        if (course.getReviewEvents().size() > course.getTotalReviews()) {
+            throw new JSONException("More review events than saved reviews");
         }
     }
 
@@ -172,6 +207,9 @@ public class CourseRepository {
         String front = data.getString("front");
         String back = data.getString("back");
         String conceptName = data.getString("conceptName");
+        if (!(data.get("reviewCount") instanceof Integer) || !(data.get("rememberedCount") instanceof Integer)) {
+            throw new JSONException("Review counts must be whole numbers");
+        }
         int reviewCount = data.getInt("reviewCount");
         int rememberedCount = data.getInt("rememberedCount");
         return new Flashcard(id, front, back, conceptName, reviewCount, rememberedCount);

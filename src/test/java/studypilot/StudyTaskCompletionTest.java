@@ -96,7 +96,7 @@ public class StudyTaskCompletionTest {
         } catch (IllegalStateException e) {
             assertTrue(e.getMessage().contains("could not be saved"));
         }
-        assertTrue(facade.getStudyPlan(course.getId(), plan.getId()).getTask(task.getId()).isDone());
+        assertTrue(new StudyPlanRepository(config.getDataDirectory()).loadPlan(plan.getId()).getTask(task.getId()).isDone());
         Files.delete(file);
         AgentFacade restarted = new AgentFacade(config, llm);
         restarted.completeTask(course.getId(), plan.getId(), task.getId());
