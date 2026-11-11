@@ -7,18 +7,36 @@ import java.util.Locale;
 import java.util.Map;
 
 final class RetrievalWords {
+    // Common words are ignored, so a question cannot match notes only through words like "the" or "what".
+    // "s" and "t" are the pieces left over from words such as "what's" and "don't".
+    private static final String[] STOP_WORDS = {
+        "a", "about", "an", "and", "are", "as", "at", "be", "by", "can", "do", "does", "for", "from",
+        "how", "i", "in", "is", "it", "me", "my", "of", "on", "or", "s", "t", "that", "the", "this",
+        "to", "was", "what", "when", "where", "which", "who", "why", "with", "you", "your"
+    };
+
     private RetrievalWords() { }
 
     static Map<String, Integer> countWords(String text) {
         Map<String, Integer> counts = new HashMap<>();
         for (String word : text.toLowerCase(Locale.ROOT).split("[^\\p{L}\\p{N}]+")) {
-            if (!word.isEmpty()) {
+            if (!word.isEmpty() && !isStopWord(word)) {
                 int count = counts.getOrDefault(word, 0);
                 counts.put(word, count + 1);
             }
         }
         return counts;
     }
+
+    private static boolean isStopWord(String word) {
+        for (String stopWord : STOP_WORDS) {
+            if (stopWord.equals(word)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     static List<Chunk> selectTopChunks(List<Chunk> chunks, double[] scores, int k) {
         if (k <= 0) {
             throw new IllegalArgumentException("Retrieval count must be positive.");

@@ -26,7 +26,8 @@ t.&gt;a : graded-only counts sorted by accuracy
 a:List smaller samples as insufficient data, reviews are excluded
 a-&gt;l : generate(weakTopicPrompt with actual statistics)
 l.&gt;a : brief explanation or failure
-a.&gt;u : ranking, counts and explanation
+a.&gt;f : ranking, counts and explanation
+f.&gt;u : weak-topic report
 a:On generation failure retain the computed report and explain that advice is unavailable</panel_attributes>
     <additional_attributes />
   </element>

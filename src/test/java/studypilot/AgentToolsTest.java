@@ -38,6 +38,58 @@ public class AgentToolsTest {
     }
 
     @Test
+    public void acceptsDollarTextThatIsNotAStepReference() throws Exception {
+        Path file = config.getDataDirectory().resolveSibling("store.md");
+        Files.writeString(file, "Components read this.$store.state to access shared state.");
+        Material store = facade.importMaterial(course.getId(), file.toString());
+        plan("answer", new JSONObject().put("question", "How do components read this.$store.state?"));
+        llm.reply(new JSONObject().put("answer", "They use this.$store.state.")
+                .put("citedChunkIds", new JSONArray().put(store.getChunks().get(0).getId())).toString());
+        AgentResult result = facade.runAgent(course.getId(), null, "Explain shared state.");
+        assertEquals(ResultStatus.OK, result.getStatus());
+        assertTrue(result.getFinalAnswer().contains("this.$store.state"));
+        assertEquals(2, llm.getPrompts().size());
+    }
+
+    @Test
+    public void acceptsOuterSpacesBeforeValidatingQuizArguments() {
+        plan("quiz", new JSONObject().put("topic", " Observer ").put("count", " 1 ")
+                .put("types", " true-false ").put("difficulty", " easy "));
+        JSONObject question = new JSONObject().put("type", "TRUE_FALSE").put("text", "Observers receive updates.")
+                .put("correctAnswer", "true").put("conceptName", "Observer");
+        llm.reply(new JSONObject().put("questions", new JSONArray().put(question)).toString());
+        AgentResult result = facade.runAgent(course.getId(), null, "Create a quiz.");
+        assertEquals(ResultStatus.OK, result.getStatus());
+        assertEquals(2, llm.getPrompts().size());
+        Quiz saved = facade.listQuizzes(course.getId()).get(0);
+        assertEquals("Observer", saved.getTopic());
+        assertEquals(Difficulty.EASY, saved.getDifficulty());
+    }
+
+    @Test
+    public void acceptsOuterSpacesBeforeValidatingSummaryStyle() {
+        plan("summarize", new JSONObject().put("materialId", " " + material.getId() + " ")
+                .put("style", " brief "));
+        llm.reply("A subject notifies subscribers.");
+        AgentResult result = facade.runAgent(course.getId(), null, "Summarize notes.");
+        assertEquals(ResultStatus.OK, result.getStatus());
+        assertEquals(2, llm.getPrompts().size());
+    }
+
+    @Test
+    public void acceptsOuterSpacesBeforeValidatingStudyPlanDateAndHours() {
+        LocalDate today = LocalDate.now();
+        plan("studyPlan", new JSONObject().put("examDate", " " + today.plusDays(1) + " ")
+                .put("hoursPerDay", " 1 "));
+        JSONObject task = new JSONObject().put("date", today.toString()).put("type", "DIAGNOSTIC_QUIZ")
+                .put("conceptName", "Observer").put("description", "Take a diagnostic quiz.").put("minutes", 15);
+        llm.reply(new JSONObject().put("tasks", new JSONArray().put(task)).toString());
+        AgentResult result = facade.runAgent(course.getId(), null, "Make a study plan.");
+        assertEquals(ResultStatus.OK, result.getStatus());
+        assertEquals(2, llm.getPrompts().size());
+    }
+
+    @Test
     public void summaryToolCallsTheExistingSummaryServiceAndSavesItsResult() {
         plan("summarize", new JSONObject().put("materialId", material.getId()).put("style", "bullet"));
         llm.reply("- A subject notifies subscribers.");

@@ -38,6 +38,7 @@ public class QuizService {
         }
         Map<QuestionType, Integer> targets = questionTargets(count, types);
         List<Question> questions = new ArrayList<>();
+        String errorMessage = "";
         for (int attempt = 0; attempt < 3 && questions.size() < count; attempt++) {
             List<QuestionType> neededTypes = neededTypes(types, targets, questions);
             String prompt = templates.quizPrompt(topic, count - questions.size(), difficulty, neededTypes, chunks);
@@ -45,6 +46,9 @@ public class QuizService {
                 prompt += "\nDo not repeat this accepted question: " + question.getText();
             }
             LLMResponse response = llmClient.generate(prompt);
+            if (!response.isSuccess() && !response.getErrorMessage().isBlank()) {
+                errorMessage = response.getErrorMessage();
+            }
             if (response.isSuccess()) {
                 try {
                     addQuestions(parser.parseRawQuestions(response.getText()), questions, targets);
@@ -54,7 +58,11 @@ public class QuizService {
             }
         }
         if (questions.isEmpty()) {
-            throw new IllegalStateException("No valid quiz questions were generated after two retries. No quiz was saved.");
+            String failure = "No valid quiz questions were generated after two retries. No quiz was saved.";
+            if (!errorMessage.isEmpty()) {
+                failure += " Last model error: " + errorMessage;
+            }
+            throw new IllegalStateException(failure);
         }
         Quiz quiz = new Quiz(course.getId(), topic, difficulty, questions);
         repository.saveQuiz(quiz);
@@ -146,6 +154,11 @@ public class QuizService {
         }
         double accuracy = tracker.getAccuracy(courseId, topic);
         int gradedCount = tracker.getGradedCount(courseId, topic);
+        ConceptStats topicStats = getQuizTopicStats(courseId, topic);
+        if (topicStats != null && topicStats.getGradedCount() >= gradedCount) {
+            accuracy = topicStats.getAccuracy();
+            gradedCount = topicStats.getGradedCount();
+        }
         Difficulty level = chooseDifficulty(accuracy, gradedCount);
         String reason = "No graded answers for this topic; using MEDIUM.";
         if (gradedCount > 0) {
@@ -155,6 +168,32 @@ public class QuizService {
             }
         }
         return new DifficultySuggestion(level, accuracy, gradedCount, reason);
+    }
+
+    // Use the larger graded sample; prefer the quiz topic on a tie.
+    // Keep each question's concept for F09.
+    // Older quizzes also work: their stored topic and results do not need changing.
+    private ConceptStats getQuizTopicStats(String courseId, String topic) {
+        List<String> quizIds = new ArrayList<>();
+        for (Quiz quiz : repository.listQuizzes(courseId)) {
+            if (quiz.getTopic().trim().equalsIgnoreCase(topic.trim())) {
+                quizIds.add(quiz.getId());
+            }
+        }
+        if (quizIds.isEmpty()) {
+            return null;
+        }
+        ConceptStats stats = new ConceptStats(topic, 0, 0);
+        for (QuizAttempt attempt : repository.listAttempts(courseId)) {
+            if (attempt.isSubmitted() && quizIds.contains(attempt.getQuizId())) {
+                for (QuestionResult result : attempt.getResults()) {
+                    if (result.getStatus() == GradingStatus.GRADED) {
+                        stats.addResult(result.isCorrect());
+                    }
+                }
+            }
+        }
+        return stats;
     }
 
     private Difficulty chooseDifficulty(double accuracy, int gradedCount) {
@@ -213,7 +252,12 @@ public class QuizService {
     private QuizAttempt saveResults(QuizAttempt attempt) {
         repository.saveAttempt(attempt);
         tracker.recordQuizAttempt(attempt);
-        repository.saveAttempt(attempt);
+        try {
+            repository.saveAttempt(attempt);
+        } catch (IllegalStateException e) {
+            tracker.addStorageWarning("The submitted attempt is saved, but its counted flags could not be updated. "
+                    + "Progress recovery uses saved attempt and question IDs to avoid counting twice.");
+        }
         return attempt;
     }
 
@@ -273,9 +317,35 @@ public class QuizService {
             }
         }
         Map<String, String> checked = new HashMap<>();
-        for (Question question : quiz.getQuestions()) {
-            checked.put(question.getId(), answers.getOrDefault(question.getId(), "").trim());
+        List<Question> questions = quiz.getQuestions();
+        for (int i = 0; i < questions.size(); i++) {
+            Question question = questions.get(i);
+            String answer = answers.getOrDefault(question.getId(), "").trim();
+            checkAnswerFormat(question, answer, i + 1);
+            checked.put(question.getId(), answer);
         }
         return checked;
+    }
+
+    // Objective answers must be an option number or true/false, so a typing mistake such as "B"
+    // is rejected before saving instead of being graded wrong for good. Blank answers are allowed.
+    private void checkAnswerFormat(Question question, String answer, int number) {
+        if (answer.isEmpty()) {
+            return;
+        }
+        if (question instanceof MultipleChoiceQuestion) {
+            int optionCount = ((MultipleChoiceQuestion) question).getOptions().size();
+            for (int option = 1; option <= optionCount; option++) {
+                if (answer.equals(Integer.toString(option))) {
+                    return;
+                }
+            }
+            throw new IllegalArgumentException("Question " + number + ": enter an option number from 1 to "
+                    + optionCount + ". No answers were saved.");
+        }
+        if (question instanceof TrueFalseQuestion
+                && !answer.equalsIgnoreCase("true") && !answer.equalsIgnoreCase("false")) {
+            throw new IllegalArgumentException("Question " + number + ": enter true or false. No answers were saved.");
+        }
     }
 }

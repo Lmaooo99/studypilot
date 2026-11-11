@@ -231,6 +231,18 @@ public class AgentControllerTest {
     }
 
     @Test
+    public void traceListsEveryPlannedStepEvenWhenThePlanIsRejected() {
+        llm.reply(plan(step("first", "progress", new JSONObject()),
+                step("second", "quiz", new JSONObject().put("topic", "Observer")
+                        .put("count", "1").put("types", "true-false").put("difficulty", "impossible"))));
+        llm.reply("{\"steps\":[],\"clarification\":\"Which difficulty would you like?\"}");
+        AgentResult result = facade.runAgent(course.getId(), null, "Create a quiz.");
+        assertTrue(result.getResults().isEmpty());
+        assertTrue(result.getTrace().toString().contains("Planned first: progress {}"));
+        assertTrue(result.getTrace().toString().contains("Planned second: quiz"));
+    }
+
+    @Test
     public void rejectsInvalidPlanDatesBeforeCallingTheGenerator() {
         llm.reply(plan(step("first", "progress", new JSONObject()),
                 step("second", "studyPlan", new JSONObject().put("examDate", "not-a-date").put("hoursPerDay", "2"))));

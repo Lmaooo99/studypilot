@@ -1,69 +1,71 @@
-# Demonstration assets
+# Native demonstration
 
-These three silent videos replay commands and output captured from actual
-StudyPilot Java 17 CLI processes on November 3, 2026, at 13:52-13:54 EST.
-They use [samples/design-notes.md](../samples/design-notes.md). Network waits are
-shortened, long output is wrapped and split into labelled continuation pages,
-and reading holds are added. Each segment retains the actual run time, exit code
-and process duration. Pause the 1080p video to inspect detailed questions or IDs.
+The student recorded the actual StudyPilot GUI and terminal on November 10, 2026.
+The 17:09 master joins all sixteen source clips in their original order without
+removing content. It uses the current working-copy Java implementation, including
+the November 9 corrections. No application output or narration was synthesized.
 
-The CLI workflow used thirteen actual model responses. The explanatory text
-identifies the model's role; local validation, retrieval, statistics and
-persistence remain Java operations. These assets are supporting CLI execution
-replays. The required native GUI walkthrough and screen recording remain pending.
-No complete GUI verification or course submission is claimed.
+Video: [StudyPilot Stage 2 demonstration](https://www.youtube.com/watch?v=eNrlBO0PAuY).
 
-| Asset | Duration | Coverage |
+Unlisted playback and all twelve feature plus two CLI timestamp links were verified in a signed-out browser. The 1080p60 HD option is available.
+
+The recorded JAR SHA256 is `c375c84cb4041926dbadde28b56de5c9e3ff9dda8b23046d0821d6bbbe090b25`.
+The 135-file Java source snapshot matches the recording preparation snapshot. The local reference
+commit remains C21 `ced673cefff3e18e54c6aca01e9ec346383d964f`; a newer published
+implementation is not claimed at the November 10 verification cutoff.
+
+## Feature timestamps
+
+| Feature | Start | Video |
 |---|---|---|
-| [A](recording-A-cli.mp4) | 01:20.30 | F01-F05: course/import, summary, concepts, cited answers and flashcard review |
-| [B](recording-B-cli.mp4) | 06:50.00 | F06-F09/F11: mixed quizzes, grading, difficulty, weak topics and saved history |
-| [C](recording-C-cli.mp4) | 01:37.67 | F10/F12: dated plans, repeated completion and a real dependent agent workflow |
+| F01 Course and material import | 00:14 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=14s) |
+| F02 Summaries | 01:36 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=96s) |
+| F03 Concept extraction | 01:58 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=118s) |
+| F04 Cited answers | 02:21 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=141s) |
+| F05 Flashcards and review | 03:21 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=201s) |
+| F06 Quiz generation | 05:48 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=348s) |
+| F07 Adaptive difficulty | 09:44 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=584s) |
+| F08 Attempts and grading | 07:17 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=437s) |
+| F09 Weak-topic ranking | 10:07 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=607s) |
+| F10 Study plans | 10:43 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=643s) |
+| F11 Progress history and restart | 14:18 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=858s) |
+| F12 Natural-language agent | 12:49 | [Watch](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=769s) |
 
-## Feature index
+F07 also shows [insufficient history at 04:48](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=288s); F09 shows
+[insufficient graded evidence at 05:21](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=321s). F08
+[reopens the saved attempt at 09:27](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=567s). Actual
+[CLI course/progress reads start at 15:01](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=901s); the
+[CLI agent and saved-conversation trace start at 16:31](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=991s).
 
-| Stage 1 feature | Asset | Start | Accessible timestamp URL |
-|---|---|---|---|
-| F01 Course/material import | [A](recording-A-cli.mp4) | 00:00 | Upload link pending |
-| F02 Summaries | [A](recording-A-cli.mp4) | 00:21 | Upload link pending |
-| F03 Concepts | [A](recording-A-cli.mp4) | 00:28 | Upload link pending |
-| F04 Cited answers | [A](recording-A-cli.mp4) | 00:38 | Upload link pending |
-| F05 Flashcards/review | [A](recording-A-cli.mp4) | 00:52 | Upload link pending |
-| F06 Quiz generation | [B](recording-B-cli.mp4) | 00:00 | Upload link pending |
-| F07 Adaptive difficulty | [B](recording-B-cli.mp4) | 06:20 | Upload link pending |
-| F08 Attempts/grading | [B](recording-B-cli.mp4) | 00:46 | Upload link pending |
-| F09 Weak topics | [B](recording-B-cli.mp4) | 06:27 | Upload link pending |
-| F10 Study plans | [C](recording-C-cli.mp4) | 00:00 | Upload link pending |
-| F11 Progress/history | [B](recording-B-cli.mp4) | 06:34 | Upload link pending |
-| F12 Natural-language agent | [C](recording-C-cli.mp4) | 00:48 | Upload link pending |
+## Demonstrated behavior
 
-## What the executions show
+The walkthrough includes duplicate-import rejection, generated summaries and
+concepts, a cited answer and unrelated question, card reveal with remembered/not-yet
+review, an invalid quiz count and all three question types, saved grading,
+graded-only difficulty and topic ranking, a rejected past exam date, a saved plan,
+repeated completion, restart restoration and actual GUI/CLI agent execution.
 
-A includes a rejected duplicate import and an unrelated question returning without
-a model request. Saved card mastery is read again in a separate JVM.
+The saved progress shows two reviews, five submitted attempts, thirty graded
+answers, eighteen correct answers and one completed task. Additional submissions
+provide sufficient topic samples. These are demonstration inputs, not student
+academic performance or KUMA evaluation. All six answers in the shown attempt
+were graded; the new recording does not demonstrate pending-grading retry or
+self-assessment. Those paths have separate automated and historical checks.
 
-B includes all three question types, an invalid question count, a malformed answers
-file rejected before submission, objective grades with pending short answers, and
-a real grading retry. Repeated submission preserves the original attempt. The
-final difficulty suggestion and weak-topic report use the saved graded results.
+The [walkthrough guide](gui-walkthrough.md) remains a rerun guide. The older
+November 3 rendered CLI replay panels are superseded by this native recording.
+The large master video is hosted separately from the source repository.
 
-C includes invalid-date rejection, a saved plan reopened after completion, and an
-agent plan that runs progress, weakTopics and quiz. Its trace shows `$step2.topic`
-resolving to the measured topic before quiz creation. A later process reuses the
-saved session. A missing request is rejected before planning.
+## Verification and remaining delivery
 
-The first attempt's verification answers came from the saved model answers to
-exercise grading. Four later attempts intentionally submitted empty answer maps
-to create weak-topic history. Their resulting accuracy is demonstration data,
-not student assessment. The malformed answers wrapper was corrected after the
-application rejected it. These inputs do not establish semantic grading accuracy.
+An isolated Java 17 clean build passed 361 tests in 46 classes, with no failures,
+errors or skips. The source copy excluded credentials, runtime data and old build
+output. The native demonstration is separate evidence from the offline suite.
+The student completed focused guided review questions about the later core paths;
+no exhaustive source-line audit is claimed.
 
-## Remaining recording and upload work
-
-Use the [GUI walkthrough guide](gui-walkthrough.md) to record the actual native
-application, including text input, selected controls, output and restarts. The
-guide is a preparation script, not a completed test or recording.
-
-After the GUI recording and student review, the student uploads the videos to an
-accessible host. Replace the pending entries here and in the Word/PDF report with
-real timestamp links, then check access as a viewer. The student submits the
-repository URL through the course system. Keep `.env` and runtime JSON files local.
+Signed-out playback and all twelve feature plus two CLI timestamp seeks passed.
+The uploaded video offers 1080p60 HD. These checks concern access and navigation,
+not semantic grading quality or Stage 3 KUMA evaluation.
+The report records scoped token totals and equivalent API costs. Actual payments
+are not allocated; the final published-clone check remains open. The student submits the repository URL through the course system.

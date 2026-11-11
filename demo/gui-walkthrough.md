@@ -1,10 +1,9 @@
 # Native GUI walkthrough guide
 
-This script prepares a future screen recording. The full native GUI walkthrough
-has not passed: the automated check displayed the window and the empty-course
-error, but could not reliably enter text. First confirm that a person can type in
-the New course field. Record the application window and actual results once input
-works. Keep the local configuration file out of the recording.
+This is a rerun guide for the native application. The student recorded the GUI
+and CLI on November 10, 2026; the [demonstration index](README.md) lists its actual
+coverage and timestamps. Optional branches below are instructions, not claims
+that every branch appears in that recording. Keep local configuration out of view.
 
 Use the tested Java 17 JAR and a separate demonstration data directory. Configure
 the existing compatible API connection locally. Import samples/design-notes.md

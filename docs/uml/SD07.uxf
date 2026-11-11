@@ -11,7 +11,7 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD07 Start and submit a quiz attempt
+    <panel_attributes>title=SD07 Submit answers before derived progress
 fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
@@ -23,18 +23,23 @@ obj=ProgressTracker~t
 u-&gt;f : startAttempt(courseId, quizId)
 f-&gt;s : startAttempt(courseId, quizId)
 s-&gt;r : saveAttempt(new attempt)
-r.&gt;u : attempt ID
+r.&gt;s : saved attempt
+s.&gt;f : attempt
+f.&gt;u : attempt ID
 u-&gt;f : submitAttempt(courseId, attemptId, answers)
 f-&gt;s : submitAttempt(courseId, attemptId, answers)
-s:Check saved course and question IDs, preserve first submitted answers
-s-&gt;g : grade(quiz, attempt)
-g: ExactMatchGrading for objective answers
-g: LLMRubricGrading for nonempty short answers
-g.&gt;s : GRADED or PENDING results
-s-&gt;r : saveAttempt(submitted attempt)
+s:Validate IDs and objective formats before first submission
+s-&gt;g : grade(quiz, attempt) only on first submission
+g.&gt;s : objective and rubric results, including PENDING
+s-&gt;r : saveAttempt(submitted answers and results)
+r.&gt;s : saved or strict primary error
 s-&gt;t : recordQuizAttempt(attempt)
-t.&gt;u : score, pending state, progress and history
-s:Repeated submission reuses saved answers and grades, pending answers do not enter accuracy</panel_attributes>
+t.&gt;s : in-memory counts and possible cache warning
+s-&gt;r : saveAttempt(counted flags)
+s:Flag-save failure warns, because answers were already saved
+s.&gt;f : saved attempt, score and pending count
+f.&gt;u : attempt result (storage warnings available separately)
+s:Repeated submissions preserve answers and grades, saved result IDs prevent double counting</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

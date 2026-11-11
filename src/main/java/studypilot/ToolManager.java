@@ -39,6 +39,10 @@ public class ToolManager {
     public String validatePlan(ExecutionPlan plan, Map<String, ToolResult> results) {
         List<String> ids = new ArrayList<>();
         List<String> available = new ArrayList<>();
+        List<String> referenceIds = new ArrayList<>(results.keySet());
+        for (PlanStep step : plan.getSteps()) {
+            referenceIds.add(step.getStepId());
+        }
         for (String id : results.keySet()) {
             if (results.get(id).getStatus() == ResultStatus.OK) {
                 available.add(id);
@@ -56,6 +60,13 @@ public class ToolManager {
             for (String value : step.getArguments().values()) {
                 if (isReference(value) && !available.contains(referenceId(value))) {
                     return "A reference must name an earlier step or a completed result: " + value;
+                }
+                if (!isReference(value)) {
+                    for (String id : referenceIds) {
+                        if (value.contains("$" + id + ".")) {
+                            return "A step reference must fill the whole argument value.";
+                        }
+                    }
                 }
             }
             available.add(step.getStepId());
@@ -86,8 +97,6 @@ public class ToolManager {
                 if (!allowReferences) {
                     return "Resolve step references before calling a tool.";
                 }
-            } else if (value.matches(".*\\$[A-Za-z][A-Za-z0-9_]*\\.[A-Za-z][A-Za-z0-9_]*.*")) {
-                return "A step reference must fill the whole argument value.";
             }
         }
         return validateValues(step);
@@ -192,13 +201,35 @@ public class ToolManager {
                 }
                 arguments.put(name, result.getData().get(field));
             }
+            arguments.put(name, arguments.get(name).trim());
         }
         PlanStep resolved = new PlanStep(step.getStepId(), step.getToolName(), arguments);
         String error = validateArguments(resolved, false);
         if (!error.isEmpty()) {
             throw new IllegalArgumentException(error);
         }
-        return resolved;
+        normalizeArguments(step.getToolName(), arguments);
+        return new PlanStep(step.getStepId(), step.getToolName(), arguments);
+    }
+
+    // Equivalent spellings and fixed defaults must share one retry/reuse budget.
+    private void normalizeArguments(String tool, Map<String, String> arguments) {
+        if (tool.equals("quiz")) {
+            arguments.put("count", Integer.toString(Integer.parseInt(arguments.getOrDefault("count", "6"))));
+            String types = arguments.getOrDefault("types", "multiple-choice,true-false,short-answer");
+            List<String> names = new ArrayList<>();
+            for (String type : types.split(",", -1)) {
+                names.add(QuestionType.parse(type).name());
+            }
+            arguments.put("types", String.join(",", names));
+            if (arguments.containsKey("difficulty")) {
+                arguments.put("difficulty", Difficulty.parse(arguments.get("difficulty")).name());
+            }
+        } else if (tool.equals("summarize")) {
+            arguments.put("style", arguments.getOrDefault("style", "brief"));
+        } else if (tool.equals("studyPlan")) {
+            arguments.put("hoursPerDay", Integer.toString(Integer.parseInt(arguments.get("hoursPerDay"))));
+        }
     }
 
     public ToolResult execute(String courseId, PlanStep step) {

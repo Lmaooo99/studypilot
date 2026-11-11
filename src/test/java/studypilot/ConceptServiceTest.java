@@ -43,6 +43,31 @@ public class ConceptServiceTest {
     }
 
     @Test
+    public void keepsALegalParentThatPointsIntoACycle() {
+        JSONArray items = new JSONArray();
+        items.put(concept("D", "A", chunkId));
+        items.put(concept("A", "B", chunkId));
+        items.put(concept("B", "A", chunkId));
+        llm.reply(new JSONObject().put("concepts", items).toString());
+        List<Concept> concepts = service.extractConcepts(course, material);
+        assertEquals("A", concepts.get(0).getParentName());
+        assertTrue(concepts.get(1).getParentName().isEmpty() || concepts.get(2).getParentName().isEmpty());
+        assertEquals("A", repository.loadCourse(course.getId()).getConcepts().get(0).getParentName());
+    }
+
+    @Test
+    public void treatsANullParentAsNoParent() {
+        JSONObject root = concept("Observer", "", chunkId).put("parentName", JSONObject.NULL);
+        JSONArray items = new JSONArray().put(root).put(concept("Subscriber", "Observer", chunkId));
+        llm.reply(new JSONObject().put("concepts", items).toString());
+        List<Concept> concepts = service.extractConcepts(course, material);
+        assertEquals(2, concepts.size());
+        assertEquals("", concepts.get(0).getParentName());
+        assertEquals("Observer", concepts.get(1).getParentName());
+        assertEquals(1, llm.getPrompts().size());
+    }
+
+    @Test
     public void mergesDuplicateNamesAndDropsCyclicParentLinks() {
         JSONArray items = new JSONArray();
         items.put(concept("Observer", "Strategy", chunkId));
@@ -62,6 +87,33 @@ public class ConceptServiceTest {
         assertEquals(1, service.extractConcepts(course, material).size());
         assertEquals(2, llm.getPrompts().size());
         assertTrue(llm.getPrompts().get(1).contains("Return only valid JSON"));
+    }
+
+    @Test
+    public void showsTheRealModelErrorWhenBothCallsFail() {
+        llm.failNext();
+        llm.failNext();
+        try {
+            service.extractConcepts(course, material);
+            fail("A failed model call must be reported.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("No concepts were saved"));
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
+    }
+
+    @Test
+    public void keepsTheModelFailureWhenTheRetryIsMalformed() {
+        llm.failNext();
+        llm.reply("not JSON");
+        try {
+            service.extractConcepts(course, material);
+            fail("The model failure must not be lost.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
+        assertEquals(0, repository.loadCourse(course.getId()).getConcepts().size());
+        assertEquals(2, llm.getPrompts().size());
     }
 
     @Test

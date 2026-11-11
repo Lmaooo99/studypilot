@@ -29,7 +29,9 @@ p.&gt;s : proposed objects
 s:Validate source IDs and parent links for concepts, remove duplicates and cycles
 s:Keep distinct nonempty flashcards, validate count before generation
 s-&gt;r : saveCourse(course)
-r.&gt;u : actual validated list or explicit failure
+r.&gt;s : save result
+s.&gt;f : actual validated list or explicit failure
+f.&gt;u : list or error
 s:Generation retries are bounded, failed work does not replace saved results</panel_attributes>
     <additional_attributes />
   </element>

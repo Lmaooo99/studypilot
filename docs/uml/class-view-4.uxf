@@ -276,7 +276,7 @@ layer=2</panel_attributes>
       <x>20</x>
       <y>1410</y>
       <w>500</w>
-      <h>360</h>
+      <h>370</h>
     </coordinates>
     <panel_attributes>QuizService
 --
@@ -289,6 +289,7 @@ layer=2</panel_attributes>
 --
 +createQuiz(course, topic, count, difficulty, types): Quiz
 +suggestDifficulty(courseId, topic): DifficultySuggestion
+-getQuizTopicStats(courseId, topic): ConceptStats
 -chooseDifficulty(accuracy, gradedCount): Difficulty
 +startAttempt(courseId, quizId): QuizAttempt
 +submitAttempt(courseId, attemptId, answers): QuizAttempt
@@ -354,7 +355,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1870</y>
+      <y>1880</y>
       <w>500</w>
       <h>220</h>
     </coordinates>
@@ -377,7 +378,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1870</y>
+      <y>1880</y>
       <w>500</w>
       <h>170</h>
     </coordinates>
@@ -397,7 +398,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>1870</y>
+      <y>1880</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -416,7 +417,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>2190</y>
+      <y>2200</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -435,7 +436,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>2190</y>
+      <y>2200</y>
       <w>500</w>
       <h>130</h>
     </coordinates>
@@ -453,7 +454,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>2190</y>
+      <y>2200</y>
       <w>500</w>
       <h>170</h>
     </coordinates>
@@ -545,7 +546,7 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>510</x>
-      <y>2245</y>
+      <y>2255</y>
       <w>110</w>
       <h>30</h>
     </coordinates>
@@ -557,7 +558,7 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>2330</y>
+      <y>2340</y>
       <w>1200</w>
       <h>70</h>
     </coordinates>
@@ -594,7 +595,7 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>2010</y>
+      <y>2020</y>
       <w>1200</w>
       <h>190</h>
     </coordinates>
@@ -609,17 +610,17 @@ layer=0</panel_attributes>
       <x>260</x>
       <y>1680</y>
       <w>1200</w>
-      <h>200</h>
+      <h>210</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 layer=0</panel_attributes>
-    <additional_attributes>1190.0;10.0;1190.0;140.0;10.0;140.0;10.0;190.0</additional_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;150.0;10.0;150.0;10.0;200.0</additional_attributes>
   </element>
   <element>
     <id>UMLNote</id>
     <coordinates>
       <x>20</x>
-      <y>2460</y>
+      <y>2470</y>
       <w>1080</w>
       <h>120</h>
     </coordinates>

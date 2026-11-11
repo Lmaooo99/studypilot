@@ -30,8 +30,12 @@ public class FlashcardService {
             throw new IllegalArgumentException("Select a material with 1 to 400 chunks for flashcard generation.");
         }
         String prompt = templates.flashcardPrompt(chunks, count);
+        String errorMessage = "";
         for (int attempt = 0; attempt < 2; attempt++) {
             LLMResponse response = llmClient.generate(prompt);
+            if (!response.isSuccess() && !response.getErrorMessage().isBlank()) {
+                errorMessage = response.getErrorMessage();
+            }
             if (response.isSuccess()) {
                 try {
                     List<Flashcard> proposed = parser.parseFlashcards(response.getText());
@@ -41,7 +45,11 @@ public class FlashcardService {
                 }
             }
         }
-        throw new IllegalStateException("Flashcard generation failed after one retry. No cards were saved.");
+        String failure = "Flashcard generation failed after one retry. No cards were saved.";
+        if (!errorMessage.isEmpty()) {
+            failure += " Last model error: " + errorMessage;
+        }
+        throw new IllegalStateException(failure);
     }
 
     private List<Flashcard> saveNewCards(Course course, List<Flashcard> proposed, int count) {

@@ -11,7 +11,7 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD13 Plan a course-bound assistant request
+    <panel_attributes>title=SD13 Plan a request and save one complete turn
 fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
@@ -19,22 +19,24 @@ obj=AgentController~c
 obj=MemoryManager~m
 obj=AgentPlanner~p
 obj=LLMClient~l
-obj=ToolManager~t
+obj=MemoryRepository~r
 
 u-&gt;f : runAgent(courseId, sessionId, request)
 f-&gt;c : handleRequest(courseId, sessionId, request)
 c-&gt;m : loadSession(courseId, sessionId)
-m.&gt;c : saved course-bound messages
-c-&gt;p : createPlan(courseId, request, last ten messages)
-p-&gt;l : generate(executionPlanPrompt with actual course context)
-l.&gt;p : structured ExecutionPlan
-p.&gt;c : plan or clarification
-c-&gt;t : validatePlan(plan, results)
-t.&gt;c : validation result
-c: executePlan(courseId, plan)
-c-&gt;m : addMessage(user), addMessage(assistant)
-c.&gt;u : AgentResult with session, status, actual outputs and trace
-m:Reject foreign or damaged sessions before planning, retain all saved messages</panel_attributes>
+m.&gt;c : full saved history
+c-&gt;p : createPlan(courseId, request, history)
+p-&gt;l : generate(executionPlanPrompt with last ten messages)
+l.&gt;p : proposed JSON
+p.&gt;c : ExecutionPlan or clarification
+c: executePlan(courseId, plan) including validation
+c-&gt;m : addTurn(request, actual final answer)
+m-&gt;r : saveConversation(courseId, sessionId, both messages)
+r.&gt;m : one temporary-file replacement or failure
+c.&gt;f : AgentResult with actual output and trace
+f.&gt;u : AgentResult
+m:A failed turn save leaves old messages unchanged, AgentResult is FAILED but completed tools remain effective
+u:CLI --json emits a FAILED result if saved conversation data cannot load</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

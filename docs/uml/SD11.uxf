@@ -11,29 +11,32 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD11 Complete a saved study task
+    <panel_attributes>title=SD11 Complete a task with its actual time
 fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
 obj=StudyPlanGenerator~g
+obj=StudyTask~t
 obj=StudyPlanRepository~r
-obj=ProgressTracker~t
-obj=HistoryRecorder / DashboardView~o
+obj=ProgressTracker~p
 
 u-&gt;f : completeTask(courseId, planId, taskId)
 f-&gt;g : markTaskDone(courseId, planId, taskId)
 g-&gt;r : loadPlan(planId)
-r.&gt;g : plan
-g:Check course ownership and saved task ID
-g-&gt;r : savePlan(plan with done flag)
-g-&gt;t : recordTaskDone(courseId, taskId)
-t:Count the stable task ID once
-t-&gt;o : update(subject)
-o.&gt;u : saved completion, progress and history
-u-&gt;f : repeat completion after restart
-f-&gt;g : markTaskDone(courseId, planId, taskId)
-g-&gt;t : recordTaskDone(courseId, taskId)
-t.&gt;u : unchanged completed count</panel_attributes>
+r.&gt;g : course-scoped plan
+combinedFragment=opt~complete g r; t:[Only if task is not already done]
+g-&gt;t : markDone()
+t:completedAt is set once to the actual completion time
+g-&gt;r : savePlan(plan including completedAt)
+r.&gt;g : saved or strict primary error
+--
+g:On primary error do not publish progress
+g-&gt;p : recordTaskDone(courseId, task)
+p:Count stable task ID once, use the saved completion time
+p.&gt;g : progress update complete
+g.&gt;f : completion recorded
+f.&gt;u : completion or primary error
+g:Legacy completed tasks without a timestamp keep it unknown</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

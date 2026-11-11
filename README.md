@@ -6,19 +6,24 @@ The Stage 1 design is in [Stage1-Report.pdf](Stage1-Report.pdf).
 ## Current status
 
 Period 1 implements F01-F05: course/material import, summaries, concepts,
-questions with checked citation IDs, and flashcard generation/review. F11 restores
-review, quiz and task counts and repairs missing history from saved records. Period 2 adds F06 quiz generation, F07 difficulty
+questions with checked citation IDs, and flashcard generation/review, plus basic
+F11 review tracking. Period 2 adds F06 quiz generation, F07 difficulty
 suggestions, F08 saved attempts with objective and model-based grading, F09
 weak-topic reports and F10 dated study plans. Failed grades can be retried or
-self-assessed against the saved answer and rubric. The assistant now plans and
-runs six tools with saved conversation context, step-result references and bounded
-retry/replan recovery. Complete study/agent restart workflows passed the current
-307-test build. The native GUI walkthrough and final student review remain pending.
+self-assessed against the saved answer and rubric. Period 3 completes F11 progress
+recovery and F12: the assistant plans and runs six tools with saved conversation
+context, step-result references and bounded retry/replan recovery. The current
+Java 17 clean build passes 361 JUnit 4 tests, including study/agent restart tests.
+A November 10 native GUI/CLI recording demonstrates all twelve features and the agent.
+The student completed a focused guided review of later core paths; this is not an
+exhaustive review of every source line. The [native demonstration](https://www.youtube.com/watch?v=eNrlBO0PAuY)
+is Unlisted; signed-out playback and twelve feature plus two CLI timestamp links
+were verified. The video offers 1080p60 HD.
 
 The seven-section implementation report is in [stage2-report.docx](stage2-report.docx)
 and [stage2-report.pdf](stage2-report.pdf). Updated editable diagrams and PNG exports
 are in [docs/uml](docs/uml). The [demonstration index](demo/README.md) describes the
-captured CLI replays and the still-required GUI recording and uploaded video links.
+November 10 native recording, feature timestamps and viewing-link status.
 
 ## Requirements and build
 
@@ -28,12 +33,15 @@ captured CLI replays and the still-required GUI recording and uploaded video lin
 ```sh
 ./mvnw clean verify
 java -jar target/studypilot.jar help
-java -jar target/studypilot.jar status
 java -jar target/studypilot.jar gui
 ```
 
 On Windows, use `mvnw.cmd clean verify` for the build. Eclipse can import the
-repository as an existing Maven project.
+repository as an existing Maven project. Use main class `studypilot.CLI`, program
+argument `gui`, and the repository root as the working directory.
+Run all commands from the repository root so `.env` and relative data paths resolve
+consistently. The first build downloads Maven 3.10.0, PDFBox 3.0.8, org.json and
+JUnit 4.13.2 through the wrapper and Maven.
 
 ## Local configuration
 
@@ -46,6 +54,9 @@ Courses, imports, reviews and progress work without an API key.
 ```sh
 cp .env.example .env
 ```
+
+On Windows, use `copy .env.example .env`. Configuration uses Java Properties syntax:
+do not quote values, and use forward slashes in Windows paths, such as `C:/StudyPilot/data`.
 
 Never commit `.env`, credentials, runtime data, or raw AI conversation logs.
 The example configuration contains placeholders only.
@@ -60,8 +71,10 @@ java -jar target/studypilot.jar material list --course COURSE_ID
 ```
 
 Replace COURSE_ID with the ID printed by course creation. TXT and Markdown imports
-keep original line ranges. Long text is split into overlapping chunks without
-breaking Unicode characters. Files over 20 MiB are rejected. Duplicate files
+keep original line ranges. A chunk's starting line skips leading blank lines and
+whitespace to locate its first content. Additional trailing blank lines remain in
+its ending range. Long text is split into overlapping chunks while keeping
+UTF-16 surrogate pairs together. Files over 20 MiB are rejected. Duplicate files
 within a course are skipped with a message, and failed imports do not add materials.
 
 PDF imports extract text separately from each page and retain its original page
@@ -78,7 +91,8 @@ retried once. Long materials use batches of 20 chunks and a final merge, up to 2
 batches. The saved summary is updated only after the complete operation succeeds.
 API requests have a 90-second timeout. Provider errors do not print response bodies
 or credentials. Available token counts are saved in `llm-usage.jsonl` under DATA_DIR;
-the file contains no prompts, responses, or credentials. Billing costs are recorded separately.
+the file contains no prompts, responses, or credentials. Monetary cost is not calculated
+by the application; use the provider's billing records for that figure.
 
 `LLM_REASONING_EFFORT` defaults to `low` for the selected model. Leave its value
 empty if a different compatible provider does not support that request parameter.
@@ -94,7 +108,10 @@ Concepts have names, definitions, optional parent names and source chunk IDs.
 The program validates model JSON and source IDs, merges duplicate names, and
 removes cyclic or unknown parent links. Invalid responses are retried once.
 An empty result preserves earlier concepts. Up to 400 chunks are processed in
-batches of 20.
+batches of 20. An absent or null parent means no parent. A source ID outside the
+supplied batch causes one retry; if any batch still fails, no concepts from that
+extraction are saved. Cycle cleanup removes a link on the cycle while preserving
+legal links leading into it.
 
 ## Questions with citations
 
@@ -103,10 +120,12 @@ java -jar target/studypilot.jar ask "What does the Observer pattern do?" --cours
 ```
 
 `RETRIEVAL_MODE=tfidf` selects TF-IDF cosine scoring; `keyword` selects keyword
-matching. Both return at most five matching chunks. No model call is made when
+matching. Both return at most five matching chunks. Common English words such as
+"the", "what" and "can" are ignored when matching. No model call is made when
 retrieval finds no matching chunks. Unknown citation IDs are removed; a reply with
-no valid citation is retried once and then reported as a failure. Ambiguous
-questions can return a clearly labeled clarification request.
+no valid citation is retried once, and if the second reply still has none, the
+answer is shown with an "Uncited:" label and no sources. Ambiguous questions can
+return a clearly labeled clarification request.
 
 Citation checking establishes that a chunk was retrieved. It does not prove that
 every sentence of the answer is supported. Retrieval is lexical and does not use
@@ -146,8 +165,10 @@ java -jar target/studypilot.jar history --course COURSE_ID
 ```
 
 Replace MATERIAL_ID and CARD_ID with IDs printed by the application. Generation
-accepts 1-50 cards and materials with up to 400 chunks. Duplicate fronts are removed
-and the actual number of new cards is reported. The GUI has a Flip card button;
+accepts 1-50 cards and materials with up to 400 chunks. Cards with an empty front or
+back are skipped and the other cards are kept; a reply with no valid card is retried
+once. Duplicate fronts are removed and the actual number of new cards is reported.
+The GUI has a Flip card button;
 Remembered and Not yet save the review. The CLI shows the back with `flashcards show`
 and records a review with `review --card ... --remembered true|false`.
 
@@ -189,14 +210,19 @@ the answer key.
 java -jar target/studypilot.jar quiz difficulty --course COURSE_ID --topic "Observer"
 ```
 
-The suggestion uses graded quiz answers for the exact saved concept name, shown as
-Topic beside each answer result. Names ignore case and outer spaces. Different
-concepts and courses are kept separate. PENDING answers and flashcard reviews do
+The suggestion compares two graded samples: answers from saved quizzes with the
+requested topic, and answers with the matching question concept in progress statistics.
+It uses the larger sample and prefers the quiz-topic sample on a tie. An unattempted
+or sparsely graded matching quiz cannot hide a larger concept sample. Existing quizzes
+work without migration. Question concepts remain
+separate for weak-topic reports; they are not overwritten with the quiz topic.
+Names ignore case and outer spaces, and courses are kept separate. PENDING answers and flashcard reviews do
 not contribute. Accuracy is fully correct answers divided by graded answers. With
 fewer than five graded answers, the level is Medium. Otherwise accuracy below 50%
 gives Easy, accuracy at or above 80% gives Hard, and the rest gives Medium. The output explains the level and sample count; with no results it says so.
 
-The query needs no API key, makes no model call and changes no saved data. The GUI's
+The query needs no API key and makes no model call. Healthy saved files remain
+unchanged; opening the course may repair derived progress/history caches. The GUI's
 Show suggestion button shows the same level and reason. Quiz creation uses the
 suggestion unless a level is selected in the GUI or supplied with `--difficulty` in
 the CLI. An invalid CLI difficulty value prints a warning and uses the suggestion.
@@ -218,7 +244,9 @@ IDs in an answers file, replacing the placeholders below:
 ```
 
 Use the displayed 1-based option number for multiple choice and `true` or `false`
-for true/false. Omitted or blank answers score zero. Objective grading reads the
+for true/false. Any other objective answer, such as `B` or `yes`, is rejected and
+nothing is saved, so the attempt can be corrected and submitted again. Omitted or
+blank answers score zero. Objective grading reads the
 saved answer key and needs no API key. Each nonempty short answer makes one model
 call using the saved question, model answer and rubric. A grade is accepted only
 when it contains an integer within the question's point range and a nonempty
@@ -324,7 +352,7 @@ the schedule covers the whole course.
 ## Study assistant
 
 ```sh
-java -jar target/studypilot.jar agent "Show progress, then summarize notes.md briefly" --course COURSE_ID --json
+java -jar target/studypilot.jar agent "Show progress, then summarize design-notes.md briefly" --course COURSE_ID --json
 java -jar target/studypilot.jar agent "Summarize the same material in bullet style" --course COURSE_ID --session SESSION_ID --json
 ```
 
@@ -349,33 +377,46 @@ The result includes the session ID, status, final answer, plan, actual tool resu
 and trace. The final answer uses the tool outputs. A tool with insufficient data
 asks for clarification; for example, no graded history cannot establish a weakest
 topic. A failed step is retried or replanned within the limits below, keeping earlier results. JSON output is
-one object on stdout; failures return exit code 1 and invalid command input returns
-2. A clarification is a normal response with exit code 0.
+one object on stdout, except invalid command input, which prints its message on
+stderr with exit code 2. Application failures return 1. A clarification is a normal
+response with exit code 0.
 
 A whole argument can reference a named data field from an earlier successful step,
 for example `"topic":"$step1.topic"`. Forward, self and cyclic dependencies are
 rejected. References belong to the current request; a later conversation request
 uses saved context and literal IDs instead. Missing result fields cause replanning
-before the dependent tool runs. Literal counts, types, dates, hours and styles are
+before the dependent tool runs. Embedded references to known step IDs are rejected;
+ordinary text such as `this.$store.state` is allowed. Literal counts, types, dates, hours and styles are
 validated; resolved values are checked again before dispatch.
 
 Each failed tool action receives at most two extra agent retries. Input errors
 replan without a tool retry, and insufficient data asks for clarification. Each
 request permits at most two replans, with at most eight steps in each plan.
 Successful IDs cannot change their tool or resolved arguments. During replanning,
-an action with the same tool name and resolved string arguments reuses its earlier
+an action with the same tool name and normalized resolved arguments reuses its earlier
 result, including under another ID. An exhausted identical failure keeps its spent
 retry budget. Explicit repeated steps within the original plan still run separately.
 A new request starts fresh budgets, even when it uses the same saved session.
+Normalization trims outer spaces, standardizes integers and quiz type/difficulty
+names, and fills the fixed quiz count/types and summary style defaults. Type order
+is preserved because it affects how question counts are distributed. An omitted
+history-based difficulty is distinct from an explicit level. Other wording changes
+are distinct actions; the controller does not infer semantic equivalence.
 
-The trace records reference resolution, calls, retries, replans, reuse and stopping.
+The trace lists every planned step, including steps that are rejected or never run,
+and records reference resolution, calls, retries, replans, reuse and stopping.
 JSON plan/results list encountered step IDs across plans; the combined list can be
 longer than eight. A repaired failed ID shows its latest result; earlier errors
 remain in the trace. Plan entries include retriesUsed; result retryable describes
 the failure type, while the controller still enforces the request's limits.
 Existing services keep their own bounded generation retries. An unusable planner
 reply is retried once. Conversation files preserve both the original request and
-final reply. A memory-save failure retains completed tool results and is reported.
+final reply together in one JSON replacement. A memory-save failure retains completed
+tool results and the previously saved conversation, without adding a half turn.
+The overall status is FAILED and the CLI returns 1 even when earlier tools succeeded.
+Inspect those tool results before retrying; rerunning the request can repeat their effects.
+With --json, an unreadable saved conversation also produces a FAILED JSON object;
+its session ID is empty if no session could be established.
 Failed planning turns are saved as failures when conversation storage is writable.
 Invalid saved message fields or unreadable conversation JSON stop the request
 before planning and leave the original file unchanged. The ten-message planning
@@ -394,18 +435,33 @@ GRADED answers enter accuracy, difficulty or weak-topic statistics. Healthy read
 and repeated task completion leave the saved files unchanged.
 
 A flashcard's count and its review event are saved together in the course file.
-This allows a later course read to repair progress/history after an interrupted
-write without recording another review. Progress and history enter memory only
-after their own save succeeds. Stable event and attempt/question IDs prevent
-repeated notifications or recovery from counting the same work twice.
+Submitted attempts and completed tasks are also saved before derived progress/history.
+A primary source-save failure is reported as an error. If only a derived save fails,
+the action is already saved: the application warns, keeps current source-backed
+counts/events in memory and retries the cache write on a later course read. It also
+retries when an older cache file still exists. Do not repeat the review to repair a cache.
+Pending in-memory writes are retried even when an older counted source is unreadable.
+After a restart, unavailable source records can still prevent rebuilding newer counts
+until those source records are repaired; CLI commands run in separate processes.
+Stable event and attempt/question IDs prevent duplicate counts and history.
+
+The dashboard reads memory snapshots without starting recovery or writing files.
+Small synchronized methods protect progress/history snapshots and skipped-file warning
+lists during the existing Swing worker and event-thread interaction. Storage notices describe issues encountered during the
+current run and remain visible after a later repair.
 
 Older course files retain review counts even without detailed review events.
 Recovery cannot reconstruct unavailable history: missing quiz entries are labelled
-as current attempt snapshots using the original submission time, and missing task
-entries use an explicitly labelled recovery time. Existing history is retained.
-Unreadable attempts/plans or missing previously counted records produce a warning
-and keep the existing counts; those source files need repair. Directories at the
-progress/history paths are preserved and reported as errors.
+as current attempt snapshots using the original submission time. New completed tasks
+save completedAt and restore that actual time; legacy tasks without a completion time
+keep it unknown and use an explicitly labelled recovery time in history. Repeated
+completion preserves the original timestamp. History is returned in time order.
+Course, quiz, attempt and plan lists skip a saved file that cannot be read, such
+as a damaged file or a Finder copy, and name it in a storage warning; the file is
+not changed. When a skipped or missing record was already counted, the existing
+counts are kept with a warning; those source files need repair. Directories at the
+progress/history paths are preserved and reported in warnings; readable study records
+remain usable while those derived paths are blocked.
 
 Saved source locations, question points and grading scores must be JSON integers.
 Saved grading flags must be JSON booleans. Course loading
@@ -427,8 +483,9 @@ answers, cards, quizzes, grading, weak-topic explanations and plans are recorded
 separately in the development log.
 
 Full deterministic testing and KUMA evaluation are later Stage 3 requirements.
-The seven-section report, updated UML and captured CLI replays are linked below.
-The complete native GUI walkthrough and recording remain pending.
+The seven-section report, updated UML and native demonstration index are linked below.
+Section 5 reports scoped tool tokens and approximate API-equivalent costs. Actual
+project payments are not allocated; the final published-source clone still requires verification.
 
 ## Stage 2 tracking
 

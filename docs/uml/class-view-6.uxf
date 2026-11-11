@@ -75,7 +75,7 @@ layer=2</panel_attributes>
       <x>1200</x>
       <y>100</y>
       <w>500</w>
-      <h>220</h>
+      <h>300</h>
     </coordinates>
     <panel_attributes>StudyTask
 --
@@ -85,8 +85,12 @@ layer=2</panel_attributes>
 -conceptName: String
 -description: String
 -minutes: int
+-done: boolean
+-completedAt: LocalDateTime
 --
 +markDone(): void
++getCompletedAt(): LocalDateTime
++isDone(): boolean
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -120,19 +124,25 @@ layer=2</panel_attributes>
       <x>610</x>
       <y>540</y>
       <w>500</w>
-      <h>240</h>
+      <h>360</h>
     </coordinates>
     <panel_attributes>ProgressTracker
 --
 -summaries: Map&lt;String, ProgressSummary&gt;
 -repository: ProgressRepository
 -lastEvent: StudyEvent
+-savePending: boolean
 --
 +recordReview(course, event): void
-+restoreSummary(summary): boolean
-+recordEvent(event): void
 +recordQuizAttempt(attempt): void
 +recordTaskDone(courseId, task): void
++getSummary(courseId): ProgressSummary
++restoreSummary(summary): boolean
++retryPendingSave(): void
++getRankedStats(courseId, minResults): List&lt;ConceptStats&gt;
++getAccuracy(courseId, topic): double
++getGradedCount(courseId, topic): int
++recordEvent(event): void
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -168,7 +178,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>920</y>
+      <y>1000</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -215,12 +225,12 @@ layer=0</panel_attributes>
       <x>-70</x>
       <y>430</y>
       <w>350</w>
-      <h>500</h>
+      <h>580</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>340.0;10.0;340.0;50.0;10.0;50.0;10.0;430.0;340.0;430.0;340.0;490.0</additional_attributes>
+    <additional_attributes>340.0;10.0;340.0;50.0;10.0;50.0;10.0;510.0;340.0;510.0;340.0;570.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
@@ -228,10 +238,10 @@ layer=0</panel_attributes>
       <x>1100</x>
       <y>200</y>
       <w>110</w>
-      <h>20</h>
+      <h>60</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 layer=0</panel_attributes>
-    <additional_attributes>10.0;10.0;100.0;10.0</additional_attributes>
+    <additional_attributes>10.0;10.0;100.0;50.0</additional_attributes>
   </element>
 </diagram>

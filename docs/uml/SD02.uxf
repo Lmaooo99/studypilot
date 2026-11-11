@@ -24,7 +24,7 @@ obj=CourseRepository~r
 u-&gt;f : summarize(courseId, materialId, style)
 f-&gt;s : summarize(course, material, style)
 s-&gt;p : summaryPrompt(style, chunks)
-combinedFragment=loop~generation s a; s:[Each batch, at most two generation attempts]
+combinedFragment=loop~generation s a; a:[Each batch, at most two generation attempts]
 s-&gt;l : generate(prompt)
 l-&gt;a : sendRequest(jsonBody)
 a.&gt;l : Chat Completions response or error
@@ -35,7 +35,9 @@ s-&gt;l : generate(merge prompt) when needed
 l.&gt;s : merged summary or error
 s:Require nonempty usable replies before replacing the summary
 s-&gt;r : saveCourse(course)
-r.&gt;u : saved summary or explicit failure
+r.&gt;s : save result
+s.&gt;f : saved summary or explicit failure
+f.&gt;u : summary or error
 s:A failed request keeps the earlier saved summary</panel_attributes>
     <additional_attributes />
   </element>

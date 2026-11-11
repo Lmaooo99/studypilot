@@ -314,7 +314,7 @@ layer=2</panel_attributes>
     </coordinates>
     <panel_attributes>RetrievalWords
 --
-
+-STOP_WORDS: String[]
 --
 ~countWords(text): Map&lt;String, Integer&gt;
 ~selectTopChunks(chunks, scores, k): List&lt;Chunk&gt;

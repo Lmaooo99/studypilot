@@ -8,7 +8,44 @@ import static org.junit.Assert.*;
 
 public class ProgressSaveTest {
     @Test
-    public void aFailedSummarySaveDoesNotChangeTheTrackersCounts() throws Exception {
+    public void retriesPendingWritesEvenWhenOlderCacheFilesStillExist() throws Exception {
+        Path directory = Files.createTempDirectory("studypilot-older-cache-files-");
+        final boolean[] blocked = {false};
+        ProgressRepository repository = new ProgressRepository(directory) {
+            public void saveSummaries(java.util.Map<String, ProgressSummary> summaries) {
+                if (blocked[0]) {
+                    throw new IllegalStateException("Test progress save failure.");
+                }
+                super.saveSummaries(summaries);
+            }
+            public void saveHistory(java.util.List<StudyEvent> events) {
+                if (blocked[0]) {
+                    throw new IllegalStateException("Test history save failure.");
+                }
+                super.saveHistory(events);
+            }
+        };
+        ProgressTracker tracker = new ProgressTracker(repository);
+        HistoryRecorder history = new HistoryRecorder(tracker, repository);
+        tracker.attach(history);
+        StudyTask first = new StudyTask(LocalDate.now(), TaskType.READ, "Observer", "First task.", 10);
+        first.markDone();
+        tracker.recordTaskDone("course", first);
+        blocked[0] = true;
+        StudyTask second = new StudyTask(LocalDate.now(), TaskType.READ, "Observer", "Second task.", 10);
+        second.markDone();
+        tracker.recordTaskDone("course", second);
+        assertEquals(1, repository.loadSummaries().get("course").getTasksDone());
+        assertEquals(1, repository.loadHistory().size());
+        blocked[0] = false;
+        tracker.restoreSummary(tracker.getSummary("course"));
+        history.saveIfMissing();
+        assertEquals(2, repository.loadSummaries().get("course").getTasksDone());
+        assertEquals(2, repository.loadHistory().size());
+    }
+
+    @Test
+    public void aFailedSummarySaveKeepsCurrentCountsAndWarnsUntilRetry() throws Exception {
         Path directory = Files.createTempDirectory("studypilot-summary-save-");
         Path blocked = directory.resolve("progress.json");
         ProgressRepository repository = new ProgressRepository(directory);
@@ -16,14 +53,10 @@ public class ProgressSaveTest {
         StudyTask task = new StudyTask(LocalDate.now(), TaskType.READ, "Observer", "Read notes.", 20);
         task.markDone();
         Files.createDirectory(blocked);
-        try {
-            tracker.recordTaskDone("course", task);
-            fail("A failed summary save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
-        assertEquals(0, tracker.getSummary("course").getTasksDone());
-        assertNull(tracker.getLastEvent());
+        tracker.recordTaskDone("course", task);
+        assertTrue(repository.getRecoveryWarning().contains("progress.json could not be updated"));
+        assertEquals(1, tracker.getSummary("course").getTasksDone());
+        assertNotNull(tracker.getLastEvent());
         Files.delete(blocked);
         tracker.recordTaskDone("course", task);
         tracker.recordTaskDone("course", task);
@@ -32,7 +65,7 @@ public class ProgressSaveTest {
     }
 
     @Test
-    public void aFailedHistorySaveDoesNotAddAnUnsavedEventToMemory() throws Exception {
+    public void aFailedHistorySaveKeepsTheEventInMemoryAndRetriesOnce() throws Exception {
         Path directory = Files.createTempDirectory("studypilot-history-save-");
         Path blocked = directory.resolve("history.json");
         ProgressRepository repository = new ProgressRepository(directory);
@@ -41,13 +74,9 @@ public class ProgressSaveTest {
         tracker.attach(history);
         StudyEvent event = new StudyEvent("course", "Observer", "Reviewed a flashcard.");
         Files.createDirectory(blocked);
-        try {
-            tracker.recordEvent(event);
-            fail("A failed history save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
-        assertTrue(history.getHistory("course").isEmpty());
+        tracker.recordEvent(event);
+        assertTrue(repository.getRecoveryWarning().contains("history.json could not be updated"));
+        assertEquals(1, history.getHistory("course").size());
         Files.delete(blocked);
         tracker.notifyObservers();
         tracker.notifyObservers();

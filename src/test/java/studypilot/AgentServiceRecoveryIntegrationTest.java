@@ -118,6 +118,24 @@ public class AgentServiceRecoveryIntegrationTest {
     }
 
     @Test
+    public void omittedDefaultStyleCannotRestartAnExhaustedSummaryAction() throws Exception {
+        Course saved = facade.getCourse(course.getId());
+        saved.getMaterial(material.getId()).setSummary("Earlier saved summary.");
+        new CourseRepository(config.getDataDirectory()).saveCourse(saved);
+        llm.reply(plan(summary("first", material.getId(), "brief")));
+        for (int i = 0; i < 6; i++) {
+            llm.failNext();
+        }
+        llm.reply(plan(step("withoutStyle", "summarize", new JSONObject().put("materialId", material.getId()))));
+        llm.reply(plan(summary("explicitStyle", material.getId(), "brief")));
+        AgentResult result = facade.runAgent(course.getId(), null, "Try summarizing again.");
+        assertEquals(ResultStatus.FAILED, result.getStatus());
+        assertEquals(9, llm.getPrompts().size());
+        assertEquals(3, result.getResults().size());
+        assertEquals("Earlier saved summary.", facade.getCourse(course.getId()).getMaterial(material.getId()).getSummary());
+    }
+
+    @Test
     public void repairsInvalidQuizArgumentsBeforeSavingOneTypedQuiz() {
         JSONObject arguments = new JSONObject().put("topic", "Observer").put("count", "0").put("types", "true-false");
         llm.reply(plan(step("unused", "progress", new JSONObject()), step("quiz", "quiz", arguments)));

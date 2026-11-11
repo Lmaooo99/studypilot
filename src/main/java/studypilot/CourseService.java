@@ -139,9 +139,21 @@ public class CourseService {
             }
             String part = text.substring(start, end);
             int lastLine = line + countNewlines(text, start, end);
+            // A newline at the end of the chunk only closes its last line; it does not start a new one.
+            if (text.charAt(end - 1) == '\n') {
+                lastLine--;
+            }
             if (!part.isBlank()) {
+                int firstLine = line;
+                int firstContent = start;
+                while (firstContent < end && text.charAt(firstContent) <= ' ') {
+                    if (text.charAt(firstContent) == '\n') {
+                        firstLine++;
+                    }
+                    firstContent++;
+                }
                 if (page == 0) {
-                    chunks.add(new Chunk(part, fileName, 0, line, lastLine));
+                    chunks.add(new Chunk(part, fileName, 0, firstLine, lastLine));
                 } else {
                     chunks.add(new Chunk(part, fileName, page, 0, 0));
                 }

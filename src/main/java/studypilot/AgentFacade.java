@@ -18,18 +18,21 @@ public class AgentFacade {
     private final ProgressRepository progressRepository;
     private final HistoryRecorder historyRecorder;
     private final ProgressRestorer progressRestorer;
+    private final CourseRepository courseRepository;
+    private final QuizRepository quizRepository;
+    private final StudyPlanRepository planRepository;
 
     public AgentFacade(AppConfig config) {
         this(config, new OpenAIAdapter(config.getModel(), new OpenAIApiClient(config), config.getReasoningEffort()));
     }
 
     public AgentFacade(AppConfig config, LLMClient llmClient) {
-        CourseRepository repository = new CourseRepository(config.getDataDirectory());
+        courseRepository = new CourseRepository(config.getDataDirectory());
         PromptTemplates templates = new PromptTemplates();
         ResponseParser parser = new ResponseParser();
-        courseService = new CourseService(repository);
-        summaryService = new SummaryService(llmClient, templates, repository);
-        conceptService = new ConceptService(llmClient, templates, parser, repository);
+        courseService = new CourseService(courseRepository);
+        summaryService = new SummaryService(llmClient, templates, courseRepository);
+        conceptService = new ConceptService(llmClient, templates, parser, courseRepository);
 
         RetrievalStrategy retrieval;
         if (config.getRetrievalMode().equals("keyword")) {
@@ -42,11 +45,11 @@ public class AgentFacade {
         progressTracker = new ProgressTracker(progressRepository);
         historyRecorder = new HistoryRecorder(progressTracker, progressRepository);
         progressTracker.attach(historyRecorder);
-        QuizRepository quizRepository = new QuizRepository(config.getDataDirectory());
-        StudyPlanRepository planRepository = new StudyPlanRepository(config.getDataDirectory());
+        quizRepository = new QuizRepository(config.getDataDirectory());
+        planRepository = new StudyPlanRepository(config.getDataDirectory());
         progressRestorer = new ProgressRestorer(progressTracker, historyRecorder, progressRepository,
                 quizRepository, planRepository);
-        flashcardService = new FlashcardService(llmClient, templates, parser, repository, progressTracker);
+        flashcardService = new FlashcardService(llmClient, templates, parser, courseRepository, progressTracker);
         quizService = new QuizService(llmClient, templates, parser,
                 quizRepository, retrieval, progressTracker);
         weakTopicAnalyzer = new WeakTopicAnalyzer(progressTracker, llmClient, templates, config.getWeakTopicMinResults());
@@ -203,19 +206,30 @@ public class AgentFacade {
         return historyRecorder.getHistory(courseId);
     }
 
+    // Observer refreshes read memory only; recovery belongs to the course operation.
+    public ProgressSummary getProgressSnapshot(String courseId) {
+        return progressTracker.getSummary(courseId);
+    }
+
+    public List<StudyEvent> getHistorySnapshot(String courseId) {
+        return historyRecorder.getHistory(courseId);
+    }
+
     public String getStorageWarnings() {
+        // Files skipped while listing saved work go into the same notice log as progress recovery.
+        addSkippedFileWarnings(courseRepository.getSkippedFiles());
+        addSkippedFileWarnings(quizRepository.getSkippedFiles());
+        addSkippedFileWarnings(planRepository.getSkippedFiles());
         return progressRepository.getRecoveryWarning();
+    }
+
+    private void addSkippedFileWarnings(List<String> files) {
+        for (String file : files) {
+            progressRepository.addWarning("Skipped unreadable saved file " + file + ". The file was not changed.");
+        }
     }
 
     public void observeProgress(Observer observer) {
         progressTracker.attach(observer);
-    }
-
-    public String getImplementationStatus() {
-        return "Available: F01-F10 (courses, materials, summaries, concepts, cited questions, flashcards, review, quizzes, difficulty suggestions, weak-topic reports and study plans)."
-                + "\nF08 supports saved attempts, objective and rubric grading, pending retries and self-grading."
-                + "\nF11 restores saved review, quiz and task progress, backs up damaged summary/history files and repairs missing history."
-                + "\nF12 provides planning, six tools, saved conversations, result references, bounded retry/replan recovery and a trace."
-                + "\nFull integration, native GUI verification and final delivery assets remain pending.";
     }
 }

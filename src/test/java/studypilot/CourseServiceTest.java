@@ -2,6 +2,7 @@ package studypilot;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -30,6 +31,39 @@ public class CourseServiceTest {
         assertEquals(1, chunk.getLineStart());
         assertEquals(2, chunk.getLineEnd());
         assertEquals(0, chunk.getPage());
+    }
+
+    @Test
+    public void startsAChunkOnItsFirstContentLine() throws Exception {
+        Path file = directory.resolve("overlap-newline.md");
+        Files.writeString(file, "a".repeat(700) + "\n" + "b".repeat(99) + "\n" + "c".repeat(50) + "\n");
+        Material material = service.importMaterial(course.getId(), file.toString());
+        assertEquals(2, material.getChunks().size());
+        Chunk second = material.getChunks().get(1);
+        assertEquals(2, second.getLineStart());
+        assertEquals(3, second.getLineEnd());
+        assertEquals("\n" + "b".repeat(99) + "\n" + "c".repeat(50) + "\n", second.getText());
+    }
+
+    @Test
+    public void doesNotCountAFinalNewlineAsAnExtraLine() throws Exception {
+        Path file = directory.resolve("two-lines.md");
+        Files.writeString(file, "First line.\nSecond line.\n");
+        Material material = service.importMaterial(course.getId(), file.toString());
+        assertEquals(1, material.getChunks().get(0).getLineStart());
+        assertEquals(2, material.getChunks().get(0).getLineEnd());
+    }
+
+    @Test
+    public void skipsAnUnreadableCourseFileAndListsTheOthers() throws Exception {
+        Path copy = directory.resolve("data").resolve("courses").resolve(course.getId() + " copy.json");
+        Files.writeString(copy, "{\"broken\": ");
+        CourseRepository repository = new CourseRepository(directory.resolve("data"));
+        List<Course> listed = repository.listCourses();
+        assertEquals(1, listed.size());
+        assertEquals(course.getId(), listed.get(0).getId());
+        assertEquals("courses/" + course.getId() + " copy.json", repository.getSkippedFiles().get(0));
+        assertEquals("{\"broken\": ", Files.readString(copy));
     }
 
     @Test

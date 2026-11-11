@@ -10,13 +10,21 @@ public class ProgressTracker extends Subject {
     private final Map<String, ProgressSummary> summaries;
     private final ProgressRepository repository;
     private StudyEvent lastEvent;
+    private boolean savePending;
 
     public ProgressTracker(ProgressRepository repository) {
         this.repository = repository;
-        summaries = repository.loadSummaries();
+        Map<String, ProgressSummary> saved;
+        try {
+            saved = repository.loadSummaries();
+        } catch (IllegalStateException e) {
+            saved = new HashMap<>();
+            repository.addWarning("progress.json could not be read. Saved study records will be used; the blocked path was kept.");
+        }
+        summaries = saved;
     }
 
-    public void recordReview(Course course, StudyEvent event) {
+    public synchronized void recordReview(Course course, StudyEvent event) {
         if (!event.getCourseId().equals(course.getId()) || !course.getReviewEvents().contains(event)) {
             throw new IllegalArgumentException("The review event must be saved with this course.");
         }
@@ -26,7 +34,7 @@ public class ProgressTracker extends Subject {
         recordEvent(event);
     }
 
-    public ProgressSummary getSummary(String courseId) {
+    public synchronized ProgressSummary getSummary(String courseId) {
         ProgressSummary summary = summaries.get(courseId);
         if (summary == null) {
             return new ProgressSummary(courseId, 0);
@@ -35,19 +43,31 @@ public class ProgressTracker extends Subject {
     }
 
     private boolean saveSummary(ProgressSummary summary) {
-        if (summary.hasSameCounts(getSummary(summary.getCourseId()))
+        if (!savePending && summary.hasSameCounts(getSummary(summary.getCourseId()))
                 && (!summaries.containsKey(summary.getCourseId()) || repository.hasProgressFile())) {
             return false;
         }
         Map<String, ProgressSummary> changed = new HashMap<>(summaries);
         changed.put(summary.getCourseId(), summary.copy());
-        repository.saveSummaries(changed);
+        saveSummaries(changed);
         summaries.put(summary.getCourseId(), changed.get(summary.getCourseId()));
         return true;
     }
 
-    public boolean restoreSummary(ProgressSummary summary) {
-        boolean changed = saveSummary(summary);
+    private void saveSummaries(Map<String, ProgressSummary> changed) {
+        try {
+            repository.saveSummaries(changed);
+            savePending = false;
+        } catch (IllegalStateException e) {
+            savePending = true;
+            repository.addWarning("Study records are saved, but progress.json could not be updated. "
+                    + "Current counts are kept in memory; a later course read will retry the save.");
+        }
+    }
+
+    public synchronized boolean restoreSummary(ProgressSummary summary) {
+        boolean changed = !summary.hasSameCounts(getSummary(summary.getCourseId()));
+        saveSummary(summary);
         if (changed) {
             lastEvent = null;
             notifyObservers();
@@ -55,7 +75,13 @@ public class ProgressTracker extends Subject {
         return changed;
     }
 
-    public void recordEvent(StudyEvent event) {
+    public synchronized void retryPendingSave() {
+        if (savePending) {
+            saveSummaries(new HashMap<>(summaries));
+        }
+    }
+
+    public synchronized void recordEvent(StudyEvent event) {
         lastEvent = event;
         notifyObservers();
     }
@@ -110,7 +136,7 @@ public class ProgressTracker extends Subject {
         return ranked;
     }
 
-    public void recordQuizAttempt(QuizAttempt attempt) {
+    public synchronized void recordQuizAttempt(QuizAttempt attempt) {
         if (!attempt.isSubmitted()) {
             throw new IllegalArgumentException("Only a submitted attempt can update progress.");
         }
@@ -131,18 +157,27 @@ public class ProgressTracker extends Subject {
         recordEvent(new StudyEvent(eventId, LocalDateTime.now(), courseId, "", description));
     }
 
-    public StudyEvent getLastEvent() {
+    public synchronized StudyEvent getLastEvent() {
         return lastEvent;
     }
 
-    public void recordTaskDone(String courseId, StudyTask task) {
+    public synchronized void recordTaskDone(String courseId, StudyTask task) {
         if (!task.isDone()) {
             throw new IllegalArgumentException("Only a completed task can update progress.");
         }
         ProgressSummary summary = getSummary(courseId);
         summary.addTask(task.getId());
         saveSummary(summary);
-        recordEvent(new StudyEvent("task-" + task.getId(), LocalDateTime.now(), courseId,
-                task.getConceptName(), "Completed study task " + task.getId() + ": " + task.getDescription()));
+        LocalDateTime time = task.getCompletedAt();
+        String description = "Completed study task " + task.getId() + ": " + task.getDescription();
+        if (time == null) {
+            time = LocalDateTime.now();
+            description += ". Timestamp is the recovery time; the original completion time is unavailable.";
+        }
+        recordEvent(new StudyEvent("task-" + task.getId(), time, courseId, task.getConceptName(), description));
+    }
+
+    public void addStorageWarning(String message) {
+        repository.addWarning(message);
     }
 }

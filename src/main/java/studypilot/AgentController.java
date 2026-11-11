@@ -17,6 +17,7 @@ public class AgentController {
     private final List<PlanStep> steps = new ArrayList<>();
     private final Map<String, ToolResult> results = new HashMap<>();
     private final Map<PlanStep, ToolResult> attemptedActions = new HashMap<>();
+    private final List<PlanStep> attemptedSteps = new ArrayList<>();
     private final Map<PlanStep, Integer> actionPlans = new HashMap<>();
     private int replansUsed;
     private String problem;
@@ -62,6 +63,7 @@ public class AgentController {
         steps.clear();
         results.clear();
         attemptedActions.clear();
+        attemptedSteps.clear();
         actionPlans.clear();
         replansUsed = 0;
         problem = "";
@@ -69,6 +71,10 @@ public class AgentController {
 
     private Decision executePlan(String courseId, ExecutionPlan plan) {
         trace.add("Planner returned " + plan.size() + " steps.");
+        // Show the whole plan first, so steps that are rejected or never run are still visible.
+        for (PlanStep step : plan.getSteps()) {
+            trace.add("Planned " + step.getStepId() + ": " + step.getToolName() + " " + step.getArguments());
+        }
         if (plan.size() == 0) {
             problem = plan.getClarification();
             trace.add("CLARIFY: " + problem);
@@ -94,12 +100,17 @@ public class AgentController {
             if (earlier == null) {
                 result = executeWithRetries(courseId, step);
                 attemptedActions.put(step, result);
+                attemptedSteps.add(step);
                 actionPlans.put(step, replansUsed);
             } else {
                 result = attemptedActions.get(earlier);
                 trace.add("Reused " + earlier.getStepId() + " for " + step.getStepId() + "; no tool call repeated.");
                 if (step.getStepId().equals(earlier.getStepId())) {
                     step = earlier;
+                } else {
+                    for (int i = 0; i < earlier.getRetriesUsed(); i++) {
+                        step.recordRetry();
+                    }
                 }
             }
             rememberResult(step, result);
@@ -183,12 +194,13 @@ public class AgentController {
     private PlanStep matchingAction(PlanStep step) {
         // Replanning reuses prior actions; explicit repeats in one plan still run.
         PlanStep match = null;
-        for (PlanStep earlier : attemptedActions.keySet()) {
+        for (PlanStep earlier : attemptedSteps) {
             if (actionPlans.get(earlier) < replansUsed && sameAction(earlier, step)) {
                 if (earlier.getStepId().equals(step.getStepId())) {
                     return earlier;
                 }
-                if (match == null || attemptedActions.get(earlier).getStatus() == ResultStatus.OK) {
+                if (match == null || (attemptedActions.get(earlier).getStatus() == ResultStatus.OK
+                        && attemptedActions.get(match).getStatus() != ResultStatus.OK)) {
                     match = earlier;
                 }
             }
@@ -249,8 +261,7 @@ public class AgentController {
         boolean needsClarification = status == ResultStatus.INSUFFICIENT_DATA;
         String answer = finalAnswer(status);
         try {
-            memoryManager.addMessage(new Message("user", request));
-            memoryManager.addMessage(new Message("assistant", answer));
+            memoryManager.addTurn(request, answer);
         } catch (IllegalArgumentException | IllegalStateException e) {
             trace.add("Memory save failed: " + e.getMessage());
             answer += "\nConversation could not be saved: " + e.getMessage();

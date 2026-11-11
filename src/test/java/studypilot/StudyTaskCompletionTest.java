@@ -90,12 +90,8 @@ public class StudyTaskCompletionTest {
     public void retriesAFailedProgressSaveWithoutRepeatingTheCount() throws Exception {
         Path file = config.getDataDirectory().resolve("progress.json");
         Files.createDirectory(file);
-        try {
-            facade.completeTask(course.getId(), plan.getId(), task.getId());
-            fail("A failed progress save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.completeTask(course.getId(), plan.getId(), task.getId());
+        assertTrue(facade.getStorageWarnings().contains("progress.json could not be updated"));
         assertTrue(new StudyPlanRepository(config.getDataDirectory()).loadPlan(plan.getId()).getTask(task.getId()).isDone());
         Files.delete(file);
         AgentFacade restarted = new AgentFacade(config, llm);
@@ -108,12 +104,8 @@ public class StudyTaskCompletionTest {
     public void retriesAFailedHistorySaveWithoutRepeatingTheCount() throws Exception {
         Path file = config.getDataDirectory().resolve("history.json");
         Files.createDirectory(file);
-        try {
-            facade.completeTask(course.getId(), plan.getId(), task.getId());
-            fail("A failed history save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.completeTask(course.getId(), plan.getId(), task.getId());
+        assertTrue(facade.getStorageWarnings().contains("history.json could not be updated"));
         Files.delete(file);
         AgentFacade restarted = new AgentFacade(config, llm);
         restarted.completeTask(course.getId(), plan.getId(), task.getId());

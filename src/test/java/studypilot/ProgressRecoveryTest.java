@@ -72,6 +72,20 @@ public class ProgressRecoveryTest {
     }
 
     @Test
+    public void missingPreviouslyGradedResultsDoNotEraseSavedCounts() throws Exception {
+        int original = facade.getProgress(course.getId()).getGradedCount();
+        Path file = directory.resolve("attempts").resolve(attempt.getId() + ".json");
+        JSONObject data = new JSONObject(Files.readString(file));
+        JSONObject result = data.getJSONArray("results").getJSONObject(0);
+        result.put("gradingStatus", "PENDING").put("pointsEarned", 0).put("correct", false).put("counted", false);
+        Files.writeString(file, data.toString());
+        String before = Files.readString(file);
+        assertEquals(original, facade.getProgress(course.getId()).getGradedCount());
+        assertTrue(facade.getStorageWarnings().contains("some saved study records are missing"));
+        assertEquals(before, Files.readString(file));
+    }
+
+    @Test
     public void healthyReadsDoNotRewriteFilesOrNotifyObservers() throws Exception {
         facade.getProgress(course.getId());
         Path progress = directory.resolve("progress.json");
@@ -103,12 +117,8 @@ public class ProgressRecoveryTest {
         Path progress = directory.resolve("progress.json");
         Files.delete(progress);
         Files.createDirectory(progress);
-        try {
-            facade.reviewCard(course.getId(), card.getId(), true);
-            fail("A failed progress save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.reviewCard(course.getId(), card.getId(), true);
+        assertTrue(facade.getStorageWarnings().contains("progress.json could not be updated"));
         Course saved = new CourseRepository(directory).loadCourse(course.getId());
         assertEquals(1, saved.getFlashcard(card.getId()).getReviewCount());
         assertEquals(1, saved.getReviewEvents().size());
@@ -125,12 +135,8 @@ public class ProgressRecoveryTest {
         Path history = directory.resolve("history.json");
         Files.delete(history);
         Files.createDirectory(history);
-        try {
-            facade.reviewCard(course.getId(), card.getId(), false);
-            fail("A failed history save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.reviewCard(course.getId(), card.getId(), false);
+        assertTrue(facade.getStorageWarnings().contains("history.json could not be updated"));
         StudyEvent saved = new CourseRepository(directory).loadCourse(course.getId()).getReviewEvents().get(0);
         Files.delete(history);
         StudyEvent restored = facade.getHistory(course.getId()).get(2);
@@ -189,7 +195,11 @@ public class ProgressRecoveryTest {
     }
 
     @Test
-    public void labelsRestoredQuizAndTaskTimesAsSnapshots() {
+    public void labelsRestoredQuizAndLegacyTaskTimesAsSnapshots() throws Exception {
+        Path file = directory.resolve("plans").resolve(plan.getId() + ".json");
+        JSONObject legacy = new JSONObject(Files.readString(file));
+        legacy.getJSONArray("tasks").getJSONObject(0).remove("completedAt");
+        Files.writeString(file, legacy.toString());
         facade.getProgress(course.getId());
         StudyEvent quizEvent = facade.getHistory(course.getId()).get(0);
         StudyEvent taskEvent = facade.getHistory(course.getId()).get(1);
@@ -217,6 +227,23 @@ public class ProgressRecoveryTest {
         assertEquals(1, facade.getProgress(course.getId()).getTasksDone());
         assertEquals("{damaged plan", Files.readString(file));
         assertTrue(facade.getStorageWarnings().contains("recovery is incomplete"));
+    }
+
+    @Test
+    public void listingSkipsADamagedPlanAndNamesItInTheWarnings() throws Exception {
+        Path file = directory.resolve("plans").resolve(plan.getId() + ".json");
+        Files.writeString(file, "{damaged plan");
+        assertEquals(0, facade.listStudyPlans(course.getId()).size());
+        assertTrue(facade.getStorageWarnings().contains("Skipped unreadable saved file plans/" + plan.getId() + ".json"));
+        assertEquals("{damaged plan", Files.readString(file));
+    }
+
+    @Test
+    public void aDamagedAttemptDoesNotStopAnotherCourseFromListingItsAttempts() throws Exception {
+        Course other = facade.createCourse("Other course");
+        Files.writeString(directory.resolve("attempts").resolve(attempt.getId() + ".json"), "{damaged attempt");
+        assertTrue(facade.listAttempts(other.getId()).isEmpty());
+        assertTrue(facade.getStorageWarnings().contains("attempts/" + attempt.getId() + ".json"));
     }
 
     @Test

@@ -97,8 +97,14 @@ public class SwingGUI implements ActionListener {
         window.add(center, BorderLayout.CENTER);
         window.add(status, BorderLayout.SOUTH);
 
-        refreshCourses();
-        results.setText(facade.getImplementationStatus() + "\n" + facade.getStorageWarnings());
+        String message = "Create a course or select one to begin.\n";
+        try {
+            refreshCourses();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // Show the problem in the window instead of failing before the window appears.
+            message = e.getMessage() + "\n";
+        }
+        results.setText(message + facade.getStorageWarnings());
         window.setSize(1150, 760);
         window.setLocationRelativeTo(null);
         window.setVisible(true);
@@ -412,7 +418,11 @@ public class SwingGUI implements ActionListener {
             return;
         }
         if (event.getSource() == courses) {
-            refreshMaterials(null);
+            try {
+                refreshMaterials(null);
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                results.setText(e.getMessage());
+            }
         } else if (event.getSource() == cards) {
             showCardFront();
         } else if (event.getSource() == studyPlans) {
@@ -553,14 +563,18 @@ public class SwingGUI implements ActionListener {
         Course oldCourse = (Course) courses.getSelectedItem();
         Material oldMaterial = (Material) materials.getSelectedItem();
         loading = true;
-        courses.removeAllItems();
-        for (Course course : facade.listCourses()) {
-            courses.addItem(course);
-            if (oldCourse != null && oldCourse.getId().equals(course.getId())) {
-                courses.setSelectedItem(course);
+        try {
+            courses.removeAllItems();
+            for (Course course : facade.listCourses()) {
+                courses.addItem(course);
+                if (oldCourse != null && oldCourse.getId().equals(course.getId())) {
+                    courses.setSelectedItem(course);
+                }
             }
+        } finally {
+            // Always reset the flag; otherwise every later click would be ignored after an error.
+            loading = false;
         }
-        loading = false;
         String materialId = null;
         if (oldMaterial != null) {
             materialId = oldMaterial.getId();
@@ -570,6 +584,23 @@ public class SwingGUI implements ActionListener {
 
     private void refreshMaterials(String materialId) {
         loading = true;
+        try {
+            loadCourseLists(materialId);
+        } finally {
+            loading = false;
+        }
+        refreshPlanTasks();
+        Course course = (Course) courses.getSelectedItem();
+        String selectedCourseId = course == null ? "" : course.getId();
+        if (!selectedCourseId.equals(assistantCourseId)) {
+            assistantCourseId = selectedCourseId;
+            assistantSession.setText("");
+            assistantChat.setText("");
+        }
+    }
+
+    // Fills the material, card, quiz, attempt and plan lists for the selected course.
+    private void loadCourseLists(String materialId) {
         difficultyReason.setText("Enter a topic and choose Show suggestion to view its graded history.");
         answerShown = false;
         materials.removeAllItems();
@@ -620,14 +651,6 @@ public class SwingGUI implements ActionListener {
         } else {
             dashboard.setCourseId(null);
         }
-        loading = false;
-        refreshPlanTasks();
-        String selectedCourseId = course == null ? "" : course.getId();
-        if (!selectedCourseId.equals(assistantCourseId)) {
-            assistantCourseId = selectedCourseId;
-            assistantSession.setText("");
-            assistantChat.setText("");
-        }
     }
 
     // SwingWorker runs file and network operations without blocking the window.
@@ -648,6 +671,8 @@ public class SwingGUI implements ActionListener {
         private final List<QuestionType> questionTypes;
         private final Quiz selectedQuiz;
         private Quiz generatedQuiz;
+        private Course createdCourse;
+        private Material importedMaterial;
         private final QuizAttempt selectedAttempt;
         private final String submittedAttemptId;
         private final Map<String, String> submittedAnswers;
@@ -733,8 +758,8 @@ public class SwingGUI implements ActionListener {
         }
 
         private String createCourse() {
-            Course created = facade.createCourse(name);
-            return "Created course: " + created.getName() + "\nCourse ID: " + created.getId();
+            createdCourse = facade.createCourse(name);
+            return "Created course: " + createdCourse.getName() + "\nCourse ID: " + createdCourse.getId();
         }
 
         private String useStudyPlan() {
@@ -756,11 +781,11 @@ public class SwingGUI implements ActionListener {
         }
 
         private String importMaterial() {
-            Material imported = facade.importMaterial(course.getId(), filePath);
-            StringBuilder text = new StringBuilder("Imported " + imported.getFileName());
-            text.append("\nMaterial ID: " + imported.getId());
-            text.append("\nChunks: " + imported.getChunks().size());
-            for (Chunk chunk : imported.getChunks()) {
+            importedMaterial = facade.importMaterial(course.getId(), filePath);
+            StringBuilder text = new StringBuilder("Imported " + importedMaterial.getFileName());
+            text.append("\nMaterial ID: " + importedMaterial.getId());
+            text.append("\nChunks: " + importedMaterial.getChunks().size());
+            for (Chunk chunk : importedMaterial.getChunks()) {
                 text.append("\n" + chunk.getLocation());
             }
             return text.toString();
@@ -828,6 +853,12 @@ public class SwingGUI implements ActionListener {
             try {
                 results.setText(get());
                 refreshCourses();
+                if (createdCourse != null) {
+                    selectCreatedCourse();
+                }
+                if (importedMaterial != null) {
+                    selectImportedMaterial();
+                }
                 if (loadedSuggestion != null) {
                     difficultyReason.setText("Suggested for \"" + topicText.trim() + "\": "
                             + loadedSuggestion.getLevel() + "; " + loadedSuggestion.getReason());
@@ -859,6 +890,26 @@ public class SwingGUI implements ActionListener {
             } finally {
                 busy = false;
                 setControlsEnabled(true);
+            }
+        }
+
+        private void selectCreatedCourse() {
+            for (int i = 0; i < courses.getItemCount(); i++) {
+                if (courses.getItemAt(i).getId().equals(createdCourse.getId())) {
+                    courses.setSelectedIndex(i);
+                    break;
+                }
+            }
+            // The course box ignores events while this worker is busy, so load the new course here.
+            refreshMaterials(null);
+        }
+
+        private void selectImportedMaterial() {
+            for (int i = 0; i < materials.getItemCount(); i++) {
+                if (materials.getItemAt(i).getId().equals(importedMaterial.getId())) {
+                    materials.setSelectedIndex(i);
+                    break;
+                }
             }
         }
 

@@ -63,8 +63,12 @@ public class ConceptService {
 
     private List<Concept> extractBatch(List<Chunk> chunks) {
         String prompt = templates.conceptPrompt(chunks);
+        String errorMessage = "";
         for (int attempt = 0; attempt < 2; attempt++) {
             LLMResponse response = llmClient.generate(prompt);
+            if (!response.isSuccess() && !response.getErrorMessage().isBlank()) {
+                errorMessage = response.getErrorMessage();
+            }
             if (response.isSuccess()) {
                 try {
                     List<Concept> concepts = parser.parseConcepts(response.getText());
@@ -75,7 +79,11 @@ public class ConceptService {
                 }
             }
         }
-        throw new IllegalStateException("Concept extraction failed after one retry. No concepts were saved.");
+        String failure = "Concept extraction failed after one retry. No concepts were saved.";
+        if (!errorMessage.isEmpty()) {
+            failure += " Last model error: " + errorMessage;
+        }
+        throw new IllegalStateException(failure);
     }
 
     private void checkSources(List<Concept> concepts, List<Chunk> chunks) {
@@ -112,7 +120,7 @@ public class ConceptService {
             while (current != null && !current.getParentName().isEmpty()) {
                 String name = current.getName().toLowerCase(Locale.ROOT);
                 if (visitedNames.contains(name)) {
-                    concept.setParentName("");
+                    current.setParentName("");
                     break;
                 }
                 visitedNames.add(name);

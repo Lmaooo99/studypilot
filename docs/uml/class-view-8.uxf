@@ -1,0 +1,163 @@
+<?xml version='1.0' encoding='utf-8'?>
+<diagram program="umlet" version="15.1">
+  <zoom_level>10</zoom_level>
+  <help_text>fontsize=14
+fontfamily=SansSerif</help_text>
+  <element>
+    <id>Text</id>
+    <coordinates>
+      <x>20</x>
+      <y>0</y>
+      <w>1120</w>
+      <h>65</h>
+    </coordinates>
+    <panel_attributes>*Saved records and recoverable progress*
+Selected implemented fields and operations
+fontsize=20
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>100</y>
+      <w>500</w>
+      <h>340</h>
+    </coordinates>
+    <panel_attributes>ProgressTracker
+--
+-summaries: Map&lt;String, ProgressSummary&gt;
+-savePending: boolean
+--
++recordReview(course, event): void
++recordQuizAttempt(attempt): void
++recordTaskDone(courseId, task): void
++getSummary(courseId): ProgressSummary
++restoreSummary(summary): boolean
++retryPendingSave(): void
+fontsize=20
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>760</x>
+      <y>100</y>
+      <w>500</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>HistoryRecorder
+--
+-history: List&lt;StudyEvent&gt;
+-savePending: boolean
+--
++update(subject): void
++saveIfMissing(): void
++getHistory(courseId): List&lt;StudyEvent&gt;
++contains(eventId): boolean
+fontsize=20
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>20</x>
+      <y>540</y>
+      <w>500</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>ProgressRestorer
+--
+-tracker: ProgressTracker
+-history: HistoryRecorder
+-progress: ProgressRepository
+--
++restore(course): void
+-rebuildSummary(course, attempts, savedPlans)
+-restoreHistory(course, attempts, savedPlans)
+-restoreTask(courseId, task): void
+fontsize=20
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>760</x>
+      <y>540</y>
+      <w>500</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>StudyTask
+--
+-taskId: String
+-done: boolean
+-completedAt: LocalDateTime
+--
++markDone(): void
++isDone(): boolean
++getCompletedAt(): LocalDateTime
+fontsize=20
+bg=white
+layer=2</panel_attributes>
+    <additional_attributes />
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>245</y>
+      <w>260</w>
+      <h>35</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+notify
+layer=0</panel_attributes>
+    <additional_attributes>10.0;25.0;250.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>430</y>
+      <w>20</w>
+      <h>120</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+restore
+layer=0</panel_attributes>
+    <additional_attributes>10.0;110.0;10.0;40.0;10.0;40.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>400</y>
+      <w>760</w>
+      <h>150</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+repair
+layer=0</panel_attributes>
+    <additional_attributes>10.0;140.0;10.0;80.0;750.0;80.0;750.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>685</y>
+      <w>260</w>
+      <h>20</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+read saved time
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;250.0;10.0</additional_attributes>
+  </element>
+</diagram>

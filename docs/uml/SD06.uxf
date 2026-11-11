@@ -17,27 +17,45 @@ obj=GUI or CLI~u
 obj=AgentFacade~f
 obj=QuizService~s
 obj=ProgressTracker~t
-obj=LLMClient~l
-obj=QuestionCreator~c
 obj=QuizRepository~r
+obj=RetrievalStrategy~x
+obj=LLMClient~l
+obj=ResponseParser~p
+obj=QuestionCreator~c
 
 u-&gt;f : suggestDifficulty(courseId, topic)
 f-&gt;s : suggestDifficulty(courseId, topic)
-s-&gt;t : getAccuracy and getGradedCount
-t.&gt;s : graded-only topic statistics
-s.&gt;u : level, count, accuracy and reason
+s-&gt;t : getAccuracy(courseId, topic), getGradedCount(courseId, topic)
+t.&gt;s : concept accuracy and graded count
+s-&gt;r : listQuizzes(courseId)
+r.&gt;s : saved quizzes
+combinedFragment=opt~topics s r; r:[A saved quiz topic matches]
+s-&gt;r : listAttempts(courseId)
+r.&gt;s : saved attempts
+s:Aggregate GRADED results from submitted matching attempts
+--
+s:Use the larger graded sample, preferring the quiz-topic sample on a tie
+s.&gt;f : level, sample count, accuracy and reason
+f.&gt;u : difficulty suggestion
 u-&gt;f : createQuiz(courseId, topic, count, difficulty, types)
 f-&gt;s : createQuiz(course, topic, count, difficulty, types)
-s:Validate inputs and retrieve relevant source chunks
+s:Validate inputs
+s-&gt;x : retrieve(topic, chunks, 5)
+x.&gt;s : relevant chunks or empty list
+s:An empty match returns an error before a model call
+combinedFragment=loop~draft s c; l:[At most three proposals while questions are missing]
 s-&gt;l : generate(quizPrompt)
-l.&gt;s : actual question drafts
+l.&gt;s : drafts or failure
+s-&gt;p : parseRawQuestions(text)
+p.&gt;s : usable raw drafts
 s-&gt;c : buildQuestion(raw)
-c: createQuestion(raw) in the selected subclass
-c.&gt;s : typed Question
-s:Bounded replacement of invalid or duplicate drafts
+c.&gt;s : typed Question retaining its concept
+--
+s:If no valid questions remain, return failure without saving
 s-&gt;r : saveQuiz(quiz)
-r.&gt;u : immutable saved quiz and actual count
-s:Below five graded results use Medium, otherwise below 50 percent Easy, at least 80 percent Hard</panel_attributes>
+r.&gt;s : saved or error
+s.&gt;f : quiz with actual question count or error
+f.&gt;u : quiz or error</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

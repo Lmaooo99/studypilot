@@ -22,6 +22,26 @@ public class StructuredAgentCLITest {
     private ByteArrayOutputStream output;
     private ByteArrayOutputStream errors;
 
+    @Test
+    public void unreadableConversationStillProducesOneFailureJsonObject() throws Exception {
+        String session = UUID.randomUUID().toString();
+        Path folder = config.getDataDirectory().resolve("conversations");
+        Files.createDirectories(folder);
+        Path file = folder.resolve(session + ".json");
+        Files.writeString(file, "{broken conversation");
+        int code = cli.runCommand(new String[] {"agent", "Show progress.", "--course", course.getId(),
+                "--session", session, "--json"});
+        assertEquals(1, code);
+        String text = output.toString().trim();
+        assertEquals(1, text.split("\\R").length);
+        JSONObject result = new JSONObject(text);
+        assertEquals("FAILED", result.getString("status"));
+        assertEquals(session, result.getString("sessionId"));
+        assertEquals(0, result.getJSONArray("plan").length());
+        assertEquals(0, llm.getPrompts().size());
+        assertEquals("{broken conversation", Files.readString(file));
+    }
+
     @Before
     public void setUp() throws Exception {
         Path workspace = Files.createTempDirectory("studypilot-structured-cli-");

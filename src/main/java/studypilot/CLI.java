@@ -74,10 +74,7 @@ public class CLI {
             return 0;
         }
         String command = args[0];
-        if (command.equals("status")) {
-            output.println(facade.getImplementationStatus());
-            return 0;
-        } else if (command.equals("course")) {
+        if (command.equals("course")) {
             return courseCommand(args);
         } else if (command.equals("material")) {
             return materialCommand(args);
@@ -110,7 +107,6 @@ public class CLI {
     private void showHelp() {
         output.println("StudyPilot");
         output.println("  gui     Open the graphical interface");
-        output.println("  status  Show implementation status");
         output.println("  help    Show this help");
         output.println("  course add <name>");
         output.println("  course list");
@@ -201,7 +197,18 @@ public class CLI {
             }
         }
         Map<String, String> flags = options(options.toArray(new String[0]), 0, "--course", "--session");
-        AgentResult result = facade.runAgent(required(flags, "--course"), flags.get("--session"), args[1]);
+        AgentResult result;
+        try {
+            result = facade.runAgent(required(flags, "--course"), flags.get("--session"), args[1]);
+        } catch (IllegalStateException e) {
+            if (!json) {
+                throw e;
+            }
+            List<String> trace = new ArrayList<>();
+            trace.add("ABORT: saved data could not be loaded. " + e.getMessage());
+            result = new AgentResult(flags.getOrDefault("--session", ""), ResultStatus.FAILED,
+                    e.getMessage(), false, trace, new ArrayList<PlanStep>(), new HashMap<String, ToolResult>());
+        }
         if (json) {
             output.println(result.toJson());
         } else {

@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <diagram program="umlet" version="15.1">
   <zoom_level>10</zoom_level>
   <help_text>fontsize=14
@@ -89,19 +89,25 @@ layer=2</panel_attributes>
       <x>20</x>
       <y>480</y>
       <w>500</w>
-      <h>240</h>
+      <h>360</h>
     </coordinates>
     <panel_attributes>ProgressTracker
 --
 -summaries: Map&lt;String, ProgressSummary&gt;
 -repository: ProgressRepository
 -lastEvent: StudyEvent
+-savePending: boolean
 --
 +recordReview(course, event): void
-+restoreSummary(summary): boolean
-+recordEvent(event): void
 +recordQuizAttempt(attempt): void
 +recordTaskDone(courseId, task): void
++getSummary(courseId): ProgressSummary
++restoreSummary(summary): boolean
++retryPendingSave(): void
++getRankedStats(courseId, minResults): List&lt;ConceptStats&gt;
++getAccuracy(courseId, topic): double
++getGradedCount(courseId, topic): int
++recordEvent(event): void
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -158,7 +164,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>880</y>
+      <y>940</y>
       <w>500</w>
       <h>280</h>
     </coordinates>
@@ -184,7 +190,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>880</y>
+      <y>940</y>
       <w>500</w>
       <h>180</h>
     </coordinates>
@@ -205,7 +211,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>880</y>
+      <y>940</y>
       <w>500</w>
       <h>220</h>
     </coordinates>
@@ -228,7 +234,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1260</y>
+      <y>1320</y>
       <w>500</w>
       <h>220</h>
     </coordinates>
@@ -251,19 +257,22 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1260</y>
+      <y>1320</y>
       <w>500</w>
-      <h>200</h>
+      <h>260</h>
     </coordinates>
     <panel_attributes>HistoryRecorder
 --
 -tracker: ProgressTracker
 -history: List&lt;StudyEvent&gt;
 -repository: ProgressRepository
+-savePending: boolean
 --
 +update(subject): void
+-record(event): void
 +contains(eventId): boolean
 +saveIfMissing(): void
++getHistory(courseId): List&lt;StudyEvent&gt;
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -287,11 +296,11 @@ layer=0</panel_attributes>
       <x>-55</x>
       <y>240</y>
       <w>925</w>
-      <h>1030</h>
+      <h>1090</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>915.0;10.0;915.0;170.0;10.0;170.0;10.0;950.0;325.0;950.0;325.0;1020.0</additional_attributes>
+    <additional_attributes>915.0;10.0;915.0;170.0;10.0;170.0;10.0;1010.0;325.0;1010.0;325.0;1080.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
@@ -299,37 +308,37 @@ layer=0</panel_attributes>
       <x>-70</x>
       <y>240</y>
       <w>940</w>
-      <h>1030</h>
+      <h>1090</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>930.0;10.0;930.0;180.0;10.0;180.0;10.0;960.0;930.0;960.0;930.0;1020.0</additional_attributes>
+    <additional_attributes>930.0;10.0;930.0;180.0;10.0;180.0;10.0;1020.0;930.0;1020.0;930.0;1080.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>710</y>
+      <y>830</y>
       <w>20</w>
-      <h>180</h>
-    </coordinates>
-    <panel_attributes>lt=-&gt;
-uses
-layer=0</panel_attributes>
-    <additional_attributes>10.0;170.0;10.0;120.0;10.0;120.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>260</x>
-      <y>1150</y>
-      <w>610</w>
       <h>120</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;70.0;600.0;70.0;600.0;110.0</additional_attributes>
+    <additional_attributes>10.0;110.0;10.0;60.0;10.0;60.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>1170</y>
+      <w>110</w>
+      <h>270</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>10.0;10.0;50.0;10.0;50.0;260.0;100.0;260.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
@@ -359,7 +368,7 @@ layer=0</panel_attributes>
     <id>UMLNote</id>
     <coordinates>
       <x>20</x>
-      <y>1580</y>
+      <y>1680</y>
       <w>1080</w>
       <h>120</h>
     </coordinates>

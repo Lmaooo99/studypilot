@@ -19,7 +19,9 @@ public class ProgressRestorer {
         this.plans = plans;
     }
 
-    public void restore(Course course) {
+    public synchronized void restore(Course course) {
+        history.saveIfMissing();
+        tracker.retryPendingSave();
         List<QuizAttempt> attempts;
         List<StudyPlan> savedPlans;
         try {
@@ -33,6 +35,7 @@ public class ProgressRestorer {
         ProgressSummary rebuilt = rebuildSummary(course, attempts, savedPlans);
         ProgressSummary previous = tracker.getSummary(course.getId());
         if (!rebuilt.getAttemptIds().containsAll(previous.getAttemptIds())
+                || !rebuilt.getCountedResultIds().containsAll(previous.getCountedResultIds())
                 || !rebuilt.getCompletedTaskIds().containsAll(previous.getCompletedTaskIds())
                 || rebuilt.getReviewsDone() < previous.getReviewsDone()) {
             progress.addWarning("Progress recovery is incomplete for course " + course.getId()
@@ -99,10 +102,16 @@ public class ProgressRestorer {
     private void restoreTask(String courseId, StudyTask task) {
         String eventId = "task-" + task.getId();
         if (!history.contains(eventId)) {
-            tracker.recordEvent(new StudyEvent(eventId, LocalDateTime.now(), courseId, task.getConceptName(),
-                    "Restored completed task " + task.getId() + ": " + task.getDescription()
-                    + ". Timestamp is the recovery time; the original completion time is unavailable."));
-            progress.addWarning("Missing task history was restored as completed-task snapshots with recovery timestamps.");
+            LocalDateTime time = task.getCompletedAt();
+            String description = "Restored completed task " + task.getId() + ": " + task.getDescription();
+            if (time == null) {
+                time = LocalDateTime.now();
+                description += ". Timestamp is the recovery time; the original completion time is unavailable.";
+                progress.addWarning("Legacy task history was restored with labelled recovery timestamps.");
+            } else {
+                description += ". Timestamp is the saved completion time.";
+            }
+            tracker.recordEvent(new StudyEvent(eventId, time, courseId, task.getConceptName(), description));
         }
     }
 }

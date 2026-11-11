@@ -34,7 +34,7 @@ public class ResponseParser {
                 throw new JSONException("Empty concept fields");
             }
             String parent = "";
-            if (item.has("parentName")) {
+            if (!item.isNull("parentName")) {
                 parent = item.getString("parentName");
             }
             List<String> sources = parseStringList(item.getJSONArray("sourceChunkIds"));
@@ -77,17 +77,25 @@ public class ResponseParser {
         JSONArray items = data.getJSONArray("cards");
         List<Flashcard> cards = new ArrayList<>();
         for (int i = 0; i < items.length(); i++) {
-            JSONObject item = items.getJSONObject(i);
-            String front = item.getString("front");
-            String back = item.getString("back");
-            if (front.isBlank() || back.isBlank()) {
-                throw new JSONException("Empty flashcard fields");
+            try {
+                JSONObject item = items.getJSONObject(i);
+                String front = item.getString("front");
+                String back = item.getString("back");
+                if (front.isBlank() || back.isBlank()) {
+                    throw new JSONException("Empty flashcard fields");
+                }
+                String conceptName = "";
+                if (!item.isNull("conceptName")) {
+                    conceptName = item.getString("conceptName");
+                }
+                cards.add(new Flashcard(front, back, conceptName));
+            } catch (JSONException | IllegalArgumentException e) {
+                // One malformed card must not discard the other cards.
             }
-            String conceptName = "";
-            if (item.has("conceptName")) {
-                conceptName = item.getString("conceptName");
-            }
-            cards.add(new Flashcard(front, back, conceptName));
+        }
+        if (cards.isEmpty()) {
+            // An empty or unusable batch is retried with a stricter prompt.
+            throw new JSONException("No valid flashcards");
         }
         return cards;
     }
@@ -166,7 +174,7 @@ public class ResponseParser {
             JSONObject saved = item.getJSONObject("arguments");
             Map<String, String> arguments = new HashMap<>();
             for (String name : saved.keySet()) {
-                arguments.put(name, saved.getString(name));
+                arguments.put(name, saved.getString(name).trim());
             }
             steps.add(new PlanStep(item.getString("stepId"), item.getString("toolName"), arguments));
         }

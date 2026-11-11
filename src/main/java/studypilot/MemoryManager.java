@@ -39,4 +39,13 @@ public class MemoryManager {
         repository.saveConversation(courseId, sessionId, updated);
         messages.add(message);
     }
+
+    public void addTurn(String request, String reply) {
+        List<Message> updated = new ArrayList<>(messages);
+        updated.add(new Message("user", request));
+        updated.add(new Message("assistant", reply));
+        repository.saveConversation(courseId, sessionId, updated);
+        messages.clear();
+        messages.addAll(updated);
+    }
 }

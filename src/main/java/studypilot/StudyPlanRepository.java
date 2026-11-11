@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.json.JSONObject;
 
 public class StudyPlanRepository {
     private final Path directory;
+    private final List<String> skippedFiles = new ArrayList<>();
 
     public StudyPlanRepository(Path dataDirectory) {
         directory = dataDirectory.resolve("plans");
@@ -38,6 +40,7 @@ public class StudyPlanRepository {
             item.put("description", task.getDescription());
             item.put("minutes", task.getMinutes());
             item.put("done", task.isDone());
+            item.put("completedAt", task.getCompletedAt() == null ? "" : task.getCompletedAt().toString());
             tasks.put(item);
         }
         data.put("tasks", tasks);
@@ -72,9 +75,13 @@ public class StudyPlanRepository {
             if (!(item.get("minutes") instanceof Integer) || !(item.get("done") instanceof Boolean)) {
                 throw new JSONException("Invalid task minutes or completion flag");
             }
+            LocalDateTime completedAt = null;
+            if (item.has("completedAt") && !item.getString("completedAt").isEmpty()) {
+                completedAt = LocalDateTime.parse(item.getString("completedAt"));
+            }
             tasks.add(new StudyTask(item.getString("taskId"), LocalDate.parse(item.getString("date")),
                     TaskType.valueOf(item.getString("type")), item.getString("conceptName"),
-                    item.getString("description"), item.getInt("minutes"), item.getBoolean("done")));
+                    item.getString("description"), item.getInt("minutes"), item.getBoolean("done"), completedAt));
         }
         return tasks;
     }
@@ -104,11 +111,27 @@ public class StudyPlanRepository {
         Collections.sort(files);
         for (Path file : files) {
             String name = file.getFileName().toString();
-            StudyPlan plan = loadPlan(name.substring(0, name.length() - 5));
-            if (plan.getCourseId().equals(courseId)) {
-                plans.add(plan);
+            try {
+                StudyPlan plan = loadPlan(name.substring(0, name.length() - 5));
+                if (plan.getCourseId().equals(courseId)) {
+                    plans.add(plan);
+                }
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                // A damaged or unknown file is skipped and left unchanged, so the other plans still load.
+                rememberSkippedFile("plans/" + name);
             }
         }
         return plans;
+    }
+
+    // Saved files that listPlans could not read, for example "plans/<id>.json".
+    public synchronized List<String> getSkippedFiles() {
+        return new ArrayList<>(skippedFiles);
+    }
+
+    private synchronized void rememberSkippedFile(String name) {
+        if (!skippedFiles.contains(name)) {
+            skippedFiles.add(name);
+        }
     }
 }

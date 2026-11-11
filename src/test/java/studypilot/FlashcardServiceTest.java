@@ -33,12 +33,79 @@ public class FlashcardServiceTest {
     }
 
     @Test
+    public void aFailedCourseSaveDoesNotRecordTheReviewOrChangeTheSavedCourse() throws Exception {
+        replyWithCards();
+        Flashcard card = facade.generateFlashcards(course.getId(), material.getId(), 2).get(0);
+        Path directory = config.getDataDirectory();
+        Path file = directory.resolve("courses").resolve(course.getId() + ".json");
+        String before = Files.readString(file);
+        CourseRepository repository = new CourseRepository(directory) {
+            public void saveCourse(Course changed) {
+                throw new IllegalStateException("Test primary course save failure.");
+            }
+        };
+        ProgressRepository progress = new ProgressRepository(directory);
+        ProgressTracker tracker = new ProgressTracker(progress);
+        HistoryRecorder history = new HistoryRecorder(tracker, progress);
+        tracker.attach(history);
+        FlashcardService service = new FlashcardService(llm, new PromptTemplates(), new ResponseParser(), repository, tracker);
+        try {
+            service.review(repository.loadCourse(course.getId()), card, true);
+            fail("The primary save failure must be reported.");
+        } catch (IllegalStateException e) {
+            assertEquals("Test primary course save failure.", e.getMessage());
+        }
+        assertEquals(before, Files.readString(file));
+        assertEquals(0, repository.loadCourse(course.getId()).getTotalReviews());
+        assertEquals(0, tracker.getSummary(course.getId()).getReviewsDone());
+        assertEquals(0, history.getHistory(course.getId()).size());
+        assertNull(tracker.getLastEvent());
+    }
+
+    @Test
     public void removesDuplicatesAndReportsTheActualNumberOfNewCards() {
         replyWithCards();
         assertEquals(2, facade.generateFlashcards(course.getId(), material.getId(), 5).size());
         replyWithCards();
         assertEquals(0, facade.generateFlashcards(course.getId(), material.getId(), 5).size());
         assertEquals(2, facade.getCardsToReview(course.getId()).size());
+        assertEquals(2, llm.getPrompts().size());
+    }
+
+    @Test
+    public void retriesAnEmptyCardBatchInsteadOfTreatingItAsSuccess() {
+        llm.reply("{\"cards\":[]}");
+        replyWithCards();
+        assertEquals(2, facade.generateFlashcards(course.getId(), material.getId(), 2).size());
+        assertEquals(2, llm.getPrompts().size());
+        assertEquals(2, facade.getCardsToReview(course.getId()).size());
+    }
+
+    @Test
+    public void showsTheRealModelErrorWhenBothCallsFail() {
+        llm.failNext();
+        llm.failNext();
+        try {
+            facade.generateFlashcards(course.getId(), material.getId(), 2);
+            fail("A failed model call must be reported.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("No cards were saved"));
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
+    }
+
+    @Test
+    public void keepsTheModelFailureWhenTheRetryIsMalformed() {
+        llm.failNext();
+        llm.reply("not JSON");
+        try {
+            facade.generateFlashcards(course.getId(), material.getId(), 2);
+            fail("The model failure must not be lost.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
+        assertEquals(0, facade.getCardsToReview(course.getId()).size());
+        assertEquals(2, llm.getPrompts().size());
     }
 
     @Test
@@ -92,6 +159,14 @@ public class FlashcardServiceTest {
         }
         assertEquals(0, facade.getProgress(course.getId()).getReviewsDone());
         assertEquals(0, facade.getHistory(course.getId()).size());
+    }
+
+    @Test
+    public void keepsTheValidCardsWhenOneCardIsMalformed() {
+        llm.reply("{\"cards\":[{\"front\":\"\",\"back\":\"invalid\"},"
+                + "{\"front\":\"What is a facade?\",\"back\":\"A simple entry point.\",\"conceptName\":null}]}");
+        assertEquals(1, facade.generateFlashcards(course.getId(), material.getId(), 2).size());
+        assertEquals(1, llm.getPrompts().size());
     }
 
     @Test

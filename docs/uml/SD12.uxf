@@ -11,29 +11,48 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD12 Restore course progress and history
+    <panel_attributes>title=SD12 Restore caches and read dashboard snapshots
 fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
 obj=CourseService~c
-obj=ProgressRestorer~x
-obj=Saved course / quiz / plan repositories~s
+obj=ProgressRestorer~r
+obj=QuizRepository / StudyPlanRepository~q
 obj=ProgressTracker~t
 obj=HistoryRecorder~h
+obj=DashboardView~d
 
 u-&gt;f : getProgress(courseId) or getHistory(courseId)
 f-&gt;c : getCourse(courseId)
 c.&gt;f : saved Course
-f-&gt;x : restore(course)
-x-&gt;s : listAttempts and listPlans for the selected course
-s.&gt;x : saved submitted results and tasks
-x: rebuildSummary using GRADED results, review events and done task IDs
-x-&gt;t : restoreSummary(rebuilt summary)
-x-&gt;h : restore missing events or labelled snapshots
-t.&gt;u : restored selected-course counts
-h.&gt;u : available history and storage notices
-x:Back up damaged derived files, preserve unreadable source records and existing counts
-x:Recovered snapshots cannot reconstruct lost grading transitions or unavailable timestamps</panel_attributes>
+f-&gt;r : restore(course)
+r-&gt;h : saveIfMissing()
+r-&gt;t : retryPendingSave()
+r:Pending in-memory cache writes retry even if source recovery will stop
+r-&gt;q : listAttempts(courseId), listPlans(courseId)
+q.&gt;r : readable records, with skipped-file warnings
+r:Rebuild counts from readable sources
+r-&gt;t : getSummary(courseId)
+t.&gt;r : previous counts and IDs
+r:If source reads fail or counted IDs are missing, keep prior counts and return with a warning
+combinedFragment=opt~rebuild r h; h:[Sources retain every previously counted record]
+r-&gt;t : restoreSummary(rebuilt)
+t:Notify only when counts change, not for a pending-write retry
+t.&gt;r : whether counts changed
+r:Report rebuilt progress only when counts changed
+r-&gt;t : recordEvent for a missing saved or labelled recovered event
+t-&gt;h : update(subject)
+h:Deduplicate IDs and attempt history save
+--
+r.&gt;f : recovery complete or warning
+f-&gt;t : getSummary(courseId) for progress
+t.&gt;f : progress copy
+f-&gt;h : getHistory(courseId) for history
+h.&gt;f : chronological event copies
+f.&gt;u : requested state, with storage warnings available
+d-&gt;f : getProgressSnapshot / getHistorySnapshot
+f.&gt;d : memory copies without restore or file writes
+r:Use saved completedAt, with labelled recovery times only for legacy tasks</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

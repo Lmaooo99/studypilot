@@ -238,6 +238,8 @@ public class AgentRecoveryTest {
         assertTrue(result.getFinalAnswer().contains("Which topic"));
         assertEquals(0, work.calls);
         assertEquals(0, followup.calls);
+        assertTrue(result.getTrace().toString().contains("A step reference must fill the whole argument value."));
+        assertEquals(2, llm.getPrompts().size());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -265,6 +267,27 @@ public class AgentRecoveryTest {
     }
 
     @Test
+    public void equivalentQuizArgumentsCannotRestartAnExhaustedRetryBudget() {
+        FailingQuizTool quiz = new FailingQuizTool();
+        tools.registerTool(quiz);
+        String[] counts = {"1", "+01", "01"};
+        for (int i = 0; i < counts.length; i++) {
+            String types = i == 1 ? "TRUE_FALSE" : "true-false";
+            JSONObject arguments = new JSONObject().put("topic", "Observer ")
+                    .put("count", counts[i]).put("types", types);
+            plan(new JSONObject().put("stepId", "quiz" + i).put("toolName", "quiz").put("arguments", arguments));
+        }
+        AgentResult result = run();
+        assertEquals(ResultStatus.FAILED, result.getStatus());
+        assertEquals(3, quiz.calls);
+        assertEquals(3, llm.getPrompts().size());
+        JSONArray saved = new JSONObject(result.toJson()).getJSONArray("plan");
+        assertEquals(3, saved.length());
+        assertEquals(2, saved.getJSONObject(1).getInt("retriesUsed"));
+        assertEquals(2, saved.getJSONObject(2).getInt("retriesUsed"));
+    }
+
+    @Test
     public void retainsTheCompletedIdWhenAnIdenticalLaterActionFailed() {
         work.failAfterFirst = true;
         plan(step("first", "work", "Observer"), step("second", "work", "Observer"));
@@ -275,6 +298,21 @@ public class AgentRecoveryTest {
         assertEquals(ResultStatus.OK, result.getResults().get("first").getStatus());
         assertEquals(ResultStatus.FAILED, result.getResults().get("second").getStatus());
         assertEquals("Observer", followup.lastValue);
+    }
+
+    // Test double: failing dispatches expose whether spelling changes reset the budget.
+    private static class FailingQuizTool implements Tool {
+        private int calls;
+
+        public String getName() { return "quiz"; }
+        public String getDescription() { return "Test quiz with a controlled failure."; }
+        public String[] getRequiredArguments() { return new String[] {"topic"}; }
+        public String[] getOptionalArguments() { return new String[] {"count", "types", "difficulty"}; }
+
+        public ToolResult execute(Map<String, String> arguments) {
+            calls++;
+            return new ToolResult(ResultStatus.FAILED, "", "Test failure.");
+        }
     }
 
     // Test double: controlled failures let the tests count actual dispatches.

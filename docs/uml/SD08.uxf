@@ -11,31 +11,30 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD08 Resolve pending short answers
+    <panel_attributes>title=SD08 Resolve and save pending grades
 fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
 obj=QuizService~s
-obj=QuizGrader / LLMRubricGrading~g
+obj=QuizGrader~g
 obj=QuizRepository~r
 obj=ProgressTracker~t
 
 u-&gt;f : retryPendingGrading(courseId, attemptId)
 f-&gt;s : retryPendingGrading(courseId, attemptId)
 s-&gt;g : regradePending(quiz, attempt)
-g.&gt;s : valid integer grade or PENDING
+g.&gt;s : valid grade or still PENDING
 s-&gt;r : saveAttempt(attempt)
 s-&gt;t : recordQuizAttempt(attempt)
-u-&gt;f : getPendingQuestion(courseId, attemptId, questionId)
-f-&gt;s : getPendingQuestion(courseId, attemptId, questionId)
-s.&gt;u : saved model answer and rubric
 u-&gt;f : selfGrade(courseId, attemptId, questionId, correct)
 f-&gt;s : selfGrade(courseId, attemptId, questionId, correct)
-s:Allow only a pending short answer, full or zero points with a self-assessment label
+s:Only a pending short answer can be self-graded
 s-&gt;r : saveAttempt(attempt)
 s-&gt;t : recordQuizAttempt(attempt)
-t.&gt;u : newly graded answers counted once
-s:Original submitted answers and timestamp stay fixed</panel_attributes>
+t.&gt;s : updated counts
+s.&gt;f : saved attempt
+f.&gt;u : attempt and possible storage warnings
+s:Primary attempt errors stop the operation, pending cache errors do not repeat a saved grade</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

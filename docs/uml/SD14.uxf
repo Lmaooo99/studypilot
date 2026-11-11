@@ -11,32 +11,35 @@ fontfamily=SansSerif</help_text>
       <w>1700</w>
       <h>1200</h>
     </coordinates>
-    <panel_attributes>title=SD14 Execute tools with bounded recovery
+    <panel_attributes>title=SD14 Execute plans with nested bounded recovery
 fontsize=14
 obj=AgentController~c
 obj=AgentPlanner~p
 obj=ToolManager~t
-obj=Six service-backed tools~s
+obj=Service-backed Tool~s
 obj=MemoryManager~m
 
-c:At most eight steps in each accepted plan, clear request-specific results
+combinedFragment=loop~request c s; p:[Initial plan plus at most two replans]
+c:Trace every proposed step, then validate the plan (parsed strings are trimmed)
+c-&gt;t : validatePlan(plan, results)
+t.&gt;c : error or accepted plan
+combinedFragment=loop~steps c s; t:[Each step until failure or clarification]
 c-&gt;t : resolveStep(step, successful results)
-t.&gt;c : whole-value references resolved to actual data
-c: reuse an identical successful action, retain exhausted action budgets
-combinedFragment=loop~action c s; c:[Initial action and at most two extra retries]
-c-&gt;t : execute(courseId, resolved step)
-t-&gt;s : execute(courseId, arguments)
-s.&gt;t : ToolResult with real status and data
-t.&gt;c : result
+t.&gt;c : resolved references and normalized arguments
+c:Reuse an earlier equivalent action and its retry count during replanning
+combinedFragment=loop~retry c s; t:[For a new action, initial call and at most two extra retries]
+c-&gt;t : execute(courseId, resolvedStep)
+t-&gt;s : execute(arguments with trusted courseId)
+s.&gt;t : ToolResult
+t.&gt;c : actual result
 --
-c:Input errors require correction, insufficient data asks a question
-combinedFragment=loop~replan c p; c:[At most two replans for this request]
-c-&gt;p : replan(courseId, request, history, resultsSoFar)
-p.&gt;c : corrected plan or clarification
-c:Keep successful IDs and arguments fixed, aliases do not reset retry budgets
+c:OK continues, INSUFFICIENT_DATA clarifies, exhausted failures stop this plan
 --
-c-&gt;m : save request and actual response
-c:Return earlier outputs and recorded failures if later work fails</panel_attributes>
+c-&gt;p : replan(courseId, request, history, resultsSoFar) only for REPLAN
+p.&gt;c : new plan or clarification
+--
+c-&gt;m : addTurn(request, actual final answer)
+c:Return actual earlier results on failure, completed IDs cannot change action</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

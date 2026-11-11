@@ -23,18 +23,23 @@ obj=CitationValidator~v
 
 u-&gt;f : askQuestion(courseId, question)
 f-&gt;s : answer(course, question)
-s:Clarify a vague request before retrieval
-s-&gt;r : retrieve(question, chunks, k)
-r.&gt;s : relevant chunks
-s:With no relevant chunks return a notice without a model call
+s:Reject blank input
+s-&gt;r : retrieve(question, course chunks, 5)
+r.&gt;s : lexical matches ignoring common English words
+s:If no chunks match, return a notice without a model request
+combinedFragment=loop~answer s v; l:[At most two replies when chunks match]
 s-&gt;l : generate(qaPrompt with retrieved IDs)
 l.&gt;s : LLMResponse
 s-&gt;p : parseCitedAnswer(text)
-p.&gt;s : answer text and cited IDs
+p.&gt;s : answer, cited IDs, needsClarification
+s:If the model asks for clarification, return a labelled question
 s-&gt;v : validate(ids, retrieved)
-v.&gt;s : allowed IDs only
-s.&gt;u : Answer with file and page or line locations
-s:Citation membership does not prove semantic support for every sentence</panel_attributes>
+v.&gt;s : retrieved IDs only
+s:Return cited answer when IDs remain, otherwise retain uncited text
+--
+s.&gt;f : Answer, Uncited answer, clarification or failure
+f.&gt;u : returned answer or error
+s:Invalid JSON is retried, retain the most recent nonempty model error</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

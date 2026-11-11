@@ -29,8 +29,13 @@ public class QuestionAnswerService {
             return new Answer("No relevant chunks were found. Please name a course topic or import relevant material.", new ArrayList<Citation>());
         }
         String prompt = templates.qaPrompt(question, retrieved);
+        String uncitedAnswer = null;
+        String errorMessage = "";
         for (int attempt = 0; attempt < 2; attempt++) {
             LLMResponse response = llmClient.generate(prompt);
+            if (!response.isSuccess() && !response.getErrorMessage().isBlank()) {
+                errorMessage = response.getErrorMessage();
+            }
             if (response.isSuccess()) {
                 try {
                     CitedAnswer proposed = parser.parseCitedAnswer(response.getText());
@@ -42,13 +47,22 @@ public class QuestionAnswerService {
                         List<Citation> citations = createCitations(validIds, retrieved);
                         return new Answer(proposed.getAnswer(), citations);
                     }
+                    uncitedAnswer = proposed.getAnswer();
                 } catch (JSONException e) {
                     // Retry the model response; raw invalid output is never executed.
                 }
             }
             prompt = templates.qaPrompt(question, retrieved) + "\nReturn only the requested JSON and use the supplied chunk IDs.";
         }
-        throw new IllegalStateException("An answer with valid citations could not be generated after one retry.");
+        if (uncitedAnswer != null) {
+            // Stage 1 UC04 5a: when no valid citation remains, show the answer as uncited.
+            return new Answer("Uncited: " + uncitedAnswer, new ArrayList<Citation>());
+        }
+        String failure = "An answer with valid citations could not be generated after one retry.";
+        if (!errorMessage.isEmpty()) {
+            failure += " Last model error: " + errorMessage;
+        }
+        throw new IllegalStateException(failure);
     }
 
     private List<Citation> createCitations(List<String> validIds, List<Chunk> retrieved) {

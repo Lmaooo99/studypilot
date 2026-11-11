@@ -38,7 +38,7 @@
 
 ## Checks
 
-- All 307 JUnit tests passed with Java 17 using `./mvnw -q clean verify`.
+- At C21 on November 3, all 307 JUnit tests passed with Java 17 using `./mvnw -q clean verify`; this is a historical total. The later November 9 verification passed 361 tests.
 - Real API checks covered summaries, concepts, cited answers and three generated flashcards.
 - Separate CLI processes confirmed card mastery, two reviews and two history events after restarting.
 - Course isolation and backups of damaged progress/history files were checked.
@@ -78,3 +78,43 @@ accessible timestamp links before the student submits the repository URL.
 ## AI support
 
 Codex was used to generate and revise code, prepare tests and troubleshoot errors.
+
+
+## November 10 native walkthrough and delivery verification
+
+The student completed focused guided review questions about later core paths,
+supplied a successful 361-test build summary and recorded the native GUI/CLI.
+All sixteen clips were joined without content cuts. Actual feature timestamps
+are in demo/README.md; the older rendered CLI panels are superseded.
+
+An isolated Java 17 ./mvnw -o clean verify independently passed 361 tests in 46
+classes, with no failures, errors or skips. The recorded JAR and the 135-file Java
+source snapshot match their preparation fingerprints. Source recordings are unchanged.
+This build used no credentials or live model calls; the video separately shows
+actual model-backed application actions. This is not KUMA evaluation.
+
+Retained Codex/Claude project logs were deduplicated to recover scoped usage.
+They do not establish complete project billing. No staging, commit or push was
+performed for this delivery preparation, and no course submission was made.
+
+
+The November 10 native demonstration was uploaded to YouTube as Unlisted: [https://www.youtube.com/watch?v=eNrlBO0PAuY](https://www.youtube.com/watch?v=eNrlBO0PAuY). Signed-out Chrome Incognito playback passed; all twelve feature and two CLI timestamp links sought to their specified positions. The player offers 1080p60 HD. This checks viewing access and navigation, not KUMA behavior. The repository remains a local working copy relative to C21; no release or fresh published-clone check is claimed.
+
+
+## November 10 scoped tool usage estimate
+
+Per-response Codex usage from the Stage 2 request on October 24 at 20:31 EDT to
+November 10 at 22:34 EST gives 523,736,215 tokens in 1,968 requests. This includes
+the main conversation, sixteen recorded background compactions and nine verified
+video-agent requests. Response IDs were deduplicated; inherited counters, cached
+input and reasoning were not added twice. The prior 21:59 snapshot remains a
+historical subset and is not added to this figure.
+
+Current gpt-6.1-sol Standard API prices give an equivalent cost of $156.22, with
+long-context rates applied per request. The student-supplied Claude Code screenshot
+reports about 287 million tokens and $125.60 equivalent cost for November 9-10,
+including an estimate for four unlogged compactions. The two estimates total about
+$281.82. These are API equivalents, not verified invoices or allocated subscription
+payments. App model and transcription fees are separate. The report and usage
+checkpoint record the scope and assumptions without private conversations or keys.
+No Java source, staging, commit, push or course submission changed in this step.

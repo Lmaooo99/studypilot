@@ -3,7 +3,9 @@ package studypilot;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -49,6 +51,38 @@ public class QuizServiceTest {
     }
 
     @Test
+    public void usesTheQuizTopicForDifficultyAndKeepsTheModelConcept() {
+        String labelled = trueFalse.replace("\"conceptName\":\"Observer\"", "\"conceptName\":\"Behavioral patterns\"");
+        llm.reply("{\"questions\":[" + labelled + "]}");
+        Quiz quiz = facade.createQuiz(course.getId(), " Observer subject ", 1, Difficulty.MEDIUM,
+                Arrays.asList(QuestionType.TRUE_FALSE));
+        Question question = quiz.getQuestions().get(0);
+        assertEquals("Behavioral patterns", question.getConceptName());
+
+        QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
+        Map<String, String> answers = new HashMap<>();
+        answers.put(question.getId(), "true");
+        facade.submitAttempt(course.getId(), attempt.getId(), answers);
+        assertEquals(1, facade.suggestDifficulty(course.getId(), "observer subject").getGradedCount());
+        assertEquals("Behavioral patterns", facade.getProgress(course.getId()).getStats().get(0).getConceptName());
+    }
+
+    @Test
+    public void keepsTheModelFailureWhenLaterQuizRepliesAreMalformed() {
+        llm.failNext();
+        llm.reply("not JSON");
+        llm.reply("not JSON");
+        try {
+            facade.createQuiz(course.getId(), "Observer", 3, Difficulty.MEDIUM, allTypes);
+            fail("The model failure must not be lost.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
+        assertEquals(0, facade.listQuizzes(course.getId()).size());
+        assertEquals(3, llm.getPrompts().size());
+    }
+
+    @Test
     public void keepsValidDraftsAndRequestsOnlyMissingTypes() {
         String invalid = trueFalse.replace("\"true\"", "\"maybe\"");
         llm.reply("{\"questions\":[" + choice + "," + choice + "," + invalid + ",{\"type\":\"ESSAY\"}]}");
@@ -71,6 +105,20 @@ public class QuizServiceTest {
         assertEquals(2, quiz.getQuestions().size());
         assertEquals(3, llm.getPrompts().size());
         assertEquals(2, facade.getQuiz(course.getId(), quiz.getId()).getQuestions().size());
+    }
+
+    @Test
+    public void showsTheRealModelErrorWhenEveryCallFails() {
+        llm.failNext();
+        llm.failNext();
+        llm.failNext();
+        try {
+            facade.createQuiz(course.getId(), "Observer", 3, Difficulty.MEDIUM, allTypes);
+            fail("A failed model call must be reported.");
+        } catch (IllegalStateException e) {
+            assertTrue(e.getMessage().contains("No quiz was saved"));
+            assertTrue(e.getMessage().contains("Last model error: Test service failure."));
+        }
     }
 
     @Test

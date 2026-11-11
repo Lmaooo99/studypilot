@@ -404,5 +404,148 @@
     "development_money_cost": null,
     "development_usage_note": "Additional development-session counters and billing are unavailable for this window.",
     "tokens_note": "Actual response usage from C21 production CLI workflow checks. Verification answers and four empty submissions create demonstration data, not student study results."
+  },
+  "november_10_recovered_development_log_snapshot": {
+    "snapshot_at_utc": "2026-11-11T02:59:40.238529+00:00",
+    "codex": {
+      "scope": "Retained main StudyPilot conversation from October 24 onward; includes planning, implementation, scheduled checks, review and presentation preparation. Separate child/fork conversations excluded.",
+      "model_label": "gpt-6.1-sol",
+      "method": "Identical cumulative-counter tuples deduplicated before summing recorded last-request usage. Cached input and reasoning output are subsets.",
+      "first_event_utc": "2026-10-25T00:32:01.350Z",
+      "last_event_utc": "2026-11-11T02:59:04.351Z",
+      "distinct_usage_events": 1848,
+      "tokens": {
+        "input_tokens": 484164953,
+        "cached_input_tokens": 471190400,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2240222,
+        "reasoning_output_tokens": 1137917,
+        "total_tokens": 486405175
+      },
+      "actual_money_cost": null
+    },
+    "claude_code": {
+      "scope": "The retained November 9-10 Toronto project session and nine child logs. Earlier project sessions and other tools are not established by these files.",
+      "method": "Deduplicate assistant records by message ID across parent and child logs; retain the largest recorded usage for an ID. Cache read and cache creation are distinct input categories; nested thinking/cache-duration breakdowns are not added again.",
+      "model_labels": [
+        "claude-opus-5-5"
+      ],
+      "first_event_utc": "2026-11-09T07:18:11.854Z",
+      "last_event_utc": "2026-11-11T02:58:47.841Z",
+      "distinct_message_ids": 1170,
+      "tokens": {
+        "input_tokens": 2382,
+        "cache_creation_input_tokens": 4965603,
+        "cache_read_input_tokens": 279474748,
+        "output_tokens": 1877027
+      },
+      "total_tokens": 286319760,
+      "actual_money_cost": null
+    },
+    "note": "Scoped retained-log counts, not complete all-tool project usage or actual bills. Earlier checkpoint and subreview counters may overlap and are not added again. No subscription cost allocation is inferred.",
+    "superseded_for_current_stage2_aggregate": true,
+    "superseded_note": "Retained historical snapshot with an earlier cutoff and last-request-counter method. The current Codex per-response estimate also includes recorded background compactions. Do not add overlapping totals."
+  },
+  "november_10_native_demonstration": {
+    "application_usage_tokens": null,
+    "application_money_cost": null,
+    "note": "Actual model-backed GUI/CLI behavior was recorded, but those calls are not included in the historical application totals because token usage was not separately collected.",
+    "transcription": {
+      "tool": "ElevenLabs Scribe v1",
+      "source_clips": 16,
+      "source_duration_seconds": 1028.423335,
+      "tokens": null,
+      "actual_money_cost": null,
+      "role": "Verbatim transcript for footage review; no synthesized application results or narration."
+    }
+  },
+  "stage2_tool_api_equivalent_estimate": {
+    "recorded_at_utc": "2026-11-11T03:45:54.898545+00:00",
+    "cost_basis": "Current Standard API-equivalent USD estimate, not a verified bill or subscription allocation.",
+    "codex": {
+      "start_utc": "2026-10-25T00:31:53.442Z",
+      "cutoff_exclusive_utc": "2026-11-11T03:34:52.945Z",
+      "start_toronto": "2026-10-24T20:31:53.442000-04:00",
+      "cutoff_toronto": "2026-11-10T22:34:52.945000-05:00",
+      "scope": "This StudyPilot conversation from the explicit Stage 2 planning request through immediately before the user requested this cost calculation. Stage 1, separate user-created forks, application model requests and transcription charges are excluded.",
+      "method": "Use per-response token_usage_record.usage, deduplicate by response_id, identify background compaction by compaction_response_id, and apply current Standard API token prices per request. Cached input and reasoning output are subsets, not additions. Inherited thread totals are not summed.",
+      "model_label": "gpt-6.1-sol",
+      "requests": 1968,
+      "tokens": {
+        "input_tokens": 521312771,
+        "cached_input_tokens": 508109824,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2423444,
+        "reasoning_output_tokens": 1179951,
+        "total_tokens": 523736215
+      },
+      "uncached_input_tokens": 13202947,
+      "main_conversation": {
+        "requests": 1959,
+        "total_tokens": 523175991,
+        "equivalent_usd": "155.9206244"
+      },
+      "known_video_agent": {
+        "requests": 9,
+        "total_tokens": 560224,
+        "equivalent_usd": "0.3024304"
+      },
+      "background_compactions_included_in_main": {
+        "requests": 16,
+        "total_tokens": 7249839,
+        "equivalent_usd": "3.0466830",
+        "note": "Subset already included; not added again."
+      },
+      "pricing_reference": "https://developers.openai.com/api/docs/models/gpt-6.1-sol",
+      "pricing_per_million_usd": {
+        "short": {
+          "input": "2",
+          "cached_input": "0.1",
+          "cache_write": "2.5",
+          "output": "10"
+        },
+        "long_above_272000_input": {
+          "input": "4",
+          "cached_input": "0.2",
+          "cache_write": "5",
+          "output": "15"
+        }
+      },
+      "pricing_assumption": "All records carry gpt-6.1-sol as their enclosing turn model. Use the current model price for API-equivalent comparison, not an actual or historical subscription bill. A separate compaction-model identifier is not supplied, so compaction uses the same reference model rate.",
+      "service_tier": null,
+      "long_request_threshold_input_tokens": 272000,
+      "long_requests": 936,
+      "cost_by_category_usd": {
+        "uncached_input": "41.096618",
+        "cached_input": "83.4973568",
+        "cache_write_input": "0.0",
+        "output": "31.629080"
+      },
+      "equivalent_usd": "156.2230548",
+      "actual_project_payment_usd": null
+    },
+    "claude_code": {
+      "source": "Student-supplied Claude Code usage screenshot; the estimate is self-reported, not an independently verified invoice.",
+      "period_toronto": "2026-11-09 02:17 EST to approximately 2026-11-10 21:57 EST",
+      "model_label_reported": "Opus 5.5",
+      "approximate_total_tokens": 287000000,
+      "logged_calls_reported": 1171,
+      "main_calls_reported": 400,
+      "calls_in_nine_subagents_reported": 771,
+      "approximate_cache_read_tokens": 280000000,
+      "approximate_output_tokens": 1880000,
+      "approximate_reasoning_subset_tokens": 1250000,
+      "approximate_cache_write_tokens": 4970000,
+      "approximate_uncached_tokens": 2400,
+      "logged_equivalent_usd_reported": "124.19",
+      "additional_unlogged_compactions_reported": 4,
+      "compaction_equivalent_usd_estimate_reported": "1.40",
+      "rounded_equivalent_usd_reported": "125.60",
+      "actual_project_payment_usd": null,
+      "note": "Rounded screenshot totals overlap earlier retained-log counters; not added again. Background compactions are estimates; no exact token count was supplied for them."
+    },
+    "combined_development_tool_equivalent_usd_approximate": "281.82",
+    "actual_project_payment_usd": null,
+    "exclusions": "Application/provider API fees, transcription, taxes and unverified account-specific billing are excluded. Historical prices are not reconstructed. Unknown actual payment is not zero."
   }
 }

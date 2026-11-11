@@ -34,9 +34,9 @@ public class DashboardView extends JPanel implements Observer {
             history.setText("");
             return;
         }
-        counts.setText(facade.getProgress(courseId).toString());
+        counts.setText(facade.getProgressSnapshot(courseId).toString());
         StringBuilder text = new StringBuilder();
-        for (StudyEvent event : facade.getHistory(courseId)) {
+        for (StudyEvent event : facade.getHistorySnapshot(courseId)) {
             text.append(event + "\n");
         }
         if (text.length() == 0) {

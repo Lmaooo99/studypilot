@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 public class CourseRepository {
     private final Path directory;
+    private final List<String> skippedFiles = new ArrayList<>();
 
     public CourseRepository(Path dataDirectory) {
         directory = dataDirectory.resolve("courses");
@@ -262,8 +263,24 @@ public class CourseRepository {
         for (Path file : files) {
             String name = file.getFileName().toString();
             String courseId = name.substring(0, name.length() - 5);
-            courses.add(loadCourse(courseId));
+            try {
+                courses.add(loadCourse(courseId));
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                // A damaged or unknown file is skipped and left unchanged, so the other courses still load.
+                rememberSkippedFile("courses/" + name);
+            }
         }
         return courses;
+    }
+
+    // Saved files that listCourses could not read, for example "courses/<id>.json".
+    public synchronized List<String> getSkippedFiles() {
+        return new ArrayList<>(skippedFiles);
+    }
+
+    private synchronized void rememberSkippedFile(String name) {
+        if (!skippedFiles.contains(name)) {
+            skippedFiles.add(name);
+        }
     }
 }

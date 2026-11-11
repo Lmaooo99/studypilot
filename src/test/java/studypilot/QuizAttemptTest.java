@@ -23,6 +23,64 @@ public class QuizAttemptTest {
     private Question trueFalse;
     private Question shortAnswer;
 
+    @Test
+    public void aFailedPrimaryAttemptSaveKeepsTheAttemptUnsubmittedAndProgressUnchanged() throws Exception {
+        QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
+        Path file = directory.resolve("attempts").resolve(attempt.getId() + ".json");
+        String before = Files.readString(file);
+        QuizRepository repository = new QuizRepository(directory) {
+            public void saveAttempt(QuizAttempt changed) {
+                throw new IllegalStateException("Test primary attempt save failure.");
+            }
+        };
+        ProgressRepository progress = new ProgressRepository(directory);
+        ProgressTracker tracker = new ProgressTracker(progress);
+        HistoryRecorder history = new HistoryRecorder(tracker, progress);
+        tracker.attach(history);
+        QuizService service = new QuizService(llm, new PromptTemplates(), new ResponseParser(),
+                repository, new TfIdfRetrieval(), tracker);
+        try {
+            service.submitAttempt(course.getId(), attempt.getId(), new HashMap<String, String>());
+            fail("The primary save failure must be reported.");
+        } catch (IllegalStateException e) {
+            assertEquals("Test primary attempt save failure.", e.getMessage());
+        }
+        assertEquals(before, Files.readString(file));
+        assertFalse(repository.loadAttempt(attempt.getId()).isSubmitted());
+        assertEquals(0, tracker.getSummary(course.getId()).getQuizzesTaken());
+        assertEquals(0, tracker.getSummary(course.getId()).getGradedCount());
+        assertEquals(0, history.getHistory(course.getId()).size());
+        assertNull(tracker.getLastEvent());
+        assertEquals(0, llm.getPrompts().size());
+    }
+
+    @Test
+    public void aFailedCountedFlagSaveDoesNotReportTheSubmittedAnswersAsLost() {
+        QuizRepository repository = new QuizRepository(directory) {
+            private int saves;
+            public void saveAttempt(QuizAttempt attempt) {
+                saves++;
+                if (saves == 3) {
+                    throw new IllegalStateException("Test counted flag save failure.");
+                }
+                super.saveAttempt(attempt);
+            }
+        };
+        ProgressRepository progress = new ProgressRepository(directory);
+        ProgressTracker tracker = new ProgressTracker(progress);
+        QuizService service = new QuizService(llm, new PromptTemplates(), new ResponseParser(),
+                repository, new TfIdfRetrieval(), tracker);
+        QuizAttempt attempt = service.startAttempt(course.getId(), quiz.getId());
+        QuizAttempt submitted = service.submitAttempt(course.getId(), attempt.getId(), answers());
+        assertTrue(submitted.isSubmitted());
+        assertTrue(repository.loadAttempt(attempt.getId()).isSubmitted());
+        assertTrue(progress.getRecoveryWarning().contains("counted flags could not be updated"));
+        AgentFacade restarted = new AgentFacade(config, new MockLLMClient());
+        int graded = submitted.getResults().size() - submitted.getPendingCount();
+        assertEquals(graded, restarted.getProgress(course.getId()).getGradedCount());
+        assertEquals(1, restarted.getProgress(course.getId()).getQuizzesTaken());
+    }
+
     @Before
     public void setUp() throws Exception {
         Path appDirectory = Files.createTempDirectory("studypilot-attempt-test-");
@@ -46,6 +104,35 @@ public class QuizAttemptTest {
         answers.put(trueFalse.getId(), "false");
         answers.put(shortAnswer.getId(), "The subject sends notifications.");
         return answers;
+    }
+
+    @Test
+    public void rejectsALetterForAMultipleChoiceAnswerAndSavesNothing() {
+        QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
+        Map<String, String> answers = answers();
+        answers.put(choice.getId(), "B");
+        try {
+            facade.submitAttempt(course.getId(), attempt.getId(), answers);
+            fail("An answer that is not an option number must be rejected.");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("Question 1: enter an option number from 1 to 2"));
+        }
+        assertFalse(facade.getAttempt(course.getId(), attempt.getId()).isSubmitted());
+        assertEquals(0, llm.getPrompts().size());
+    }
+
+    @Test
+    public void rejectsATrueFalseAnswerThatIsNotTrueOrFalse() {
+        QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
+        Map<String, String> answers = answers();
+        answers.put(trueFalse.getId(), "yes");
+        try {
+            facade.submitAttempt(course.getId(), attempt.getId(), answers);
+            fail("A true/false answer must be true or false.");
+        } catch (IllegalArgumentException e) {
+            assertTrue(e.getMessage().contains("Question 2: enter true or false"));
+        }
+        assertFalse(facade.getAttempt(course.getId(), attempt.getId()).isSubmitted());
     }
 
     @Test
@@ -186,12 +273,8 @@ public class QuizAttemptTest {
         Path blocker = blocked.resolve("test.txt");
         Files.writeString(blocker, "Test-only obstacle to a JSON save.");
         QuizAttempt attempt = facade.startAttempt(course.getId(), quiz.getId());
-        try {
-            facade.submitAttempt(course.getId(), attempt.getId(), answers());
-            fail("The failed history save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.submitAttempt(course.getId(), attempt.getId(), answers());
+        assertTrue(facade.getStorageWarnings().contains("history.json could not be updated"));
         Files.delete(blocker);
         Files.delete(blocked);
         facade.submitAttempt(course.getId(), attempt.getId(), new HashMap<String, String>());

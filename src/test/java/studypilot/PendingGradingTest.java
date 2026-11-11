@@ -166,12 +166,8 @@ public class PendingGradingTest {
         Path blocker = history.resolve("test.txt");
         Files.writeString(blocker, "Test-only save obstacle.");
         llm.reply("{\"pointsEarned\":1,\"explanation\":\"Complete answer.\"}");
-        try {
-            facade.retryPendingGrading(course.getId(), pending.getId());
-            fail("The failed history save must be reported.");
-        } catch (IllegalStateException e) {
-            assertTrue(e.getMessage().contains("could not be saved"));
-        }
+        facade.retryPendingGrading(course.getId(), pending.getId());
+        assertTrue(facade.getStorageWarnings().contains("history.json could not be updated"));
         Files.delete(blocker);
         Files.delete(history);
         facade.retryPendingGrading(course.getId(), pending.getId());

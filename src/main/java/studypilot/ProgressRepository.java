@@ -21,22 +21,22 @@ public class ProgressRepository {
         this.directory = directory;
     }
 
-    public String getRecoveryWarning() {
+    public synchronized String getRecoveryWarning() {
         return recoveryWarning;
     }
 
-    public void addWarning(String warning) {
+    public synchronized void addWarning(String warning) {
         if (!recoveryWarning.contains(warning + "\n")) {
             recoveryWarning += warning + "\n";
         }
     }
 
     public boolean hasHistoryFile() {
-        return Files.exists(directory.resolve("history.json"));
+        return Files.isRegularFile(directory.resolve("history.json"));
     }
 
     public boolean hasProgressFile() {
-        return Files.exists(directory.resolve("progress.json"));
+        return Files.isRegularFile(directory.resolve("progress.json"));
     }
 
     public void saveSummaries(Map<String, ProgressSummary> summaries) {

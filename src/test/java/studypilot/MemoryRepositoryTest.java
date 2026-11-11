@@ -10,6 +10,50 @@ import static org.junit.Assert.*;
 
 public class MemoryRepositoryTest {
     @Test
+    public void savesBothMessagesOfATurnInOneWrite() throws Exception {
+        final int[] writes = {0};
+        Path directory = Files.createTempDirectory("studypilot-atomic-turn-");
+        MemoryRepository repository = new MemoryRepository(directory) {
+            public void saveConversation(String courseId, String sessionId, List<Message> messages) {
+                writes[0]++;
+                assertEquals(2, messages.size());
+                super.saveConversation(courseId, sessionId, messages);
+            }
+        };
+        MemoryManager manager = new MemoryManager(repository);
+        manager.loadSession("course", null);
+        manager.addTurn("Show progress.", "One quiz taken.");
+        assertEquals(1, writes[0]);
+        assertEquals(2, repository.loadConversation("course", manager.getSessionId()).size());
+        assertEquals(2, manager.getHistory().size());
+    }
+
+    @Test
+    public void aFailedTurnSaveLeavesBothDiskAndMemoryUnchanged() throws Exception {
+        Path directory = Files.createTempDirectory("studypilot-atomic-turn-failure-");
+        final String session = UUID.randomUUID().toString();
+        MemoryRepository original = new MemoryRepository(directory);
+        original.saveConversation("course", session, Arrays.asList(new Message("user", "Earlier request.")));
+        Path file = directory.resolve("conversations").resolve(session + ".json");
+        String before = Files.readString(file);
+        MemoryRepository failing = new MemoryRepository(directory) {
+            public void saveConversation(String courseId, String sessionId, List<Message> messages) {
+                throw new IllegalStateException("Test turn save failure.");
+            }
+        };
+        MemoryManager manager = new MemoryManager(failing);
+        manager.loadSession("course", session);
+        try {
+            manager.addTurn("New request.", "New answer.");
+            fail("A failed turn must not be partly saved.");
+        } catch (IllegalStateException e) {
+            assertEquals("Test turn save failure.", e.getMessage());
+        }
+        assertEquals(before, Files.readString(file));
+        assertEquals(1, manager.getHistory().size());
+    }
+
+    @Test
     public void preservesRolesTextAndSessionIsolationAfterReload() throws Exception {
         Path directory = Files.createTempDirectory("studypilot-memory-test-");
         MemoryRepository repository = new MemoryRepository(directory);

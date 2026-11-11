@@ -22,18 +22,23 @@ u-&gt;f : createCourse(name)
 f-&gt;s : createCourse(name)
 s-&gt;r : saveCourse(course)
 r.&gt;s : saved
-s.&gt;u : course ID
+s.&gt;f : course ID
+f.&gt;u : course ID
 u-&gt;f : importMaterial(courseId, filePath)
 f-&gt;s : importMaterial(courseId, filePath)
 s: checkMaterialFile(file)
 s: contentHash(bytes), reject duplicates
 s: readTextFile or extractPdf, splitIntoChunks
 s-&gt;r : saveCourse(course)
-r.&gt;u : material ID and source locations, or error
+r.&gt;s : saved material
+s.&gt;f : material or error
+f.&gt;u : material (GUI adds source locations, CLI prints ID, name and count)
 u-&gt;f : reopen the selected course
 f-&gt;s : getCourse(courseId)
 s-&gt;r : loadCourse(courseId)
-r.&gt;u : stored IDs, pages or line ranges
+r.&gt;s : saved course
+s.&gt;f : saved course
+f.&gt;u : course with stored source locations
 s:Unsupported, corrupt, blank or duplicate inputs add no material</panel_attributes>
     <additional_attributes />
   </element>

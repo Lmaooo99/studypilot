@@ -16,6 +16,7 @@ fontsize=14
 obj=GUI or CLI~u
 obj=AgentFacade~f
 obj=StudyPlanGenerator~g
+obj=CourseService~c
 obj=ProgressTracker~t
 obj=LLMClient~l
 obj=ResponseParser~p
@@ -23,21 +24,25 @@ obj=StudyPlanRepository~r
 
 u-&gt;f : createStudyPlan(courseId, examDate, hoursPerDay)
 f-&gt;g : generate(courseId, examDate, hoursPerDay)
-g:Validate real dates and whole hours from 1 to 24
+g:checkInput checks real dates and whole hours from 1 to 24
+g-&gt;c : getCourse(courseId)
+c.&gt;g : saved Course
+g:If the course has no chunks, return an error before a model call
 g-&gt;t : getRankedStats(courseId, minResults)
 t.&gt;g : graded-only topic context
-g:Without enough graded evidence require a diagnostic quiz first
-combinedFragment=loop~proposal g p; g:[At most three proposals]
+g:Without enough evidence require a diagnostic quiz first
+combinedFragment=loop~proposal g p; p:[At most three proposals]
 g-&gt;l : generate(studyPlanPrompt)
-l.&gt;g : proposed JSON tasks
+l.&gt;g : proposed tasks or failure
 g-&gt;p : parseStudyTasks(text)
 p.&gt;g : dated tasks
-g: validatePlan(plan)
+g:validatePlan(plan, today), then check diagnostic-first work
 --
-g:Check dates, positive minutes, daily budgets and diagnostic order
+g:Only a validated proposal may be saved
 g-&gt;r : savePlan(valid plan)
-r.&gt;u : actual saved schedule or explicit error
-g:An exhausted invalid proposal does not overwrite an earlier plan</panel_attributes>
+r.&gt;g : saved or error
+g.&gt;f : actual saved schedule or explicit error
+f.&gt;u : plan or error</panel_attributes>
     <additional_attributes />
   </element>
 </diagram>

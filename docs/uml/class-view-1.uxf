@@ -68,7 +68,7 @@ layer=2</panel_attributes>
       <x>1200</x>
       <y>100</y>
       <w>500</w>
-      <h>370</h>
+      <h>720</h>
     </coordinates>
     <panel_attributes>AgentFacade
 --
@@ -78,15 +78,33 @@ layer=2</panel_attributes>
 -questionAnswerService: QuestionAnswerService
 -flashcardService: FlashcardService
 -quizService: QuizService
+-weakTopicAnalyzer: WeakTopicAnalyzer
+-studyPlanGenerator: StudyPlanGenerator
+-agentController: AgentController
+-progressTracker: ProgressTracker
+-progressRepository: ProgressRepository
+-historyRecorder: HistoryRecorder
+-progressRestorer: ProgressRestorer
+-courseRepository: CourseRepository
+-quizRepository: QuizRepository
+-planRepository: StudyPlanRepository
 --
 +createCourse(name): Course
-+listCourses(): List&lt;Course&gt;
 +importMaterial(courseId, filePath): Material
 +summarize(courseId, materialId, style): String
 +extractConcepts(courseId, materialId): List&lt;Concept&gt;
 +askQuestion(courseId, question): Answer
 +generateFlashcards(courseId, materialId, count): List&lt;Flashcard&gt;
-+reviewCard(courseId, cardId, remembered): void
++createQuiz(courseId, topic, count, difficulty, types): Quiz
++suggestDifficulty(courseId, topic): DifficultySuggestion
++submitAttempt(courseId, attemptId, answers): QuizAttempt
++createStudyPlan(courseId, examDate, hoursPerDay): StudyPlan
++completeTask(courseId, planId, taskId): void
++runAgent(courseId, sessionId, request): AgentResult
++getProgress(courseId): ProgressSummary
++getHistory(courseId): List&lt;StudyEvent&gt;
++getProgressSnapshot(courseId): ProgressSummary
++getHistorySnapshot(courseId): List&lt;StudyEvent&gt;
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -96,7 +114,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>570</y>
+      <y>920</y>
       <w>500</w>
       <h>340</h>
     </coordinates>
@@ -125,7 +143,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>570</y>
+      <y>920</y>
       <w>500</w>
       <h>260</h>
     </coordinates>
@@ -150,7 +168,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>570</y>
+      <y>920</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -169,7 +187,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1010</y>
+      <y>1360</y>
       <w>500</w>
       <h>180</h>
     </coordinates>
@@ -190,19 +208,18 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1010</y>
+      <y>1360</y>
       <w>500</w>
-      <h>200</h>
+      <h>180</h>
     </coordinates>
     <panel_attributes>ToolManager
 --
 -tools: Map&lt;String, Tool&gt;
 --
-+registerTool(tool): void
-+hasTool(name): boolean
 +validatePlan(plan): String
 +validatePlan(plan, results): String
 +resolveStep(step, results): PlanStep
+-normalizeArguments(tool, arguments): void
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -212,7 +229,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>1010</y>
+      <y>1360</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -231,7 +248,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1310</y>
+      <y>1640</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -250,7 +267,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1310</y>
+      <y>1640</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -269,7 +286,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>1310</y>
+      <y>1640</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -288,7 +305,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1560</y>
+      <y>1890</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -307,7 +324,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1560</y>
+      <y>1890</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -326,7 +343,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>1560</y>
+      <y>1890</y>
       <w>500</w>
       <h>150</h>
     </coordinates>
@@ -345,7 +362,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>1810</y>
+      <y>2140</y>
       <w>500</w>
       <h>200</h>
     </coordinates>
@@ -367,7 +384,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>1810</y>
+      <y>2140</y>
       <w>500</w>
       <h>180</h>
     </coordinates>
@@ -388,7 +405,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>1810</y>
+      <y>2140</y>
       <w>500</w>
       <h>220</h>
     </coordinates>
@@ -411,9 +428,9 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>2130</y>
+      <y>2460</y>
       <w>500</w>
-      <h>200</h>
+      <h>220</h>
     </coordinates>
     <panel_attributes>MemoryManager
 --
@@ -423,7 +440,8 @@ layer=2</panel_attributes>
 -repository: MemoryRepository
 --
 +loadSession(courseId, sessionId): void
-+addMessage(message): void
++getHistory(): List&lt;Message&gt;
++addTurn(request, reply): void
 bg=white
 fontsize=14
 layer=2</panel_attributes>
@@ -433,7 +451,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>610</x>
-      <y>2130</y>
+      <y>2460</y>
       <w>500</w>
       <h>170</h>
     </coordinates>
@@ -453,7 +471,7 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>1200</x>
-      <y>2130</y>
+      <y>2460</y>
       <w>500</w>
       <h>240</h>
     </coordinates>
@@ -477,9 +495,9 @@ layer=2</panel_attributes>
     <id>UMLClass</id>
     <coordinates>
       <x>20</x>
-      <y>2470</y>
+      <y>2800</y>
       <w>500</w>
-      <h>360</h>
+      <h>420</h>
     </coordinates>
     <panel_attributes>&lt;&lt;private inner class&gt;&gt;
 SwingGUI.StudyWorker
@@ -488,6 +506,8 @@ SwingGUI.StudyWorker
 -filePath: String
 -course: Course
 -material: Material
+-createdCourse: Course
+-importedMaterial: Material
 -loadedAttempt: QuizAttempt
 -loadedAgent: AgentResult
 --
@@ -505,73 +525,73 @@ layer=2</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>1200</w>
-      <h>170</h>
+      <h>150</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>1190.0;10.0;1190.0;80.0;10.0;80.0;10.0;160.0</additional_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;60.0;10.0;60.0;10.0;140.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>850</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>610</w>
-      <h>170</h>
+      <h>150</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>600.0;10.0;600.0;90.0;10.0;90.0;10.0;160.0</additional_attributes>
+    <additional_attributes>600.0;10.0;600.0;70.0;10.0;70.0;10.0;140.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>1440</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>20</w>
-      <h>170</h>
+      <h>150</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;100.0;10.0;100.0;10.0;160.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;80.0;10.0;80.0;10.0;140.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>-85</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>1545</w>
-      <h>420</h>
+      <h>400</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>1535.0;10.0;1535.0;110.0;10.0;110.0;10.0;360.0;355.0;360.0;355.0;410.0</additional_attributes>
+    <additional_attributes>1535.0;10.0;1535.0;90.0;10.0;90.0;10.0;340.0;355.0;340.0;355.0;390.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>-100</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>1560</w>
-      <h>420</h>
+      <h>400</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>1550.0;10.0;1550.0;120.0;10.0;120.0;10.0;370.0;960.0;370.0;960.0;410.0</additional_attributes>
+    <additional_attributes>1550.0;10.0;1550.0;100.0;10.0;100.0;10.0;350.0;960.0;350.0;960.0;390.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>-115</x>
-      <y>1150</y>
+      <y>1500</y>
       <w>1575</w>
-      <h>420</h>
+      <h>400</h>
     </coordinates>
     <panel_attributes>lt=&lt;&lt;.
 layer=0</panel_attributes>
-    <additional_attributes>1565.0;10.0;1565.0;130.0;10.0;130.0;10.0;380.0;1565.0;380.0;1565.0;410.0</additional_attributes>
+    <additional_attributes>1565.0;10.0;1565.0;110.0;10.0;110.0;10.0;360.0;1565.0;360.0;1565.0;390.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
@@ -579,12 +599,12 @@ layer=0</panel_attributes>
       <x>260</x>
       <y>330</y>
       <w>1200</w>
-      <h>180</h>
+      <h>530</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>10.0;10.0;10.0;170.0;1190.0;170.0;1190.0;140.0</additional_attributes>
+    <additional_attributes>10.0;10.0;10.0;520.0;1190.0;520.0;1190.0;490.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
@@ -592,18 +612,18 @@ layer=0</panel_attributes>
       <x>1100</x>
       <y>180</y>
       <w>110</w>
-      <h>115</h>
+      <h>290</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>10.0;10.0;100.0;105.0</additional_attributes>
+    <additional_attributes>10.0;10.0;100.0;280.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>460</y>
+      <y>810</y>
       <w>1200</w>
       <h>120</h>
     </coordinates>
@@ -616,7 +636,7 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>510</x>
-      <y>690</y>
+      <y>1040</y>
       <w>110</w>
       <h>60</h>
     </coordinates>
@@ -629,7 +649,7 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>260</x>
-      <y>900</y>
+      <y>1250</y>
       <w>610</w>
       <h>120</h>
     </coordinates>
@@ -642,57 +662,20 @@ layer=0</panel_attributes>
     <id>Relation</id>
     <coordinates>
       <x>-205</x>
-      <y>900</y>
+      <y>1250</y>
       <w>485</w>
-      <h>1240</h>
+      <h>1220</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>475.0;10.0;475.0;60.0;10.0;60.0;10.0;1180.0;475.0;1180.0;475.0;1230.0</additional_attributes>
+    <additional_attributes>475.0;10.0;475.0;60.0;10.0;60.0;10.0;1160.0;475.0;1160.0;475.0;1210.0</additional_attributes>
   </element>
   <element>
     <id>Relation</id>
     <coordinates>
       <x>1100</x>
-      <y>1075</y>
-      <w>110</w>
-      <h>45</h>
-    </coordinates>
-    <panel_attributes>lt=-&gt;
-uses
-layer=0</panel_attributes>
-    <additional_attributes>10.0;35.0;100.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>260</x>
-      <y>2000</y>
-      <w>1200</w>
-      <h>140</h>
-    </coordinates>
-    <panel_attributes>lt=-&gt;
-layer=0</panel_attributes>
-    <additional_attributes>1190.0;130.0;1190.0;100.0;10.0;100.0;10.0;10.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>260</x>
-      <y>710</y>
-      <w>1200</w>
-      <h>310</h>
-    </coordinates>
-    <panel_attributes>lt=-&gt;
-layer=0</panel_attributes>
-    <additional_attributes>1190.0;10.0;1190.0;280.0;10.0;280.0;10.0;300.0</additional_attributes>
-  </element>
-  <element>
-    <id>Relation</id>
-    <coordinates>
-      <x>510</x>
-      <y>2205</y>
+      <y>1425</y>
       <w>110</w>
       <h>35</h>
     </coordinates>
@@ -704,21 +687,58 @@ layer=0</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>-280</x>
-      <y>330</y>
-      <w>560</w>
-      <h>2150</h>
+      <x>260</x>
+      <y>2330</y>
+      <w>1200</w>
+      <h>140</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;130.0;1190.0;100.0;10.0;100.0;10.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>260</x>
+      <y>1060</y>
+      <w>1200</w>
+      <h>310</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+layer=0</panel_attributes>
+    <additional_attributes>1190.0;10.0;1190.0;280.0;10.0;280.0;10.0;300.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>510</x>
+      <y>2535</y>
+      <w>110</w>
+      <h>45</h>
     </coordinates>
     <panel_attributes>lt=-&gt;
 uses
 layer=0</panel_attributes>
-    <additional_attributes>550.0;10.0;550.0;160.0;10.0;160.0;10.0;2060.0;550.0;2060.0;550.0;2140.0</additional_attributes>
+    <additional_attributes>10.0;35.0;100.0;10.0</additional_attributes>
+  </element>
+  <element>
+    <id>Relation</id>
+    <coordinates>
+      <x>-280</x>
+      <y>330</y>
+      <w>560</w>
+      <h>2480</h>
+    </coordinates>
+    <panel_attributes>lt=-&gt;
+uses
+layer=0</panel_attributes>
+    <additional_attributes>550.0;10.0;550.0;510.0;10.0;510.0;10.0;2390.0;550.0;2390.0;550.0;2470.0</additional_attributes>
   </element>
   <element>
     <id>UMLNote</id>
     <coordinates>
       <x>20</x>
-      <y>2930</y>
+      <y>3320</y>
       <w>1080</w>
       <h>120</h>
     </coordinates>

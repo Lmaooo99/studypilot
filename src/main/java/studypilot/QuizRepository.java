@@ -18,6 +18,7 @@ import org.json.JSONObject;
 public class QuizRepository {
     private final Path directory;
     private final Path attemptDirectory;
+    private final List<String> skippedFiles = new ArrayList<>();
 
     public QuizRepository(Path dataDirectory) {
         directory = dataDirectory.resolve("quizzes");
@@ -133,9 +134,14 @@ public class QuizRepository {
         Collections.sort(files);
         for (Path file : files) {
             String name = file.getFileName().toString();
-            Quiz quiz = loadQuiz(name.substring(0, name.length() - 5));
-            if (quiz.getCourseId().equals(courseId)) {
-                quizzes.add(quiz);
+            try {
+                Quiz quiz = loadQuiz(name.substring(0, name.length() - 5));
+                if (quiz.getCourseId().equals(courseId)) {
+                    quizzes.add(quiz);
+                }
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                // A damaged or unknown file is skipped and left unchanged, so the other quizzes still load.
+                rememberSkippedFile("quizzes/" + name);
             }
         }
         return quizzes;
@@ -263,11 +269,27 @@ public class QuizRepository {
         Collections.sort(files);
         for (Path file : files) {
             String name = file.getFileName().toString();
-            QuizAttempt attempt = loadAttempt(name.substring(0, name.length() - 5));
-            if (attempt.getCourseId().equals(courseId)) {
-                attempts.add(attempt);
+            try {
+                QuizAttempt attempt = loadAttempt(name.substring(0, name.length() - 5));
+                if (attempt.getCourseId().equals(courseId)) {
+                    attempts.add(attempt);
+                }
+            } catch (IllegalArgumentException | IllegalStateException e) {
+                // A damaged or unknown file is skipped and left unchanged, so the other attempts still load.
+                rememberSkippedFile("attempts/" + name);
             }
         }
         return attempts;
+    }
+
+    // Saved files that the list methods could not read, for example "attempts/<id>.json".
+    public synchronized List<String> getSkippedFiles() {
+        return new ArrayList<>(skippedFiles);
+    }
+
+    private synchronized void rememberSkippedFile(String name) {
+        if (!skippedFiles.contains(name)) {
+            skippedFiles.add(name);
+        }
     }
 }

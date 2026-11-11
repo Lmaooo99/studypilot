@@ -36,20 +36,23 @@ period-1-commits.md, period-2-commits.md and period-3-commits.md.
 | 3 | C20 | CLI and structured-result acceptance tests | Implemented |
 | 3 | C21 | Complete workflows across restarts | Implemented |
 
-Material imports preserve complete Unicode characters at chunk boundaries and
+Material imports keep UTF-16 surrogate pairs together at chunk boundaries and
 reject files containing only an encoding marker.
 
 ## Remaining delivery work
 
-- Complete the native GUI walkthrough and real GUI recording.
 - Verify the final published source and assets from a fresh GitHub clone.
-- Add uploaded, accessible timestamp links for every Stage 1 feature.
-- Maintain changes and rationale, representative AI/human interactions, token/money records and weekly commit links.
-- CLI replay A covers F01-F05, B covers F06-F09/F11, and C covers F10/F12. A native GUI recording is still required.
-- Video uploads, timestamp-link checks and course-system submission remain pending.
-- Complete the final GUI walkthrough and review later code changes. The confirmed review covers F01-F05 and review/history; review of the Period 2 and Period 3 code remains pending.
-- Add development-tool and API billing records when available.
-- Complete the clean-clone rehearsal and final checks by November 9; final submission is due November 10.
+- Scoped development tokens and API-equivalent costs are recorded in report Section 5. Retain actual billing when available; unknown actual payments are not zero.
+- Keep the report aligned with the eventual published version and video links.
+- The student submits the repository URL through the course system by November 10.
+
+The November 10 native GUI/CLI recording covers F01-F12 and the agent. The student
+answered focused questions about later core paths and supplied a successful
+361-test build summary. An independent isolated Java 17 build also passed all
+361 tests in 46 classes. This is not an exhaustive source-line review or Stage 3
+KUMA evaluation. Unlisted playback and all twelve feature plus two CLI timestamp
+seeks passed in a signed-out browser; 1080p60 HD is available. Earlier dated
+entries below retain their historical status.
 
 ## Fixed implementation decisions
 
@@ -134,3 +137,15 @@ reject files containing only an encoding marker.
 - The production CLI workflow used 13 actual API responses. A real agent resolved the weakTopics result into a new quiz and reopened the same conversation in another JVM.
 - Demonstration data reached one review, five submitted attempts, 30 graded answers, six correct answers and one completed task. Four empty submissions deliberately created weak-topic history; these are not student study results.
 - Updated UMLet sources and PNG exports are in docs/uml. The report accounts for all twelve features, five patterns, design changes, collaboration, usage and the three reporting periods. Native GUI text entry was not reliable during the automated check; the full GUI walkthrough and recording remain pending.
+
+## November 9 review verification
+
+The current clean Java 17 build passes 361 JUnit 4 tests. Post-review corrections
+cover GUI selection/loading, malformed inputs and stored-file lists, retained
+question concepts, topic lookup, bounded action reuse and storage recovery.
+Derived writes warn and retry after the source action is saved; observer refreshes
+read snapshots, task history retains saved completion times and agent turns save
+both messages together. The report and UML have been synchronized with these paths.
+At that earlier checkpoint, student code review ended at C07. The November 10
+focused guided review and native recording are recorded above; publication and
+viewer-link verification remain separate delivery work.

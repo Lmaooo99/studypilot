@@ -2,6 +2,42 @@
 
 Notes for the Stage 2 implementation report, covering the current implementation.
 
+## November 10 native demonstration and focused review
+
+The student answered guided questions about later quiz construction, grading,
+sample selection, topic ranking, study plans, agent validation/reuse/memory and
+source-backed storage recovery. The student supplied a 361-test BUILD SUCCESS
+summary and recorded the native GUI and terminal. This is focused core-path
+review, not an exhaustive review of every later source line.
+
+The complete 16-clip master is 17:09 and covers F01-F12 plus actual CLI/agent
+execution. Its source and recorded JAR fingerprints match the current Java
+snapshot. An isolated Java 17 clean verify independently passed 361 tests in 46
+classes with no failures, errors or skips. Viewer links and current delivery
+status are in demo/README.md. The Unlisted upload, signed-out playback and twelve
+feature plus two CLI timestamp seeks were verified; 1080p60 HD is available.
+Earlier entries retain their original dates and
+scope; pending statements in those entries describe their historical checkpoints.
+
+## November 9 review follow-up
+
+Claude Code drafted fixes for GUI selection, damaged-file listing, retrieval,
+uncited answers, quiz input validation, flashcard parsing, trace plans, line ranges
+and model-error messages. A subsequent Codex review preserved those fixes and
+revised F07 to compare saved quiz-topic and concept samples, using the larger graded
+sample and preferring the quiz topic on a tie while retaining individual concepts
+for F09. It also normalized equivalent tool arguments for retry/reuse budgets,
+retained model errors through malformed retries and retried empty flashcard batches.
+
+The latest Java 17 clean build passed 361 JUnit 4 tests. Packaged CLI checks used isolated
+data and an authored quiz fixture without credentials; no live model check or full
+native GUI walkthrough was repeated. The student confirmed manual GUI input and
+course creation on November 3. Confirmed code review still covers Period 1 only;
+student review of later code and these fixes remains pending.
+
+The Word/PDF report and UML now reflect these changes and the storage recovery fixes below. Earlier entries
+below record their original checks and test counts; they are not current totals.
+
 ## 1 Project overview and status
 
 StudyPilot helps students study their own course materials. F01-F10 are implemented
@@ -10,7 +46,8 @@ objective and rubric grading, pending retries and self-assessment. F11 covers re
 quiz submissions, graded-answer counts, completed tasks and history, including
 restoration from saved study records after an interrupted write.
 F12 now supports tool execution, conversation memory, step-result references and
-bounded retry/replan recovery. C21 complete study/agent restart workflows passed; native GUI verification remains pending.
+bounded retry/replan recovery. Complete study/agent restart workflows passed;
+the November 10 native recording demonstrates the GUI and CLI paths indexed in demo/README.md.
 The app uses Java 17, Swing, a CLI, JSON repositories, and an OpenAI-compatible
 Chat Completions service with configured model ID gpt-6.1-sol.
 
@@ -18,18 +55,18 @@ Chat Completions service with configured model ID gpt-6.1-sol.
 
 | Feature | Type | Status | Main files and responsibilities | Key methods | Patterns | Video |
 |---|---|---|---|---|---|---|
-| F01 Course/material import | Deterministic | Implemented | CourseService validates/extracts/chunks; CourseRepository saves source locations | createCourse, importMaterial, extractPdf | Facade | A 00:00; upload pending |
-| F02 Summaries | AI | Implemented | SummaryService batches/merges/saves; OpenAIAdapter translates model calls | summarize, summaryPrompt, mergeSummaryPrompt, generate | Facade, Adapter | A 00:21; upload pending |
-| F03 Concepts | Hybrid | Implemented | ConceptService merges and checks relationships; ResponseParser validates structured fields | extractConcepts, parseConcepts | Facade, Adapter | A 00:28; upload pending |
-| F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | A 00:38; upload pending |
-| F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | A 00:52; upload pending |
-| F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | B 00:00; upload pending |
-| F07 Adaptive difficulty | Deterministic | Implemented | QuizService chooses a level; ProgressTracker reads course/topic graded statistics; DifficultySuggestion holds the level, accuracy, count and reason; GUI/CLI accept an override | suggestDifficulty, chooseDifficulty, getAccuracy, getGradedCount | Facade | B 06:20; upload pending |
-| F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | B 00:46; upload pending |
-| F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | B 06:27; upload pending |
-| F10 Study plans | Hybrid | Implemented | StudyPlanGenerator builds context and validates proposals; ResponseParser reads tasks; StudyPlan/StudyTask hold the dated schedule; StudyPlanRepository saves it; ProgressTracker records completion | createStudyPlan, generate, studyPlanPrompt, parseStudyTasks, validatePlan, getTasksForDay, getTotalMinutes, markTaskDone, recordTaskDone | Facade, Adapter, Observer | C 00:00; upload pending |
-| F11 Progress/history | Deterministic | Implemented | ProgressTracker saves copied counts; Course retains review events; ProgressRestorer rebuilds selected-course counts/history; ProgressRepository backs up damaged files; HistoryRecorder/DashboardView observe updates | recordReview, recordQuizAttempt, recordTaskDone, restore, restoreSummary, recordEvent, getSummary, update, getHistory | Facade, Observer | B 06:34; upload pending |
-| F12 Natural-language agent | AI | Implemented core | AgentPlanner proposes steps; AgentController validates and executes; ToolManager dispatches six service-backed tools; MemoryManager/MemoryRepository save messages; AgentResult holds actual results and trace | runAgent, handleRequest, createPlan, replan, executionPlanPrompt, parseExecutionPlan, validatePlan, resolveStep, executeWithRetries, execute, decide, loadSession, addMessage, toJson | Facade, Adapter | C 00:48; upload pending |
+| F01 Course/material import | Deterministic | Implemented | CourseService validates/extracts/chunks; CourseRepository saves source locations | createCourse, importMaterial, extractPdf | Facade | [00:14](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=14s) |
+| F02 Summaries | AI | Implemented | SummaryService batches/merges/saves; OpenAIAdapter translates model calls | summarize, summaryPrompt, mergeSummaryPrompt, generate | Facade, Adapter | [01:36](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=96s) |
+| F03 Concepts | Hybrid | Implemented | ConceptService merges and checks relationships; ResponseParser validates structured fields | extractConcepts, parseConcepts | Facade, Adapter | [01:58](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=118s) |
+| F04 Cited answers | Hybrid | Implemented | QuestionAnswerService retrieves; strategies score chunks; CitationValidator filters IDs | answer, retrieve, parseCitedAnswer, validate | Facade, Strategy, Adapter | [02:21](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=141s) |
+| F05 Flashcards/review | Hybrid | Implemented | FlashcardService generates/reviews; Flashcard stores mastery; tracker notifies observers | generateCards, review, recordReview, getMastery | Facade, Adapter, Observer | [03:21](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=201s) |
+| F06 Quiz generation | Hybrid | Implemented | QuizService retrieves/generates; ResponseParser reads drafts; QuestionCreator and three subclasses validate typed products; QuizRepository saves immutable quizzes | createQuiz, quizPrompt, parseRawQuestions, buildQuestion, createQuestion, saveQuiz, loadQuiz | Facade, Strategy, Adapter, Factory Method | [05:48](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=348s) |
+| F07 Adaptive difficulty | Deterministic | Implemented with documented changes | QuizService aggregates saved quiz-topic results; ProgressTracker supplies the concept sample for comparison; DifficultySuggestion carries level and reason | suggestDifficulty, getQuizTopicStats, chooseDifficulty, getAccuracy, getGradedCount | Facade | [09:44](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=584s) |
+| F08 Attempts/grading | Hybrid | Implemented | QuizAttempt preserves submitted answers; QuizGrader selects ExactMatchGrading or LLMRubricGrading; ResponseParser checks grades; QuizService resolves PENDING; QuizRepository restores attempts | startAttempt, submitAttempt, grade, parseGrading, regradePending, retryPendingGrading, getPendingQuestion, selfGrade, replacePendingResult | Facade, Strategy, Adapter, Observer | [07:17](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=437s) |
+| F09 Weak topics | Hybrid | Implemented | ProgressTracker filters and sorts graded ConceptStats; WeakTopicAnalyzer requests a brief explanation; WeakTopicReport retains ranking and insufficient-data names on failure | getWeakTopics, analyze, getRankedStats, weakTopicPrompt | Facade, Adapter | [10:07](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=607s) |
+| F10 Study plans | Hybrid | Implemented with documented changes | StudyPlanGenerator validates schedules; StudyPlan/StudyTask retain tasks and actual completion time; StudyPlanRepository saves before progress | createStudyPlan, generate, validatePlan, markTaskDone, getCompletedAt | Facade, Adapter, Observer | [10:43](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=643s) |
+| F11 Progress/history | Deterministic | Implemented with documented changes | ProgressTracker and HistoryRecorder retain source-backed caches and pending writes; ProgressRestorer rebuilds counts/history; DashboardView reads memory snapshots | recordReview, recordQuizAttempt, recordTaskDone, restore, getProgressSnapshot, getHistorySnapshot | Facade, Observer | [14:18](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=858s) |
+| F12 Natural-language agent | AI | Implemented with documented changes | AgentPlanner proposes; AgentController validates/executes; ToolManager normalizes arguments; MemoryManager/MemoryRepository save whole turns | runAgent, handleRequest, createPlan, replan, validatePlan, resolveStep, executeWithRetries, addTurn, toJson | Facade, Adapter | [12:49](https://www.youtube.com/watch?v=eNrlBO0PAuY&t=769s) |
 
 F01 starts at the GUI/CLI, passes through AgentFacade to CourseService, and saves a
 Course with Material and Chunk objects. F02/F03/F05 send material chunks through
@@ -100,8 +137,9 @@ StudyPlanTool calls StudyPlanGenerator; ProgressTool reads ProgressTracker. The
 controller continues on OK, clarifies insufficient data, retries eligible failures
 and replans invalid or exhausted steps within its limits. Whole-value dependencies
 resolve only from actual successful result data. AgentResult retains actual outputs
-and decisions. MemoryManager.addMessage saves the original user request and final
-assistant message through MemoryRepository.
+and decisions. MemoryManager.addTurn saves the original user request and final
+assistant message together through MemoryRepository. A failed conversation save
+returns FAILED while retaining actual completed tool results; inspect them before retrying.
 
 F11 uses the saved course, attempts and plans as the sources for derived progress.
 AgentFacade.getCourse calls ProgressRestorer before returning the selected course.
@@ -290,8 +328,8 @@ course's saved records support. UC14's unchanged-data postcondition still applie
 to healthy reads; a recovery read may repair derived files and warn the user.
 Only original review events retain their original event times. A recovered quiz
 snapshot uses the attempt's submission time and explicitly disclaims a later
-grading time. A recovered completed task uses the recovery time because its
-original completion time is not stored. Missing earlier grading transitions or
+grading time. New completed tasks retain their saved completedAt time; legacy
+completed tasks without that field use a labelled recovery time. Missing earlier grading transitions or
 legacy review details remain unavailable. UC14/SD12 and the updated UMLet class views represent these changes.
 
 C17 adds persistence integration checks through AgentFacade and fresh application
@@ -356,7 +394,8 @@ My review of these additions remains pending.
 
 ## 6 Development and verification
 
-The current implementation passed 307 JUnit tests with Java 17. The packaged CLI
+At C21 on November 3, the implementation passed 307 JUnit tests with Java 17. This
+is a historical total. The packaged CLI
 imported sample material and reloaded it in another process; a summary request
 without API settings returned a missing-key error.
 
@@ -611,3 +650,88 @@ evaluation remains part of Stage 3.
 The three CLI replays retain captured commands, actual output and the role of the
 model. Their local file and timestamp index is in demo/README.md. The native GUI
 walkthrough/recording and accessible uploaded timestamp links remain pending.
+
+## November 9 storage recovery verification
+
+Primary review, submitted-attempt and task saves remain strict. Failed progress or
+history writes now warn while retaining supported counts/events in memory and
+retrying the pending write on a later course read, including over an older cache.
+Dashboard observer refreshes use read-only snapshots; synchronized state methods
+prevent worker/EDT access from duplicating history. Source records and their IDs
+remain the recovery baseline, and missing previously counted result IDs do not
+erase earlier counts. History reads return chronological copies.
+
+StudyTask now persists its first completedAt. Existing completed tasks without a
+time remain compatible and are labelled unknown/recovery time when needed. Agent
+request/reply messages are saved as one turn, and saved-data load errors retain a
+structured CLI FAILED response under --json. That earlier 346-test build included startup
+with blocked derived paths, cache repair, stored timestamps, old-file preservation,
+atomic turn failure and structured saved-data errors. These are offline checks;
+full native GUI, live model rechecks, videos and later-code student review remain pending.
+
+## November 9 recheck corrections
+
+The subsequent Java 17 clean build passed 360 tests in 46 suites with no failures,
+errors or skips. Fourteen new tests cover the F07 sample regression and course
+isolation, literal dollar text, outer argument spaces, legal links into concept
+cycles, null parents, chunk start lines, pending cache writes with damaged sources,
+cross-course recovery notices and strict primary review/attempt save failures.
+Before these fixes, the targeted run had ten assertion failures and one error;
+the course-isolation and primary-save guards already passed.
+
+F07 now compares the quiz-topic and concept samples and uses the larger graded
+sample, preferring the quiz topic on a tie. Recovery retries pending memory caches
+before checking incomplete sources. Only actual count changes report a rebuild;
+skipped-file warning lists are synchronized. Protocol strings are trimmed before
+plan validation; embedded references apply only to known step IDs. Ordinary
+this.$store.state text remains literal. The concept and chunk fixes retain source
+text and validated source IDs.
+
+That report revision described a working copy based on C21. The existing A/B/C
+replays were captured on November 3 before C21 was committed, using the production
+code later included in that commit and before these fixes;
+final real GUI and CLI screen recordings remain required. Student restart
+acceptance is not claimed. Complete tool/billing totals and student review after
+C07 remain pending. Detailed class views are included in the report appendix.
+
+## November 9 documentation and coverage check
+
+The next clean Java 17 build passed 361 tests in 46 suites, with no failures,
+errors or skips. One new test gives the concept and quiz-topic samples five
+answers each, with opposite accuracies, and checks that F07 selects the quiz
+topic. AgentRecoveryTest already contained
+rejectsEmbeddedReferencesInsteadOfGuessingReplacementText and the earlier
+360-test report confirms it ran. That existing test now also checks the rejection
+message and the two planning calls. Test imports were simplified in the two
+files identified by the review. No production Java behavior changed in this step.
+
+The report now separates Stage 1's backup/reset/warning design from C16's
+source-backed recovery, C21's recovery-time task snapshots and the November 9
+saved completion times. The invalid-difficulty reference is UC07 2a. Replay
+capture preceded the C21 commit; the production code was the same as the code
+later included in C21. Verification and delivery status use a dated snapshot,
+and complete billing totals remain unverified rather than inferred.
+
+The UML guide explains the shared facade recovery prelude. The recovery detail
+uses the actual savedPlans parameter names; the report identifies continuation
+of the Observer realization lines between appendix sheets. README explains
+leading blank-line handling and the remaining trailing-blank-line range behavior.
+
+
+## November 10 scoped tool usage estimate
+
+Per-response Codex usage from the Stage 2 request on October 24 at 20:31 EDT to
+November 10 at 22:34 EST gives 523,736,215 tokens in 1,968 requests. This includes
+the main conversation, sixteen recorded background compactions and nine verified
+video-agent requests. Response IDs were deduplicated; inherited counters, cached
+input and reasoning were not added twice. The prior 21:59 snapshot remains a
+historical subset and is not added to this figure.
+
+Current gpt-6.1-sol Standard API prices give an equivalent cost of $156.22, with
+long-context rates applied per request. The student-supplied Claude Code screenshot
+reports about 287 million tokens and $125.60 equivalent cost for November 9-10,
+including an estimate for four unlogged compactions. The two estimates total about
+$281.82. These are API equivalents, not verified invoices or allocated subscription
+payments. App model and transcription fees are separate. The report and usage
+checkpoint record the scope and assumptions without private conversations or keys.
+No Java source, staging, commit, push or course submission changed in this step.

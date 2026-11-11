@@ -20,6 +20,16 @@ public class RetrievalStrategyTest {
     }
 
     @Test
+    public void ignoresCommonWordsWhenMatching() {
+        List<Chunk> chunks = new ArrayList<>();
+        chunks.add(new Chunk("The subject is what notifies the observers.", "a.txt", 0, 1, 1));
+        for (RetrievalStrategy strategy : new RetrievalStrategy[] {new KeywordRetrieval(), new TfIdfRetrieval()}) {
+            assertEquals(0, strategy.retrieve("What is the capital of France?", chunks, 5).size());
+            assertEquals(1, strategy.retrieve("What notifies the observers?", chunks, 5).size());
+        }
+    }
+
+    @Test
     public void tfIdfUsesCosineNormalizationForLongerChunks() {
         List<Chunk> chunks = new ArrayList<>();
         chunks.add(new Chunk("observer unrelated extra many words", "a.txt", 0, 1, 1));
