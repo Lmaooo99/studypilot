@@ -20,8 +20,8 @@ exhaustive review of every source line. The [native demonstration](https://www.y
 is Unlisted; signed-out playback and twelve feature plus two CLI timestamp links
 were verified. The video offers 1080p60 HD.
 
-The seven-section implementation report is in [stage2-report.docx](stage2-report.docx)
-and [stage2-report.pdf](stage2-report.pdf). Updated editable diagrams and PNG exports
+The seven-section implementation report is in [stage2-report.pdf](stage2-report.pdf).
+Updated editable diagrams and PNG exports
 are in [docs/uml](docs/uml). The [demonstration index](demo/README.md) describes the
 November 10 native recording, feature timestamps and viewing-link status.
 
@@ -497,4 +497,4 @@ project payments are not allocated; the final published-source clone still requi
 - [Usage checkpoint](docs/usage-checkpoint.json)
 
 The working record supplies the feature, design-change and collaboration details
-used in stage2-report.docx and stage2-report.pdf.
+used in the Stage 2 report.
